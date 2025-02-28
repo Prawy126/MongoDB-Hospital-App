@@ -19,6 +19,7 @@ Przypadek użycia: Aplikacje czasu rzeczywistego (np. czaty).
 ## Bazy klucz-wartość (prosty model: klucz → wartość)
 
 **Redis**
+
 Dlaczego warto: Bardzo szybka, wspiera struktury danych (listy, hashe).
 Python: redis-py.
 Java: Jedis lub Lettuce.
@@ -26,6 +27,7 @@ Przypadek użycia: Cache, kolejki, sesje użytkowników.
 Docker: docker run -d -p 6379:6379 --name redis redis:alpine.
 
 **DynamoDB (AWS)**
+
 Dlaczego warto: Zarządzana przez AWS, automatyczna skalowalność.
 Python: boto3 (SDK AWS).
 Java: AWS SDK for Java.
@@ -34,12 +36,14 @@ Przypadek użycia: Aplikacje serverless, wysokie obciążenia.
 ## Bazy kolumnowe (dane przechowywane w kolumnach, nie wierszach)
 
 **Apache Cassandra**
+
 Dlaczego warto: Liniowa skalowalność, odporność na awarie.
 Python: cassandra-driver.
 Java: Oficjalny sterownik lub Spring Data Cassandra.
 Przypadek użycia: Analiza dużych zbiorów danych, systemy IoT.
 
 **ScylldDB**
+
 Dlaczego warto: Zgodna z Cassandra, ale szybsza (napisana w C++).
 Python/JAVA: Te same narzędzia co dla Cassandra.
 Przypadek użycia: Aplikacje wymagające niskich opóźnień.
@@ -47,6 +51,7 @@ Przypadek użycia: Aplikacje wymagające niskich opóźnień.
 ## Bazy grafowe (oparte na węzłach i relacjach)
 
 **Neo4j**
+
 Dlaczego warto: Najpopularniejsza baza grafowa, język zapytań Cypher.
 Python: neo4j-python-driver.
 Java: Oficjalny sterownik lub Spring Data Neo4j.
@@ -54,6 +59,7 @@ Przypadek użycia: Sieci społecznościowe, rekomendacje, wykrywanie oszustw.
 Docker: docker run -d -p 7474:7474 -p 7687:7687 --name neo4j neo4j:latest.
 
 **ArangoDB**
+
 Dlaczego warto: Łączy modele grafowe, dokumentowe i klucz-wartość.
 Python: python-arango.
 Java: arangodb-java-driver.
@@ -62,6 +68,7 @@ Przypadek użycia: Aplikacje wymagające wielomodelowości.
 ## Lekkie bazy dla małych projektów
 
 **TinyDB (Python)**
+
 Dlaczego warto: Czysty Python, brak serwera, idealna do prototypów.
 Przykład: from tinydb import TinyDB; db = TinyDB('db.json').
 
