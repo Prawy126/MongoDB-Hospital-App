@@ -83,7 +83,7 @@ Przykład: DB db = DBMaker.fileDB("file.db").make(); HTreeMap map = db.hashMap("
 - [ ] Couchbase
 - [ ] Redis
 - [ ] DynamoDB (AWS)
-- [ ] Apache Cassandra
+- [ ] ~~Apache Cassandra~~
 - [ ] Neo4j
 - [ ] ArangoDB
 - [ ] TinyDB (Python)
