@@ -1,5 +1,5 @@
 # Propozycje baz:
-1) Bazy dokumentowe (przechowują dane w formie dokumentów, np. JSON)
+## Bazy dokumentowe (przechowują dane w formie dokumentów, np. JSON)
 
 **MongoDB**
 
@@ -16,7 +16,7 @@ Python: couchbase-python-client.
 Java: Oficjalny SDK.
 Przypadek użycia: Aplikacje czasu rzeczywistego (np. czaty).
 
-2) Bazy klucz-wartość (prosty model: klucz → wartość)
+## Bazy klucz-wartość (prosty model: klucz → wartość)
 
 **Redis**
 Dlaczego warto: Bardzo szybka, wspiera struktury danych (listy, hashe).
@@ -31,7 +31,7 @@ Python: boto3 (SDK AWS).
 Java: AWS SDK for Java.
 Przypadek użycia: Aplikacje serverless, wysokie obciążenia.
 
-3) Bazy kolumnowe (dane przechowywane w kolumnach, nie wierszach)
+## Bazy kolumnowe (dane przechowywane w kolumnach, nie wierszach)
 
 **Apache Cassandra**
 Dlaczego warto: Liniowa skalowalność, odporność na awarie.
@@ -44,7 +44,7 @@ Dlaczego warto: Zgodna z Cassandra, ale szybsza (napisana w C++).
 Python/JAVA: Te same narzędzia co dla Cassandra.
 Przypadek użycia: Aplikacje wymagające niskich opóźnień.
 
-4) Bazy grafowe (oparte na węzłach i relacjach)
+## Bazy grafowe (oparte na węzłach i relacjach)
 
 **Neo4j**
 Dlaczego warto: Najpopularniejsza baza grafowa, język zapytań Cypher.
@@ -59,7 +59,7 @@ Python: python-arango.
 Java: arangodb-java-driver.
 Przypadek użycia: Aplikacje wymagające wielomodelowości.
 
-5) Lekkie bazy dla małych projektów
+## Lekkie bazy dla małych projektów
 
 **TinyDB (Python)**
 Dlaczego warto: Czysty Python, brak serwera, idealna do prototypów.
