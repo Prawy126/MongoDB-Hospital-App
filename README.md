@@ -1,0 +1,2 @@
+# Propozycje baz:
+- [ ] 
