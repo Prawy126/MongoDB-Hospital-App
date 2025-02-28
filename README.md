@@ -1,2 +1,2 @@
 # Propozycje baz:
-- [ ] 
+- [ ] przykład
