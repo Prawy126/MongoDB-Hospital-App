@@ -104,4 +104,15 @@ Przykład: from tinydb import TinyDB; db = TinyDB('db.json').
 Dlaczego warto: Embedded, wspiera struktury danych (mapy, kolekcje).
 
 Przykład: DB db = DBMaker.fileDB("file.db").make(); HTreeMap map = db.hashMap("map").createOrOpen();.
-- [ ] przykład
+
+## Lista baz
+
+- [ ] MongoDB
+- [ ] Couchbase
+- [ ] Redis
+- [ ] DynamoDB (AWS)
+- [ ] Apache Cassandra
+- [ ] Neo4j
+- [ ] ArangoDB
+- [ ] TinyDB (Python)
+- [ ] MapDB (Java)
