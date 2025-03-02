@@ -78,13 +78,3 @@
   - Atomowe operacje `INCR` do zliczania głosów.  
   - Wygaśnięcie ankiet po czasie (`EXPIRE`).  
 
----
-
-## 📊 Jak wybrać bazę?
-1. **Klucz-wartość**: Wybierz, jeśli potrzebujesz **szybkości i prostoty** (Redis, TinyDB).  
-2. **Obiektowe**: Sprawdzą się w projektach z **hierarchią klas** (ObjectDB, MongoDB).  
-3. **Versant**: Dla zaawansowanych systemów korporacyjnych.  
-
----
-
-**Uwaga**: Każda grupa musi wybrać **unikalny system bazodanowy** – sprawdź z prowadzącym, które są już zajęte!
