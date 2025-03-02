@@ -1,90 +1,90 @@
-# Propozycje baz:
-## Bazy dokumentowe (przechowują dane w formie dokumentów, np. JSON)
+# Bazy danych: Klucz-Wartość i Obiektowe
 
-**MongoDB**
+## 📚 Bazy Klucz-Wartość
 
-Dlaczego warto: Najpopularniejsza baza dokumentowa, prosta integracja, bogate zapytania.
-Python: Biblioteka pymongo (oficjalna).
-Java: Sterownik MongoDB Java Driver lub framework Spring Data MongoDB.
-Przypadek użycia: Aplikacje społecznościowe, zarządzanie treścią, logi.
-Docker: docker run -d -p 27017:27017 --name mongo mongo:latest.
+### **Redis**
+- **Opis**: Szybka baza danych działająca w pamięci RAM z obsługą trwałego zapisu.
+- **Zastosowania**: Cache’owanie, systemy głosowań w czasie rzeczywistym, kolejki komunikatów.
+- **Link**: [Dokumentacja Redis](https://redis.io/documentation)
 
-**Couchbase**
+### **Amazon DynamoDB**
+- **Opis**: W pełni zarządzana baza NoSQL od AWS, skalowalna i wydajna.
+- **Zastosowania**: Aplikacje webowe, systemy logowania, analiza danych w czasie rzeczywistym.
+- **Link**: [Dokumentacja DynamoDB](https://docs.aws.amazon.com/dynamodb/)
 
-Dlaczego warto: Łączy cechy bazy dokumentowej i klucz-wartość, skalowalność.
-Python: couchbase-python-client.
-Java: Oficjalny SDK.
-Przypadek użycia: Aplikacje czasu rzeczywistego (np. czaty).
+### **TinyDB (Python)**
+- **Opis**: Lekka, osadzona baza danych dla Pythina, przechowująca dane w formacie JSON.
+- **Zastosowania**: Małe aplikacje lokalne, prototypowanie, projekty edukacyjne.
+- **Link**: [TinyDB GitHub](https://github.com/msiemens/tinydb)
 
-## Bazy klucz-wartość (prosty model: klucz → wartość)
+### **MapDB (Java)**
+- **Opis**: Osadzona baza dla Javy, wspierająca struktury takie jak mapy i kolekcje.
+- **Zastosowania**: Cache’owanie, przechowywanie dużych zbiorów danych w pamięci.
+- **Link**: [MapDB GitHub](https://github.com/jankotek/mapdb)
 
-**Redis**
+---
 
-Dlaczego warto: Bardzo szybka, wspiera struktury danych (listy, hashe).
-Python: redis-py.
-Java: Jedis lub Lettuce.
-Przypadek użycia: Cache, kolejki, sesje użytkowników.
-Docker: docker run -d -p 6379:6379 --name redis redis:alpine.
+## 🧩 Bazy Obiektowe
 
-**DynamoDB (AWS)**
+### **ObjectDB**
+- **Opis**: Czysto obiektowa baza danych dla Javy, kompatybilna ze standardem JPA.
+- **Zastosowania**: Aplikacje korporacyjne, systemy zarządzania relacjami między obiektami.
+- **Link**: [ObjectDB Docs](https://www.objectdb.com/)
 
-Dlaczego warto: Zarządzana przez AWS, automatyczna skalowalność.
-Python: boto3 (SDK AWS).
-Java: AWS SDK for Java.
-Przypadek użycia: Aplikacje serverless, wysokie obciążenia.
+### **MongoDB**
+- **Opis**: Dokumentowa baza NoSQL z mapowaniem obiektowym (przez format BSON).
+- **Zastosowania**: Aplikacje webowe, systemy CMS, analiza danych.
+- **Link**: [MongoDB Docs](https://www.mongodb.com/docs/)
 
-## Bazy kolumnowe (dane przechowywane w kolumnach, nie wierszach)
+### **Versant**
+- **Opis**: Komercyjna baza obiektowa dla zaawansowanych zastosowań (np. finanse, telekomunikacja).
+- **Zastosowania**: Systemy wymagające skomplikowanych hierarchii obiektów i niskich opóźnień.
+- **Link**: [Versant Official](https://www.actian.com/versant/)
 
-**Apache Cassandra**
+---
 
-Dlaczego warto: Liniowa skalowalność, odporność na awarie.
-Python: cassandra-driver.
-Java: Oficjalny sterownik lub Spring Data Cassandra.
-Przypadek użycia: Analiza dużych zbiorów danych, systemy IoT.
+## 📋 Lista baz do wyboru
 
-**ScylldDB**
+- [x] **ObjectDB** (obiektowa)  
+- [x] **MongoDB** (obiektowa/dokumentowa)  
+- [x] **Versant** (obiektowa)  
+- [x] **Redis** (klucz-wartość)  
+- [x] **DynamoDB (AWS)** (klucz-wartość)  
+- [x] **TinyDB (Python)** (klucz-wartość, osadzona)  
+- [x] **MapDB (Java)** (klucz-wartość, osadzona)  
 
-Dlaczego warto: Zgodna z Cassandra, ale szybsza (napisana w C++).
-Python/JAVA: Te same narzędzia co dla Cassandra.
-Przypadek użycia: Aplikacje wymagające niskich opóźnień.
+---
 
-## Bazy grafowe (oparte na węzłach i relacjach)
+## 💡 Propozycje projektów
 
-**Neo4j**
+### **Dla ObjectDB (obiektowa)**
+- **Temat**: *System zarządzania szpitalem z hierarchią klas (Pacjent, Lekarz, Oddział)*.  
+- **Poziom trudności**: 5.0/5.0  
+- **Funkcje**:  
+  - Dziedziczenie klas (`Osoba → Pacjent/Lekarz`).  
+  - Zaawansowane zapytania JPQL (np. znajdź wolne łóżka na oddziale).  
 
-Dlaczego warto: Najpopularniejsza baza grafowa, język zapytań Cypher.
-Python: neo4j-python-driver.
-Java: Oficjalny sterownik lub Spring Data Neo4j.
-Przypadek użycia: Sieci społecznościowe, rekomendacje, wykrywanie oszustw.
-Docker: docker run -d -p 7474:7474 -p 7687:7687 --name neo4j neo4j:latest.
+### **Dla MongoDB (obiektowa/dokumentowa)**
+- **Temat**: *Platforma blogowa z komentarzami i tagami*.  
+- **Poziom trudności**: 4.0/5.0  
+- **Funkcje**:  
+  - Mapowanie obiektów do dokumentów BSON.  
+  - Wyszukiwanie postów po tagach z użyciem agregacji.  
 
-**ArangoDB**
+### **Dla Redis (klucz-wartość)**
+- **Temat**: *System ankiet z wynikami w czasie rzeczywistym*.  
+- **Poziom trudności**: 4.0/5.0  
+- **Funkcje**:  
+  - Atomowe operacje `INCR` do zliczania głosów.  
+  - Wygaśnięcie ankiet po czasie (`EXPIRE`).  
 
-Dlaczego warto: Łączy modele grafowe, dokumentowe i klucz-wartość.
-Python: python-arango.
-Java: arangodb-java-driver.
-Przypadek użycia: Aplikacje wymagające wielomodelowości.
+---
 
-## Lekkie bazy dla małych projektów
+## 📊 Jak wybrać bazę?
+1. **Klucz-wartość**: Wybierz, jeśli potrzebujesz **szybkości i prostoty** (Redis, TinyDB).  
+2. **Obiektowe**: Sprawdzą się w projektach z **hierarchią klas** (ObjectDB, MongoDB).  
+3. **Versant**: Dla zaawansowanych systemów korporacyjnych.  
 
-**TinyDB (Python)**
+---
 
-Dlaczego warto: Czysty Python, brak serwera, idealna do prototypów.
-Przykład: from tinydb import TinyDB; db = TinyDB('db.json').
-
-**MapDB (Java)**
-
-Dlaczego warto: Embedded, wspiera struktury danych (mapy, kolekcje).
-Przykład: DB db = DBMaker.fileDB("file.db").make(); HTreeMap map = db.hashMap("map").createOrOpen();.
-
-## Lista baz
-
-- [ ] MongoDB
-- [ ] Couchbase
-- [ ] Redis
-- [ ] DynamoDB (AWS)
-- [ ] ~~Apache Cassandra~~
-- [ ] Neo4j
-- [ ] ArangoDB
-- [ ] TinyDB (Python)
-- [ ] MapDB (Java)
+**Uwaga**: Każda grupa musi wybrać **unikalny system bazodanowy** – sprawdź z prowadzącym, które są już zajęte!
