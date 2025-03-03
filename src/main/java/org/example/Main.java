@@ -3,16 +3,18 @@ package org.example;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.MongoException;
 
 public class Main {
     public static void main(String[] args) {
-        // Połączenie z lokalnym MongoDB (domyślnie na porcie 27017)
-        try (MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017")) {
-            // Pobranie bazy danych (jeśli nie istnieje, zostanie utworzona)
+        try (MongoClient mongoClient = MongoClients.create("mongodb://127.0.0.1:27017")) {
             MongoDatabase database = mongoClient.getDatabase("testdb");
 
+            // Wymuś komunikację z serwerem (np. pobierz nazwy baz danych)
+            mongoClient.listDatabaseNames().first(); // Sprawdza połączenie
+
             System.out.println("Połączono z bazą danych: " + database.getName());
-        } catch (Exception e) {
+        } catch (MongoException e) {
             System.err.println("Błąd połączenia: " + e.getMessage());
         }
     }
