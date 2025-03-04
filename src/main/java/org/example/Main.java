@@ -7,7 +7,7 @@ import com.mongodb.MongoException;
 
 public class Main {
     public static void main(String[] args) {
-        try (MongoClient mongoClient = MongoClients.create("mongodb://127.0.0.1:27017")) {
+        try (MongoClient mongoClient = MongoClients.create("mongodb://192.168.0.50:27017")) {
             MongoDatabase database = mongoClient.getDatabase("testdb");
 
             // Wymuś komunikację z serwerem (np. pobierz nazwy baz danych)
