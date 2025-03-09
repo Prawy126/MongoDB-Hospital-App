@@ -1,31 +1,31 @@
+// MongoDatabaseConnector.java
 package backend;
 
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.MongoException;
 
 public class MongoDatabaseConnector {
-
     private static final String DB_IP = "192.168.0.104";
     private static final int DB_PORT = 27017;
-    private static final String DB_NAME = "testdb";
+    private static final String DB_NAME = "hospitalDB";
 
     private static MongoClient mongoClient;
-    public static MongoDatabase connectToDatabase() {
-        String connectionString = String.format("mongodb://%s:%d", DB_IP, DB_PORT);
 
+    public static MongoDatabase connectToDatabase() {
         try {
-            MongoClient mongoClient = MongoClients.create(connectionString);
+            String connectionString = String.format("mongodb://%s:%d", DB_IP, DB_PORT);
+            mongoClient = MongoClients.create(connectionString);
             MongoDatabase database = mongoClient.getDatabase(DB_NAME);
-            // Wymuś komunikację z serwerem
-            mongoClient.listDatabaseNames().first();
+            System.out.println("Połączono z bazą danych: " + DB_NAME);
             return database;
         } catch (MongoException e) {
             System.err.println("Błąd połączenia: " + e.getMessage());
             return null;
         }
     }
+
     public static void close() {
         if (mongoClient != null) {
             try {
@@ -38,4 +38,6 @@ public class MongoDatabaseConnector {
             System.out.println("Brak aktywnego połączenia do zamknięcia.");
         }
     }
+
+
 }
