@@ -17,4 +17,6 @@ module org.example.projekt {
 
     opens org.example.projekt to javafx.fxml;
     exports org.example.projekt;
+
+    exports backend;
 }

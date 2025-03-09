@@ -14,7 +14,7 @@ public class Doctor {
     private String contactInformation;
 
     // Konstruktor domyślny wymagany przez MongoDB
-    protected Doctor() {}
+    public Doctor() {}
 
     // Konstruktor z parametrami
     public Doctor(String firstName, String lastName, String specialization,

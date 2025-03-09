@@ -14,7 +14,7 @@ public class Appointment {
     private AppointmentStatus status;
 
     // Konstruktor domyślny wymagany przez MongoDB
-    protected Appointment() {}
+    public Appointment() {}
 
     // Konstruktor z parametrami
     public Appointment(ObjectId patientId, ObjectId doctorId, LocalDate date,
