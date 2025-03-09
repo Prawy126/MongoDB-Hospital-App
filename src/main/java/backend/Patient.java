@@ -1,55 +1,63 @@
+// model/Patient.java
 package backend;
 
-import dev.morphia.annotations.Entity;
-import dev.morphia.annotations.Id;
 import org.bson.types.ObjectId;
+import java.util.Date;
 
-@Entity("patients")
 public class Patient {
-
-    @Id
     private ObjectId id;
-    private String name;
-    private int age;
-    private String medicalCondition;
-
-    public Patient() {}
-
-    public Patient(String name, int age, String medicalCondition) {
-        this.name = name;
-        this.age = age;
-        this.medicalCondition = medicalCondition;
-    }
+    private String firstName;
+    private String lastName;
+    private String pesel;
+    private Date birthDate;
+    private String address;
 
     public ObjectId getId() {
         return id;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getPesel() {
+        return pesel;
+    }
+
+    public Date getBirthDate() {
+        return birthDate;
+    }
+
+    public String getAddress() {
+        return address;
     }
 
     public void setId(ObjectId id) {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
-    public int getAge() {
-        return age;
+    public void setPesel(String pesel) {
+        this.pesel = pesel;
     }
 
-    public void setAge(int age) {
-        this.age = age;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
-    public String getMedicalCondition() {
-        return medicalCondition;
+    public void setBirthDate(Date birthDate) {
+        this.birthDate = birthDate;
     }
-
-    public void setMedicalCondition(String medicalCondition) {
-        this.medicalCondition = medicalCondition;
-    }
+// konstruktory, gettery, settery
 }

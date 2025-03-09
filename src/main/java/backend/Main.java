@@ -1,29 +1,52 @@
 package backend;
 
+import com.mongodb.client.MongoDatabase;
+import org.bson.types.ObjectId;
+
+import java.util.Date;
+import java.util.List;
+
 public class Main {
-
     public static void main(String[] args) {
-        // Tworzenie nowego pacjenta
-        Patient patient = new Patient("Jan Kowalski", 45, "Nadciśnienie");
-        MorphiaDatabaseConnector.savePatient(patient);
-        System.out.println("Zapisano pacjenta: " + patient.getName());
+        MongoDatabase database = MongoDatabaseConnector.connectToDatabase();
 
-        // Wyszukiwanie pacjenta
-        Patient foundPatient = MorphiaDatabaseConnector.findPatientByName("Jan Kowalski");
-        if (foundPatient != null) {
-            System.out.println("Znaleziono pacjenta: " + foundPatient.getName() + ", wiek: " + foundPatient.getAge() + ", stan zdrowia: " + foundPatient.getMedicalCondition());
-        } else {
-            System.out.println("Nie znaleziono pacjenta.");
+        if (database != null) {
+            try {
+                // Repozytoria
+                PatientRepository patientRepo = new PatientRepository(database);
+                DoctorRepository doctorRepo = new DoctorRepository(database);
+                AppointmentRepository appointmentRepo = new AppointmentRepository(database);
+
+                // Tworzenie pacjenta
+                Patient patient = new Patient();
+                patient.setFirstName("Jan");
+                patient.setLastName("Kowalski");
+                patient.setPesel("12345678901");
+                patient.setBirthDate(new Date());
+                patient.setAddress("ul. Testowa 123, Warszawa");
+                String patientId = patientRepo.createPatient(patient);
+
+                // Tworzenie lekarza
+                Doctor doctor = new Doctor();
+                doctor.setFirstName("Anna");
+                doctor.setLastName("Nowak");
+                doctor.setSpecialization("Kardiolog");
+                doctor.setAvailableDays(List.of("Poniedziałek", "Środa", "Piątek"));
+                String doctorId = doctorRepo.createDoctor(doctor);
+
+                // Tworzenie wizyty
+                Appointment appointment = new Appointment();
+                appointment.setPatientId(new ObjectId(patientId));
+                appointment.setDoctorId(new ObjectId(doctorId));
+                appointment.setDate(new Date());
+                appointment.setRoom("Sala 205");
+                appointment.setDescription("Konsultacja kardiologiczna");
+                String appointmentId = appointmentRepo.createAppointment(appointment);
+
+                System.out.println("Dodano nową wizytę o ID: " + appointmentId);
+            } finally {
+                MongoDatabaseConnector.close();
+            }
         }
-
-        // Wyświetlanie wszystkich pacjentów
-        System.out.println("Lista wszystkich pacjentów:");
-        for (Patient p : MorphiaDatabaseConnector.getAllPatients()) {
-            System.out.println("- " + p.getName() + ", wiek: " + p.getAge() + ", stan zdrowia: " + p.getMedicalCondition());
-        }
-
-        // Usuwanie pacjenta
-        MorphiaDatabaseConnector.deletePatientByName("Jan Kowalski");
-        System.out.println("Pacjent został usunięty.");
     }
 }
