@@ -1,4 +1,3 @@
-// MongoDatabaseConnector.java
 package backend;
 
 import com.mongodb.client.MongoClient;
@@ -7,7 +6,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.MongoException;
 
 public class MongoDatabaseConnector {
-    private static final String DB_IP = "192.168.0.104";
+    private static final String DB_IP = "192.168.8.102";
     private static final int DB_PORT = 27017;
     private static final String DB_NAME = "hospitalDB";
 
