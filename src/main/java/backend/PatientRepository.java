@@ -2,26 +2,26 @@ package backend;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
+
+import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 
 public class PatientRepository {
-    private final MongoCollection<Document> collection;
+    private final MongoCollection<Patient> collection;
 
     public PatientRepository(MongoDatabase database) {
-        this.collection = database.getCollection("patients");
+        CodecRegistry pojoCodecRegistry = fromProviders(
+                PojoCodecProvider.builder()
+                        .automatic(true)
+                        .build()
+        );
+
+        this.collection = database.getCollection("patients", Patient.class);
     }
 
-    public String createPatient(Patient patient) {
-        Document doc = new Document()
-                .append("firstName", patient.getFirstName())
-                .append("lastName", patient.getLastName())
-                .append("pesel", patient.getPesel())
-                .append("birthDate", patient.getBirthDate())
-                .append("address", patient.getAddress());
-
-        collection.insertOne(doc);
-        return doc.getObjectId("_id").toString();
+    public Patient createPatient(Patient patient) {
+        collection.insertOne(patient);
+        return patient;
     }
-
-    // Metody do wyszukiwania, aktualizacji, usuwania itp.
 }

@@ -1,27 +1,18 @@
-// repository/DoctorRepository.java
 package backend;
 
-import backend.Doctor;
+
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
-import org.bson.types.ObjectId;
 
 public class DoctorRepository {
-    private final MongoCollection<Document> collection;
+    private final MongoCollection<Doctor> collection;
 
     public DoctorRepository(MongoDatabase database) {
-        this.collection = database.getCollection("doctors");
+        this.collection = database.getCollection("doctors", Doctor.class);
     }
 
-    public String createDoctor(Doctor doctor) {
-        Document doc = new Document()
-                .append("firstName", doctor.getFirstName())
-                .append("lastName", doctor.getLastName())
-                .append("specialization", doctor.getSpecialization())
-                .append("availableDays", doctor.getAvailableDays());
-
-        collection.insertOne(doc);
-        return doc.getObjectId("_id").toString();
+    public Doctor createDoctor(Doctor doctor) {
+        collection.insertOne(doctor);
+        return doctor;
     }
 }
