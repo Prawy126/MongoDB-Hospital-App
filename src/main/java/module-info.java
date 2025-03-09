@@ -12,6 +12,8 @@ module org.example.projekt {
     requires com.almasb.fxgl.all;
     requires org.mongodb.driver.sync.client;
     requires org.mongodb.driver.core;
+    requires morphia.core;
+    requires org.mongodb.bson;
 
     opens org.example.projekt to javafx.fxml;
     exports org.example.projekt;
