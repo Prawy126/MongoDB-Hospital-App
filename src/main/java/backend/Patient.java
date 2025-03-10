@@ -4,31 +4,23 @@ import org.bson.types.ObjectId;
 import java.time.LocalDate;
 import java.util.Date;
 
-public class Patient {
+public class Patient extends Person{
     private ObjectId id;
-    private String firstName;
-    private String lastName;
-    private String pesel;
     private LocalDate birthDate;
     private String address;
-
-    // Istniejący kod getterów i setterów pozostaje bez zmian...
 
     public ObjectId getId() {
         return id;
     }
 
     public String getFirstName() {
-        return firstName;
+        return super.getImie();
     }
 
     public String getLastName() {
-        return lastName;
+        return super.getNazwisko();
     }
 
-    public String getPesel() {
-        return pesel;
-    }
 
     public LocalDate getBirthDate() {
         return birthDate;
@@ -38,23 +30,28 @@ public class Patient {
         return address;
     }
 
-    // Konstruktor domyślny wymagany przez MongoDB
-    public Patient() {}
+    public void ustawWiek(int wiek){
+        super.setWiek(wiek);
+    }
+
+    Patient() {
+
+    }
 
     public void setId(ObjectId id) {
         this.id = id;
     }
 
     public void setFirstName(String firstName) {
-        this.firstName = firstName;
+        setImie(firstName);
     }
 
     public void setLastName(String lastName) {
-        this.lastName = lastName;
+        setNazwisko(lastName);
     }
 
-    public void setPesel(String pesel) {
-        this.pesel = pesel;
+    public void setPesel(int pesel) {
+        super.setPesel(pesel);
     }
 
     public void setBirthDate(LocalDate birthDate) {
@@ -67,9 +64,7 @@ public class Patient {
 
     // Konstruktor z parametrami
     public Patient(String firstName, String lastName, String pesel, LocalDate birthDate, String address) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.pesel = pesel;
+        super(firstName,lastName,Integer.parseInt(pesel));
         this.birthDate = birthDate;
         this.address = address;
     }
@@ -79,8 +74,9 @@ public class Patient {
         private ObjectId id;
         private String firstName;
         private String lastName;
-        private String pesel;
+        private int pesel;
         private LocalDate birthDate;
+        private int wiek;
         private String address;
 
         public Builder() {}
@@ -100,7 +96,7 @@ public class Patient {
             return this;
         }
 
-        public Builder pesel(String pesel) {
+        public Builder pesel(int pesel) {
             this.pesel = pesel;
             return this;
         }
@@ -114,6 +110,10 @@ public class Patient {
             this.address = address;
             return this;
         }
+        public Builder wiek(int wiek){
+            this.wiek = wiek;
+            return this;
+        }
 
         public Patient build() {
             Patient patient = new Patient();
@@ -122,6 +122,7 @@ public class Patient {
             patient.setLastName(lastName);
             patient.setPesel(pesel);
             patient.setBirthDate(birthDate);
+            patient.setWiek(wiek);
             patient.setAddress(address);
             return patient;
         }
@@ -144,9 +145,9 @@ public class Patient {
     public String toString() {
         return "Patient{" +
                 "id=" + id +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", pesel='" + pesel + '\'' +
+                ", firstName='" + super.getImie() + '\'' +
+                ", lastName='" + super.getNazwisko() + '\'' +
+                ", pesel='" + super.getPesel() + '\'' +
                 ", birthDate=" + birthDate +
                 ", address='" + address + '\'' +
                 '}';

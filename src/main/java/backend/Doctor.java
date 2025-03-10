@@ -4,10 +4,8 @@ import org.bson.types.ObjectId;
 
 import java.util.List;
 
-public class Doctor {
+public class Doctor extends Person{
     private ObjectId id;
-    private String firstName;
-    private String lastName;
     private String specialization;
     private List<String> availableDays;
     private String room;
@@ -19,8 +17,7 @@ public class Doctor {
     // Konstruktor z parametrami
     public Doctor(String firstName, String lastName, String specialization,
                   List<String> availableDays, String room, String contactInformation) {
-        this.firstName = firstName;
-        this.lastName = lastName;
+        super(firstName, lastName);
         this.specialization = specialization;
         this.availableDays = availableDays;
         this.room = room;
@@ -29,8 +26,8 @@ public class Doctor {
 
     // Gettery
     public ObjectId getId() { return id; }
-    public String getFirstName() { return firstName; }
-    public String getLastName() { return lastName; }
+    public String getFirstName() { return super.getImie(); }
+    public String getLastName() { return super.getNazwisko(); }
     public String getSpecialization() { return specialization; }
     public List<String> getAvailableDays() { return availableDays; }
     public String getRoom() { return room; }
@@ -38,8 +35,8 @@ public class Doctor {
 
     // Settery
     public void setId(ObjectId id) { this.id = id; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
+    public void setFirstName(String firstName) { super.setImie(firstName); }
+    public void setLastName(String lastName) { super.setNazwisko(lastName); }
     public void setSpecialization(String specialization) { this.specialization = specialization; }
     public void setAvailableDays(List<String> availableDays) { this.availableDays = availableDays; }
     public void setRoom(String room) { this.room = room; }
@@ -122,8 +119,8 @@ public class Doctor {
     public String toString() {
         return "Doctor{" +
                 "id=" + id +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
+                ", firstName='" + super.getImie() + '\'' +
+                ", lastName='" + super.getNazwisko() + '\'' +
                 ", specialization='" + specialization + '\'' +
                 ", availableDays=" + availableDays +
                 ", room='" + room + '\'' +

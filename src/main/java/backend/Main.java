@@ -22,9 +22,10 @@ public class Main {
                 Patient patient = new Patient.Builder()
                         .firstName("Jan")
                         .lastName("Kowalski")
-                        .pesel("12345678901")
+                        .pesel(123456789)
                         .birthDate(LocalDate.now())
                         .address("ul. Testowa 123, Warszawa")
+                        .wiek(12)
                         .build();
 
                 Patient createdPatient = patientRepo.createPatient(patient);
