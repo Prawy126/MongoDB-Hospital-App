@@ -19,20 +19,13 @@ public class MongoDatabaseConnector {
 
     public static MongoDatabase connectToDatabase() {
         try {
-            // Create a CodecRegistry that includes POJO support
             CodecRegistry pojoCodecRegistry = fromRegistries(
                     MongoClientSettings.getDefaultCodecRegistry(),
                     fromProviders(PojoCodecProvider.builder().automatic(true).build())
             );
 
-            // Configure the client settings with the codec registry
-            MongoClientSettings settings = MongoClientSettings.builder()
-                    .applyConnectionString(new com.mongodb.ConnectionString(
-                            String.format("mongodb://%s:%d", DB_IP, DB_PORT)))
-                    .codecRegistry(pojoCodecRegistry)
-                    .build();
+            MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(new com.mongodb.ConnectionString(String.format("mongodb://%s:%d", DB_IP, DB_PORT))).codecRegistry(pojoCodecRegistry).build();
 
-            // Create the client with the configured settings
             mongoClient = MongoClients.create(settings);
             MongoDatabase database = mongoClient.getDatabase(DB_NAME);
             System.out.println("Połączono z bazą danych: " + DB_NAME);
