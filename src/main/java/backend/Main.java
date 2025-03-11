@@ -1,10 +1,7 @@
 package backend;
 
 import com.mongodb.client.MongoDatabase;
-import org.bson.types.ObjectId;
-
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 public class Main {
@@ -13,24 +10,21 @@ public class Main {
 
         if (database != null) {
             try {
-                // Inicjalizacja repozytoriów
                 PatientRepository patientRepo = new PatientRepository(database);
                 DoctorRepository doctorRepo = new DoctorRepository(database);
                 AppointmentRepository appointmentRepo = new AppointmentRepository(database);
 
-                // Tworzenie pacjenta
                 Patient patient = new Patient.Builder()
                         .firstName("Jan")
                         .lastName("Kowalski")
                         .pesel(123456789)
                         .birthDate(LocalDate.now())
                         .address("ul. Testowa 123, Warszawa")
-                        .wiek(12)
+                        .age(12)
                         .build();
 
                 Patient createdPatient = patientRepo.createPatient(patient);
 
-                // Tworzenie lekarza
                 Doctor doctor = new Doctor.Builder()
                         .firstName("Anna")
                         .lastName("Nowak")

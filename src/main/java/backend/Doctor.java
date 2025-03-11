@@ -1,7 +1,6 @@
 package backend;
 
 import org.bson.types.ObjectId;
-
 import java.util.List;
 
 public class Doctor extends Person{
@@ -11,10 +10,8 @@ public class Doctor extends Person{
     private String room;
     private String contactInformation;
 
-    // Konstruktor domyślny wymagany przez MongoDB
     public Doctor() {}
 
-    // Konstruktor z parametrami
     public Doctor(String firstName, String lastName, String specialization,
                   List<String> availableDays, String room, String contactInformation) {
         super(firstName, lastName);
@@ -24,19 +21,17 @@ public class Doctor extends Person{
         this.contactInformation = contactInformation;
     }
 
-    // Gettery
     public ObjectId getId() { return id; }
-    public String getFirstName() { return super.getImie(); }
-    public String getLastName() { return super.getNazwisko(); }
+    public String getFirstName() { return super.getFistName(); }
+    public String getLastName() { return super.getLastName(); }
     public String getSpecialization() { return specialization; }
     public List<String> getAvailableDays() { return availableDays; }
     public String getRoom() { return room; }
     public String getContactInformation() { return contactInformation; }
 
-    // Settery
     public void setId(ObjectId id) { this.id = id; }
-    public void setFirstName(String firstName) { super.setImie(firstName); }
-    public void setLastName(String lastName) { super.setNazwisko(lastName); }
+    public void setFirstName(String firstName) { super.setFirstName(firstName); }
+    public void setLastName(String lastName) { super.setLastName(lastName); }
     public void setSpecialization(String specialization) { this.specialization = specialization; }
     public void setAvailableDays(List<String> availableDays) { this.availableDays = availableDays; }
     public void setRoom(String room) { this.room = room; }
@@ -119,8 +114,8 @@ public class Doctor extends Person{
     public String toString() {
         return "Doctor{" +
                 "id=" + id +
-                ", firstName='" + super.getImie() + '\'' +
-                ", lastName='" + super.getNazwisko() + '\'' +
+                ", firstName='" + super.getFistName() + '\'' +
+                ", lastName='" + super.getLastName() + '\'' +
                 ", specialization='" + specialization + '\'' +
                 ", availableDays=" + availableDays +
                 ", room='" + room + '\'' +

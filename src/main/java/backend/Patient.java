@@ -1,8 +1,7 @@
 package backend;
-import org.bson.types.ObjectId;
 
+import org.bson.types.ObjectId;
 import java.time.LocalDate;
-import java.util.Date;
 
 public class Patient extends Person{
     private ObjectId id;
@@ -14,11 +13,11 @@ public class Patient extends Person{
     }
 
     public String getFirstName() {
-        return super.getImie();
+        return super.getFistName();
     }
 
     public String getLastName() {
-        return super.getNazwisko();
+        return super.getLastName();
     }
 
 
@@ -30,8 +29,8 @@ public class Patient extends Person{
         return address;
     }
 
-    public void ustawWiek(int wiek){
-        super.setWiek(wiek);
+    public void setAge(int age){
+        super.setAge(age);
     }
 
     Patient() {
@@ -43,11 +42,11 @@ public class Patient extends Person{
     }
 
     public void setFirstName(String firstName) {
-        setImie(firstName);
+        super.setFirstName(firstName);
     }
 
     public void setLastName(String lastName) {
-        setNazwisko(lastName);
+        super.setLastName(lastName);
     }
 
     public void setPesel(int pesel) {
@@ -69,14 +68,13 @@ public class Patient extends Person{
         this.address = address;
     }
 
-    // Klasa Builder
     public static class Builder {
         private ObjectId id;
         private String firstName;
         private String lastName;
         private int pesel;
         private LocalDate birthDate;
-        private int wiek;
+        private int age;
         private String address;
 
         public Builder() {}
@@ -110,8 +108,8 @@ public class Patient extends Person{
             this.address = address;
             return this;
         }
-        public Builder wiek(int wiek){
-            this.wiek = wiek;
+        public Builder age(int age){
+            this.age = age;
             return this;
         }
 
@@ -122,7 +120,7 @@ public class Patient extends Person{
             patient.setLastName(lastName);
             patient.setPesel(pesel);
             patient.setBirthDate(birthDate);
-            patient.setWiek(wiek);
+            patient.setAge(age);
             patient.setAddress(address);
             return patient;
         }
@@ -145,8 +143,8 @@ public class Patient extends Person{
     public String toString() {
         return "Patient{" +
                 "id=" + id +
-                ", firstName='" + super.getImie() + '\'' +
-                ", lastName='" + super.getNazwisko() + '\'' +
+                ", firstName='" + super.getFistName() + '\'' +
+                ", lastName='" + super.getLastName() + '\'' +
                 ", pesel='" + super.getPesel() + '\'' +
                 ", birthDate=" + birthDate +
                 ", address='" + address + '\'' +

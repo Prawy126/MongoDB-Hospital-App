@@ -1,7 +1,6 @@
 package backend;
 
 import org.bson.types.ObjectId;
-
 import java.time.LocalDate;
 
 public class Appointment {
@@ -13,10 +12,8 @@ public class Appointment {
     private String description;
     private AppointmentStatus status;
 
-    // Konstruktor domyślny wymagany przez MongoDB
     public Appointment() {}
 
-    // Konstruktor z parametrami
     public Appointment(ObjectId patientId, ObjectId doctorId, LocalDate date,
                        String room, String description, AppointmentStatus status) {
         this.patientId = patientId;
@@ -27,7 +24,6 @@ public class Appointment {
         this.status = status;
     }
 
-    // Gettery
     public ObjectId getId() { return id; }
     public ObjectId getPatientId() { return patientId; }
     public ObjectId getDoctorId() { return doctorId; }
@@ -36,7 +32,6 @@ public class Appointment {
     public String getDescription() { return description; }
     public AppointmentStatus getStatus() { return status; }
 
-    // Settery
     public void setId(ObjectId id) { this.id = id; }
     public void setPatientId(ObjectId patientId) { this.patientId = patientId; }
     public void setDoctorId(ObjectId doctorId) { this.doctorId = doctorId; }
@@ -45,7 +40,6 @@ public class Appointment {
     public void setDescription(String description) { this.description = description; }
     public void setStatus(AppointmentStatus status) { this.status = status; }
 
-    // Klasa Builder
     public static class Builder {
         private ObjectId id;
         private ObjectId patientId;

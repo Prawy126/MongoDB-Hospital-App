@@ -3,13 +3,9 @@ package backend;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
-
 import java.util.List;
 import java.util.Optional;
-
-import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.ne;
 
 public class PatientRepository {
     private final MongoCollection<Patient> collection;
@@ -50,5 +46,5 @@ public class PatientRepository {
     public void deletePatient(ObjectId id) {
         collection.deleteOne(eq("_id", id));
     }
-    
+
 }
