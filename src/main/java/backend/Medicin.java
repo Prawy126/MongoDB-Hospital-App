@@ -1,9 +1,11 @@
 package backend;
 
 import org.bson.types.ObjectId;
-
 import java.util.List;
 
+/**
+ * Klasa Medicin reprezentuje lek w systemie.
+ */
 public class Medicin {
     private ObjectId id;
     private String name;

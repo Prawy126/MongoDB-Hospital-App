@@ -4,6 +4,9 @@ import com.mongodb.client.MongoDatabase;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Klasa Main zawiera przykładowy kod wykorzystujący repozytoria pacjentów, lekarzy i wizyt.
+ */
 public class Main {
     public static void main(String[] args) {
         MongoDatabase database = MongoDatabaseConnector.connectToDatabase();

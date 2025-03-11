@@ -3,16 +3,17 @@ package backend;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.ne;
 
+/**
+ * Klasa DoctorRepository zarządza operacjami CRUD dla kolekcji lekarzy w bazie danych MongoDB.
+ */
 public class DoctorRepository {
     private final MongoCollection<Doctor> collection;
 

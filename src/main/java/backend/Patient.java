@@ -3,6 +3,9 @@ package backend;
 import org.bson.types.ObjectId;
 import java.time.LocalDate;
 
+/**
+ * Klasa Patient reprezentuje pacjenta w systemie.
+ */
 public class Patient extends Person{
     private ObjectId id;
     private LocalDate birthDate;

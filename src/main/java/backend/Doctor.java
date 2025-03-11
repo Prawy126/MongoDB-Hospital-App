@@ -3,6 +3,9 @@ package backend;
 import org.bson.types.ObjectId;
 import java.util.List;
 
+/**
+ * Klasa Doctor reprezentuje lekarza w systemie.
+ */
 public class Doctor extends Person{
     private ObjectId id;
     private String specialization;

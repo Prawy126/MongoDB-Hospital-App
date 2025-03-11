@@ -5,6 +5,9 @@ import org.bson.types.ObjectId;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Klasa Nurse reprezentuje pielęgniarkę w systemie.
+ */
 public class Nurse extends Person {
     private String specialization;
     private List<Assignment> assignments;

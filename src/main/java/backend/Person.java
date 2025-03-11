@@ -17,6 +17,7 @@ public class Person {
         this.lastName = lastName;
         this.pesel = pesel;
     }
+
     public Person(String firstName, String lastName, int pesel, int age){
         this.firstName = firstName;
         this.lastName = lastName;

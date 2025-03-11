@@ -3,6 +3,9 @@ package backend;
 import org.bson.types.ObjectId;
 import java.util.Date;
 
+/**
+ * Klasa Assignment reprezentuje przypisanie pacjenta do leczenia.
+ */
 class Assignment {
     private ObjectId patientId;
     private ObjectId treatmentId;

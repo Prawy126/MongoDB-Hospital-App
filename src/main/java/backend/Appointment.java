@@ -3,6 +3,9 @@ package backend;
 import org.bson.types.ObjectId;
 import java.time.LocalDate;
 
+/**
+ * Klasa Appointment reprezentuje wizytę pacjenta u lekarza.
+ */
 public class Appointment {
     private ObjectId id;
     private ObjectId patientId;

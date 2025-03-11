@@ -4,6 +4,9 @@ import org.bson.types.ObjectId;
 
 import java.util.Date;
 
+/**
+ * Klasa Prescription reprezentuje receptę wystawioną przez lekarza.
+ */
 public class Prescription {
     private ObjectId id;
     private ObjectId pacjentId;

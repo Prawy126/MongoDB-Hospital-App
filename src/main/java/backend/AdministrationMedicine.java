@@ -3,6 +3,9 @@ package backend;
 import org.bson.types.ObjectId;
 import java.util.Date;
 
+/**
+ * Klasa AdministrationMedicine reprezentuje podanie leku pacjentowi przez pielęgniarkę.
+ */
 public class AdministrationMedicine {
     private ObjectId id;
     private ObjectId prescriptionId;

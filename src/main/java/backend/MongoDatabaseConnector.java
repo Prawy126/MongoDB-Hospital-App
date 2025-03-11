@@ -10,6 +10,9 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
+/**
+ * Klasa MongoDatabaseConnector służy do zarządzania połączeniem z bazą danych MongoDB.
+ */
 public class MongoDatabaseConnector {
     private static final String DB_IP = "192.168.84.191";
     private static final int DB_PORT = 27017;
@@ -17,6 +20,11 @@ public class MongoDatabaseConnector {
 
     private static MongoClient mongoClient;
 
+    /**
+     * Nawiązuje połączenie z bazą danych MongoDB.
+     *
+     * @return obiekt MongoDatabase reprezentujący połączenie z bazą danych
+     */
     public static MongoDatabase connectToDatabase() {
         try {
             CodecRegistry pojoCodecRegistry = fromRegistries(
@@ -24,7 +32,10 @@ public class MongoDatabaseConnector {
                     fromProviders(PojoCodecProvider.builder().automatic(true).build())
             );
 
-            MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(new com.mongodb.ConnectionString(String.format("mongodb://%s:%d", DB_IP, DB_PORT))).codecRegistry(pojoCodecRegistry).build();
+            MongoClientSettings settings = MongoClientSettings.builder()
+                    .applyConnectionString(new com.mongodb.ConnectionString(String.format("mongodb://%s:%d", DB_IP, DB_PORT)))
+                    .codecRegistry(pojoCodecRegistry)
+                    .build();
 
             mongoClient = MongoClients.create(settings);
             MongoDatabase database = mongoClient.getDatabase(DB_NAME);
@@ -36,6 +47,9 @@ public class MongoDatabaseConnector {
         }
     }
 
+    /**
+     * Zamyka połączenie z bazą danych MongoDB.
+     */
     public static void close() {
         if (mongoClient != null) {
             try {
