@@ -1,80 +1,84 @@
-# Bazy danych: Klucz-Wartość i Obiektowe
+# Projekt zaliczeniowy z przedmiotu nie relacyjne bazy danych
+## Aplikacja zarządzająca szpitalem z użyciem MongoDB(Obiektowo) oraz Java
 
-## 📚 Bazy Klucz-Wartość
+Ten projekt stanowi zaliczenie z przedmiotu dotyczącego nierelacyjnych baz danych. Został napisany w języku Java i prezentuje implementację rozwiązań typowych dla systemów bazodanowych działających w modelu nierelacyjnym.
 
-### **Redis**
-- **Opis**: Szybka baza danych działająca w pamięci RAM z obsługą trwałego zapisu.
-- **Zastosowania**: Cache’owanie, systemy głosowań w czasie rzeczywistym, kolejki komunikatów.
-- **Link**: [Dokumentacja Redis](https://redis.io/documentation)
+## Spis treści
 
-### **Amazon DynamoDB**
-- **Opis**: W pełni zarządzana baza NoSQL od AWS, skalowalna i wydajna.
-- **Zastosowania**: Aplikacje webowe, systemy logowania, analiza danych w czasie rzeczywistym.
-- **Link**: [Dokumentacja DynamoDB](https://docs.aws.amazon.com/dynamodb/)
+- [Opis projektu](#opis-projektu)
+- [Funkcjonalności](#funkcjonalności)
+- [Wymagania](#wymagania)
+- [Instalacja](#instalacja)
+- [Sposób użycia](#sposób-użycia)
+- [Struktura projektu](#struktura-projektu)
+- [Autor](#autor)
+- [Licencja](#licencja)
 
-### **TinyDB (Python)**
-- **Opis**: Lekka, osadzona baza danych dla Pythina, przechowująca dane w formacie JSON.
-- **Zastosowania**: Małe aplikacje lokalne, prototypowanie, projekty edukacyjne.
-- **Link**: [TinyDB GitHub](https://github.com/msiemens/tinydb)
+## Opis projektu
 
-### **MapDB (Java)**
-- **Opis**: Osadzona baza dla Javy, wspierająca struktury takie jak mapy i kolekcje.
-- **Zastosowania**: Cache’owanie, przechowywanie dużych zbiorów danych w pamięci.
-- **Link**: [MapDB GitHub](https://github.com/jankotek/mapdb)
+Projekt został stworzony w ramach zaliczenia przedmiotu dotyczącego nierelacyjnych baz danych. Głównym celem projektu jest implementacja rozwiązań, które demonstrują możliwości przechowywania i przetwarzania dużych zbiorów danych w modelu nierelacyjnym. Projekt jest przykładem na wykorzystanie technologii Java w połączeniu z nowoczesnymi podejściami do zarządzania danymi.
 
----
+## Funkcjonalności
 
-## 🧩 Bazy Obiektowe
+- Implementacja podstawowych operacji na danych (CRUD).
+- Przykłady zarządzania obiektami w systemie nierelacyjnym.
+- Integracja z wybranymi technologiami bazodanowymi.
+- Wsparcie dla przetwarzania danych w czasie rzeczywistym.
 
-### **ObjectDB**
-- **Opis**: Czysto obiektowa baza danych dla Javy, kompatybilna ze standardem JPA.
-- **Zastosowania**: Aplikacje korporacyjne, systemy zarządzania relacjami między obiektami.
-- **Link**: [ObjectDB Docs](https://www.objectdb.com/)
+## Wymagania
 
-### **MongoDB**
-- **Opis**: Dokumentowa baza NoSQL z mapowaniem obiektowym (przez format BSON).
-- **Zastosowania**: Aplikacje webowe, systemy CMS, analiza danych.
-- **Link**: [MongoDB Docs](https://www.mongodb.com/docs/)
+- Java 11 lub nowsza
+- Maven lub Gradle jako system budowania projektu
+- Inne wymagane biblioteki są określone w pliku konfiguracyjnym projektu (np. `pom.xml` lub `build.gradle`)
 
-### **Versant**
-- **Opis**: Komercyjna baza obiektowa dla zaawansowanych zastosowań (np. finanse, telekomunikacja).
-- **Zastosowania**: Systemy wymagające skomplikowanych hierarchii obiektów i niskich opóźnień.
-- **Link**: [Versant Official](https://www.actian.com/versant/)
+## Instalacja
 
----
+1. Sklonuj repozytorium:
+   ```bash
+   git clone https://github.com/Prawy126/bazy-nierelacyjne.git
+   ```
+2. Przejdź do katalogu projektu:
+   ```bash
+   cd bazy-nierelacyjne
+   ```
+3. Zbuduj projekt przy użyciu wybranego narzędzia:
+   - Za pomocą Mavena:
+     ```bash
+     mvn clean install
+     ```
+   - Za pomocą Gradle:
+     ```bash
+     gradle build
+     ```
 
-## 📋 Lista baz do wyboru
+## Sposób użycia
 
-- [x] **ObjectDB** (obiektowa)  
-- [x] **MongoDB** (obiektowa/dokumentowa)  
-- [x] **Versant** (obiektowa)  
-- [x] **Redis** (klucz-wartość)  
-- [x] **DynamoDB (AWS)** (klucz-wartość)  
-- [x] **TinyDB (Python)** (klucz-wartość, osadzona)  
-- [x] **MapDB (Java)** (klucz-wartość, osadzona)  
+Po zbudowaniu projektu uruchom aplikację. W zależności od implementacji, aplikacja może wymagać dodatkowej konfiguracji, która znajduje się w dokumentacji technicznej lub komentarzach wewnątrz kodu.
 
----
+Przykładowe uruchomienie aplikacji:
+```bash
+java -jar target/nazwa-aplikacji.jar
+```
 
-## 💡 Propozycje projektów
+## Struktura projektu
 
-### **Dla ObjectDB (obiektowa)**
-- **Temat**: *System zarządzania szpitalem z hierarchią klas (Pacjent, Lekarz, Oddział)*.  
-- **Poziom trudności**: 5.0/5.0  
-- **Funkcje**:  
-  - Dziedziczenie klas (`Osoba → Pacjent/Lekarz`).  
-  - Zaawansowane zapytania JPQL (np. znajdź wolne łóżka na oddziale).  
+```
+Prawy126/bazy-nierelacyjne
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── [pakiety z kodem źródłowym Java]
+│   │   └── resources
+│   └── test
+│       └── java
+├── pom.xml lub build.gradle
+└── README.md
+```
 
-### **Dla MongoDB (obiektowa/dokumentowa)**
-- **Temat**: *Platforma blogowa z komentarzami i tagami*.  
-- **Poziom trudności**: 4.0/5.0  
-- **Funkcje**:  
-  - Mapowanie obiektów do dokumentów BSON.  
-  - Wyszukiwanie postów po tagach z użyciem agregacji.  
+## Autor
 
-### **Dla Redis (klucz-wartość)**
-- **Temat**: *System ankiet z wynikami w czasie rzeczywistym*.  
-- **Poziom trudności**: 4.0/5.0  
-- **Funkcje**:  
-  - Atomowe operacje `INCR` do zliczania głosów.  
-  - Wygaśnięcie ankiet po czasie (`EXPIRE`).  
+Projekt został stworzony przez Michał Pilecki oraz Jakub Opar
 
+## Licencja
+
+Projekt jest dostępny na licencji MIT. Szczegóły znajdują się w pliku `LICENSE`.
