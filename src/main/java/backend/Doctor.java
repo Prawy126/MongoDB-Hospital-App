@@ -28,6 +28,8 @@ public class Doctor extends Person{
     public List<String> getAvailableDays() { return availableDays; }
     public String getRoom() { return room; }
     public String getContactInformation() { return contactInformation; }
+    public int getAge() { return super.getAge(); }
+    public int getPesel() { return super.getPesel(); }
 
     public void setId(ObjectId id) { this.id = id; }
     public void setFirstName(String firstName) { super.setFirstName(firstName); }
@@ -36,8 +38,9 @@ public class Doctor extends Person{
     public void setAvailableDays(List<String> availableDays) { this.availableDays = availableDays; }
     public void setRoom(String room) { this.room = room; }
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
+    public void setAge(int age) { super.setAge(age); }
+    public void setPesel(int pesel) { super.setPesel(pesel); }
 
-    // Klasa Builder
     public static class Builder {
         private ObjectId id;
         private String firstName;
@@ -45,6 +48,8 @@ public class Doctor extends Person{
         private String specialization;
         private List<String> availableDays;
         private String room;
+        private int age;
+        private int pesel;
         private String contactInformation;
 
         public Builder() {}
@@ -83,6 +88,14 @@ public class Doctor extends Person{
             this.contactInformation = contactInformation;
             return this;
         }
+        public Builder age(int age) {
+            this.age = age;
+            return this;
+        }
+        public Builder pesel(int pesel) {
+            this.pesel = pesel;
+            return this;
+        }
 
         public Doctor build() {
             Doctor doctor = new Doctor();
@@ -92,6 +105,8 @@ public class Doctor extends Person{
             doctor.setSpecialization(specialization);
             doctor.setAvailableDays(availableDays);
             doctor.setRoom(room);
+            doctor.setPesel(pesel);
+            doctor.setAge(age);
             doctor.setContactInformation(contactInformation);
             return doctor;
         }

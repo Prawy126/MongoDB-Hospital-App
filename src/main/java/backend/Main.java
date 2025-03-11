@@ -30,6 +30,8 @@ public class Main {
                         .lastName("Nowak")
                         .specialization("Kardiolog")
                         .availableDays(List.of("Poniedziałek", "Środa", "Piątek"))
+                        .age(45)
+                        .pesel(987654321)
                         .build();
 
                 Doctor createdDoctor = doctorRepo.createDoctor(doctor);
