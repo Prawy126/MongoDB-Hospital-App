@@ -1,9 +1,6 @@
 package backend;
 
-import backend.mongo.AppointmentRepository;
-import backend.mongo.DoctorRepository;
-import backend.mongo.MongoDatabaseConnector;
-import backend.mongo.PatientRepository;
+import backend.mongo.*;
 import com.mongodb.client.MongoDatabase;
 
 /**

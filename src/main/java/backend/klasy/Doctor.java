@@ -1,5 +1,6 @@
 package backend.klasy;
 
+import backend.status.Day;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
@@ -12,14 +13,14 @@ import java.util.List;
 public class Doctor extends Person {
     private ObjectId id;
     private String specialization;
-    private List<String> availableDays;
+    private List<Day> availableDays;
     private String room;
     private String contactInformation;
 
     public Doctor() {}
 
     public Doctor(String firstName, String lastName, String specialization,
-                  List<String> availableDays, String room, String contactInformation)throws NullNameException {
+                  List<Day> availableDays, String room, String contactInformation)throws NullNameException {
         super(firstName, lastName);
         this.specialization = specialization;
         this.availableDays = availableDays;
@@ -31,7 +32,7 @@ public class Doctor extends Person {
     public String getFirstName() { return super.getFirstName(); }
     public String getLastName() { return super.getLastName(); }
     public String getSpecialization() { return specialization; }
-    public List<String> getAvailableDays() { return availableDays; }
+    public List<Day> getAvailableDays() { return availableDays; }
     public String getRoom() { return room; }
     public String getContactInformation() { return contactInformation; }
     public int getAge() { return super.getAge(); }
@@ -41,7 +42,7 @@ public class Doctor extends Person {
     public void setFirstName(String firstName) throws NullNameException{ super.setFirstName(firstName); }
     public void setLastName(String lastName) throws NullNameException{ super.setLastName(lastName); }
     public void setSpecialization(String specialization) { this.specialization = specialization; }
-    public void setAvailableDays(List<String> availableDays) { this.availableDays = availableDays; }
+    public void setAvailableDays(List<Day> availableDays) { this.availableDays = availableDays; }
     public void setRoom(String room) { this.room = room; }
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
     public void setAge(int age)throws AgeException { if(age >= 25)super.setAge(age);else throw new AgeException("Wiek lekarza nie może być mniejszy niż 25"); }
@@ -52,7 +53,7 @@ public class Doctor extends Person {
         private String firstName;
         private String lastName;
         private String specialization;
-        private List<String> availableDays;
+        private List<Day> availableDays;
         private String room;
         private int age;
         private long pesel;
@@ -80,7 +81,7 @@ public class Doctor extends Person {
             return this;
         }
 
-        public Builder availableDays(List<String> availableDays) {
+        public Builder availableDays(List<Day> availableDays) {
             this.availableDays = availableDays;
             return this;
         }

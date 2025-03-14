@@ -4,6 +4,7 @@ import backend.status.AppointmentStatus;
 import backend.klasy.Appointment;
 import backend.klasy.Doctor;
 import backend.klasy.Patient;
+import backend.status.Day;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
@@ -81,7 +82,7 @@ public class AppointmentRepository {
                     .specialization("Kardiolog")
                     .pesel(11122233311L)
                     .age(45)
-                    .availableDays(List.of("Poniedziałek", "Środa", "Piątek"))
+                    .availableDays(List.of(Day.MONDAY, Day.WEDNESDAY, Day.FRIDAY))
                     .build();
 
             // Tworzenie wizyty

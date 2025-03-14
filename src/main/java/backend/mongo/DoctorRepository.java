@@ -1,6 +1,7 @@
 package backend.mongo;
 
 import backend.klasy.Doctor;
+import backend.status.Day;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
@@ -65,7 +66,7 @@ public class DoctorRepository {
                     .specialization("Kardiolog")
                     .pesel(11122233311L)
                     .age(45)
-                    .availableDays(List.of("Poniedziałek", "Środa", "Piątek"))
+                    .availableDays(List.of(Day.MONDAY, Day.WEDNESDAY, Day.FRIDAY))
                     .build();
 
             Doctor createdDoctor = createDoctor(testDoctor);
@@ -92,7 +93,7 @@ public class DoctorRepository {
             System.out.println("[OK] Liczba wszystkich lekarzy w bazie: " + allDoctors.size());
 
             // Aktualizacja lekarza
-            createdDoctor.setAvailableDays(List.of("Wtorek", "Czwartek"));
+            createdDoctor.setAvailableDays(List.of(Day.THURSDAY, Day.SATURDAY));
             Doctor updatedDoctor = updateDoctor(createdDoctor);
             System.out.println("[OK] Zaktualizowano dni przyjęć lekarza: " + updatedDoctor.getAvailableDays());
 

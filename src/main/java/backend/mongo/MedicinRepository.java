@@ -1,6 +1,7 @@
 package backend.mongo;
 
 import backend.klasy.Medicin;
+import backend.status.Type;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -61,8 +62,8 @@ public class MedicinRepository {
             // Dodawanie nowego leku
             Medicin testMedicin = new Medicin(
                     "Paracetamol",
-                    "Tabletka",
-                    "500mg",
+                    Type.tablets,
+                    500,
                     List.of("Brak"),
                     false
             );
@@ -79,7 +80,7 @@ public class MedicinRepository {
             System.out.println("[OK] Liczba wszystkich leków w bazie: " + allMedicins.size());
 
             // Aktualizacja leku
-            createdMedicin.setDose("650mg");
+            createdMedicin. setDose(650);
             Medicin updatedMedicin = updateMedicin(createdMedicin);
             System.out.println("[OK] Zaktualizowano dawkę leku: " + updatedMedicin.getDose());
 
