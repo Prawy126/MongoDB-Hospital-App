@@ -6,7 +6,7 @@ import java.time.LocalDate;
 /**
  * Klasa Patient reprezentuje pacjenta w systemie.
  */
-public class Patient extends Person{
+public class Patient extends Person {
     private ObjectId id;
     private LocalDate birthDate;
     private String address;
@@ -16,13 +16,12 @@ public class Patient extends Person{
     }
 
     public String getFirstName() {
-        return super.getFistName();
+        return super.getFirstName();
     }
 
     public String getLastName() {
         return super.getLastName();
     }
-
 
     public LocalDate getBirthDate() {
         return birthDate;
@@ -32,12 +31,12 @@ public class Patient extends Person{
         return address;
     }
 
-    public void setAge(int age){
+    public void setAge(int age) {
         super.setAge(age);
     }
 
-    Patient() {
-
+    public Patient() {
+        // Public no-argument constructor
     }
 
     public void setId(ObjectId id) {
@@ -66,7 +65,7 @@ public class Patient extends Person{
 
     // Konstruktor z parametrami
     public Patient(String firstName, String lastName, String pesel, LocalDate birthDate, String address) {
-        super(firstName,lastName,Integer.parseInt(pesel));
+        super(firstName, lastName, Integer.parseInt(pesel));
         this.birthDate = birthDate;
         this.address = address;
     }
@@ -111,7 +110,8 @@ public class Patient extends Person{
             this.address = address;
             return this;
         }
-        public Builder age(int age){
+
+        public Builder age(int age) {
             this.age = age;
             return this;
         }
@@ -146,7 +146,7 @@ public class Patient extends Person{
     public String toString() {
         return "Patient{" +
                 "id=" + id +
-                ", firstName='" + super.getFistName() + '\'' +
+                ", firstName='" + super.getFirstName() + '\'' +
                 ", lastName='" + super.getLastName() + '\'' +
                 ", pesel='" + super.getPesel() + '\'' +
                 ", birthDate=" + birthDate +

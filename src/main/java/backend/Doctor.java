@@ -25,7 +25,7 @@ public class Doctor extends Person{
     }
 
     public ObjectId getId() { return id; }
-    public String getFirstName() { return super.getFistName(); }
+    public String getFirstName() { return super.getFirstName(); }
     public String getLastName() { return super.getLastName(); }
     public String getSpecialization() { return specialization; }
     public List<String> getAvailableDays() { return availableDays; }
@@ -132,7 +132,7 @@ public class Doctor extends Person{
     public String toString() {
         return "Doctor{" +
                 "id=" + id +
-                ", firstName='" + super.getFistName() + '\'' +
+                ", firstName='" + super.getFirstName() + '\'' +
                 ", lastName='" + super.getLastName() + '\'' +
                 ", specialization='" + specialization + '\'' +
                 ", availableDays=" + availableDays +

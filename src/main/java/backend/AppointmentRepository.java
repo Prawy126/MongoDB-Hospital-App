@@ -121,4 +121,78 @@ public class AppointmentRepository {
     public List<Appointment> findAll() {
         return collection.find().into(new ArrayList<>());
     }
+
+    public void testAppointment() {
+        System.out.println("\n=== Rozpoczynam testowanie AppointmentRepository ===");
+
+        try {
+            // Tworzenie pacjenta i lekarza dla wizyty
+            Patient testPatient = new Patient.Builder()
+                    .firstName("Tomasz")
+                    .lastName("Nowak")
+                    .pesel(555666777)
+                    .birthDate(LocalDate.of(1990, 5, 10))
+                    .address("ul. Przykładowa 15, Wrocław")
+                    .age(34)
+                    .build();
+
+            Doctor testDoctor = new Doctor.Builder()
+                    .firstName("Maria")
+                    .lastName("Kowalska")
+                    .specialization("Neurolog")
+                    .availableDays(List.of("Poniedziałek", "Czwartek"))
+                    .age(48)
+                    .pesel(444333222)
+                    .build();
+
+            // Tworzenie wizyty
+            Appointment testAppointment = new Appointment.Builder()
+                    .patientId(testPatient)
+                    .doctorId(testDoctor)
+                    .date(LocalDate.now().plusDays(1))
+                    .room("Gabinet 12")
+                    .description("Badanie neurologiczne")
+                    .build();
+
+            Appointment createdAppointment = createAppointment(testAppointment);
+            System.out.println("[OK] Utworzono wizytę w sali: " + createdAppointment.getRoom());
+
+            // Wyszukiwanie wizyty po ID
+            Optional<Appointment> foundById = findAppointmentById(createdAppointment.getId());
+            System.out.println("[OK] Wyszukano wizytę po ID: " + foundById.orElse(null));
+
+            // Wyszukiwanie wizyt po ID pacjenta
+            List<Appointment> patientAppointments = findAppointmentsByPatientId(testPatient.getId());
+            System.out.println("[OK] Liczba wizyt pacjenta: " + patientAppointments.size());
+
+            // Wyszukiwanie wizyt po ID lekarza
+            List<Appointment> doctorAppointments = findAppointmentsByDoctorId(testDoctor.getId());
+            System.out.println("[OK] Liczba wizyt lekarza: " + doctorAppointments.size());
+
+            // Wyszukiwanie wizyt po dacie
+            List<Appointment> appointmentsByDate = findAppointmentsByDate(LocalDate.now().plusDays(1));
+            System.out.println("[OK] Liczba wizyt w danym dniu: " + appointmentsByDate.size());
+
+            // Wyszukiwanie dostępnych wizyt na dany dzień i specjalizację
+            List<Appointment> availableAppointments = findAvailableAppointments(LocalDate.now().plusDays(1), "Neurolog");
+            System.out.println("[OK] Liczba dostępnych wizyt dla specjalizacji 'Neurolog': " + availableAppointments.size());
+
+            // Aktualizacja wizyty
+            createdAppointment.setRoom("Gabinet 20");
+            createdAppointment.setDescription("Badanie neurologiczne i testy");
+            Appointment updatedAppointment = updateAppointment(createdAppointment);
+            System.out.println("[OK] Zaktualizowano wizytę: " + updatedAppointment.getDescription());
+
+            // Usuwanie wizyty
+            deleteAppointment(createdAppointment.getId());
+            System.out.println("[OK] Usunięto wizytę o ID: " + createdAppointment.getId());
+
+            System.out.println("[SUCCESS] Wszystkie testy dla AppointmentRepository zakończone pomyślnie!");
+
+        } catch (Exception e) {
+            System.err.println("[ERROR] Wystąpił błąd podczas testowania AppointmentRepository: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }

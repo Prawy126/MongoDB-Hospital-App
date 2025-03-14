@@ -3,12 +3,15 @@ package backend;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import static com.mongodb.client.model.Filters.eq;
 
 /*
-* Klasa zarządzajaca zapisem danych pacjenta do bazy MongoDB w sposób obiektowy*/
+ * Klasa zarządzajaca zapisem danych pacjenta do bazy MongoDB w sposób obiektowy*/
 public class PatientRepository {
     private final MongoCollection<Patient> collection;
 
@@ -43,7 +46,7 @@ public class PatientRepository {
      * @return lista wszystkich pacjentów
      */
     public List<Patient> findAll() {
-        return collection.find().into(List.of());
+        return collection.find().into(new ArrayList<>());
     }
 
     /**
@@ -53,7 +56,7 @@ public class PatientRepository {
      * @return lista pacjentów o podanym imieniu
      */
     public List<Patient> findPatientByFirstName(String firstName) {
-        return collection.find(eq("firstName", firstName)).into(List.of());
+        return collection.find(eq("firstName", firstName)).into(new ArrayList<>());
     }
 
     /**
@@ -63,7 +66,7 @@ public class PatientRepository {
      * @return lista pacjentów o podanym nazwisku
      */
     public List<Patient> findPatientByLastName(String lastName) {
-        return collection.find(eq("lastName", lastName)).into(List.of());
+        return collection.find(eq("lastName", lastName)).into(new ArrayList<>());
     }
 
     /**
@@ -73,7 +76,7 @@ public class PatientRepository {
      * @return lista pacjentów o podanym numerze PESEL
      */
     public List<Patient> findPatientByPesel(int pesel) {
-        return collection.find(eq("pesel", pesel)).into(List.of());
+        return collection.find(eq("pesel", pesel)).into(new ArrayList<>());
     }
 
     /**
@@ -83,7 +86,7 @@ public class PatientRepository {
      * @return lista pacjentów o podanym adresie
      */
     public List<Patient> findPatientByAddress(String address) {
-        return collection.find(eq("address", address)).into(List.of());
+        return collection.find(eq("address", address)).into(new ArrayList<>());
     }
 
     /**
@@ -93,7 +96,7 @@ public class PatientRepository {
      * @return lista pacjentów o podanej dacie urodzenia
      */
     public List<Patient> findPatientByBirthDate(String birthDate) {
-        return collection.find(eq("birthDate", birthDate)).into(List.of());
+        return collection.find(eq("birthDate", birthDate)).into(new ArrayList<>());
     }
 
     /**
@@ -115,4 +118,67 @@ public class PatientRepository {
     public void deletePatient(ObjectId id) {
         collection.deleteOne(eq("_id", id));
     }
+
+    public void testPatient() {
+        System.out.println("\n=== Rozpoczynam testowanie PatientRepository ===");
+
+        try {
+            // Tworzenie pacjenta
+            Patient testPatient = new Patient.Builder()
+                    .firstName("Testowy")
+                    .lastName("Pacjent")
+                    .pesel(111222333)
+                    .birthDate(LocalDate.now())
+                    .address("ul. Przykładowa 10, Kraków")
+                    .age(25)
+                    .build();
+
+            Patient createdPatient = createPatient(testPatient);
+            System.out.println("[OK] Utworzono pacjenta: " + createdPatient);
+
+            // Wyszukiwanie po ID
+            Optional<Patient> foundById = findPatientById(createdPatient.getId());
+            System.out.println("[OK] Wyszukano pacjenta po ID: " + foundById.orElse(null));
+
+            // Wyszukiwanie po imieniu
+            List<Patient> patientsByFirstName = findPatientByFirstName("Testowy");
+            System.out.println("[OK] Wyszukano pacjentów po imieniu 'Testowy': " + patientsByFirstName.size());
+
+            // Wyszukiwanie po nazwisku
+            List<Patient> patientsByLastName = findPatientByLastName("Pacjent");
+            System.out.println("[OK] Wyszukano pacjentów po nazwisku 'Pacjent': " + patientsByLastName.size());
+
+            // Wyszukiwanie po PESEL
+            List<Patient> patientsByPesel = findPatientByPesel(111222333);
+            System.out.println("[OK] Wyszukano pacjentów po PESEL '111222333': " + patientsByPesel.size());
+
+            // Wyszukiwanie po adresie
+            List<Patient> patientsByAddress = findPatientByAddress("ul. Przykładowa 10, Kraków");
+            System.out.println("[OK] Wyszukano pacjentów po adresie 'ul. Przykładowa 10, Kraków': " + patientsByAddress.size());
+
+            // Wyszukiwanie po dacie urodzenia
+            List<Patient> patientsByBirthDate = findPatientByBirthDate(LocalDate.now().toString());
+            System.out.println("[OK] Wyszukano pacjentów urodzonych dziś: " + patientsByBirthDate.size());
+
+            // Pobranie wszystkich pacjentów
+            List<Patient> allPatients = findAll();
+            System.out.println("[OK] Liczba wszystkich pacjentów w bazie: " + allPatients.size());
+
+            // Aktualizacja pacjenta
+            createdPatient.setAddress("ul. Zmieniona 20, Kraków");
+            Patient updatedPatient = updatePatient(createdPatient);
+            System.out.println("[OK] Zaktualizowano adres pacjenta: " + updatedPatient.getAddress());
+
+            // Usuwanie pacjenta
+            deletePatient(createdPatient.getId());
+            System.out.println("[OK] Usunięto pacjenta o ID: " + createdPatient.getId());
+
+            System.out.println("[SUCCESS] Wszystkie testy zakończone pomyślnie!");
+
+        } catch (Exception e) {
+            System.err.println("[ERROR] Wystąpił błąd podczas testowania PatientRepository: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }

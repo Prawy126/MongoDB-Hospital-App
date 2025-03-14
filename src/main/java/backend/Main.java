@@ -1,11 +1,9 @@
 package backend;
 
 import com.mongodb.client.MongoDatabase;
-import java.time.LocalDate;
-import java.util.List;
 
 /**
- * Klasa Main zawiera przykładowy kod wykorzystujący repozytoria pacjentów, lekarzy i wizyt.
+ * Klasa Main zawiera kompleksowe testy funkcjonalności systemu medycznego.
  */
 public class Main {
     public static void main(String[] args) {
@@ -17,56 +15,25 @@ public class Main {
                 DoctorRepository doctorRepo = new DoctorRepository(database);
                 AppointmentRepository appointmentRepo = new AppointmentRepository(database);
 
-                Patient patient = new Patient.Builder()
-                        .firstName("Jan")
-                        .lastName("Kowalski")
-                        .pesel(123456789)
-                        .birthDate(LocalDate.now())
-                        .address("ul. Testowa 123, Warszawa")
-                        .age(12)
-                        .build();
+                // Testowanie metod PatientRepository
+                System.out.println("\n=== Testowanie metod PatientRepository ===");
+                patientRepo.testPatient();
 
-                Patient createdPatient = patientRepo.createPatient(patient);
+                // Testowanie metod DoctorRepository
+                System.out.println("\n=== Testowanie metod DoctorRepository ===");
+                doctorRepo.testDoctor();
 
-                Doctor doctor = new Doctor.Builder()
-                        .firstName("Anna")
-                        .lastName("Nowak")
-                        .specialization("Kardiolog")
-                        .availableDays(List.of("Poniedziałek", "Środa", "Piątek"))
-                        .age(45)
-                        .pesel(987654321)
-                        .build();
+                // Testowanie metod AppointmentRepository
+                System.out.println("\n=== Testowanie metod AppointmentRepository ===");
+                appointmentRepo.testAppointment();
 
-                Doctor createdDoctor = doctorRepo.createDoctor(doctor);
-
-                // Tworzenie wizyty
-                Appointment appointment = new Appointment.Builder()
-                        .patientId(createdPatient)
-                        .doctorId(createdDoctor)
-                        .date(LocalDate.now())
-                        .room("Sala 205")
-                        .description("Konsultacja kardiologiczna")
-                        .build();
-
-                Appointment createdAppointment = appointmentRepo.createAppointment(appointment);
-
-                System.out.printf("""
-                    Dodano nową wizytę:
-                    ID: %s
-                    Pacjent: %s %s
-                    Lekarz: %s %s
-                    Sala: %s
-                    Opis: %s
-                    """,
-                        createdAppointment.getId(),
-                        createdPatient.getFirstName(), createdPatient.getLastName(),
-                        createdDoctor.getFirstName(), createdDoctor.getLastName(),
-                        createdAppointment.getRoom(),
-                        createdAppointment.getDescription()
-                );
+            } catch (Exception e) {
+                System.err.println("[ERROR] Wystąpił błąd podczas testowania: " + e.getMessage());
+                e.printStackTrace();
             } finally {
                 MongoDatabaseConnector.close();
             }
         }
     }
 }
+

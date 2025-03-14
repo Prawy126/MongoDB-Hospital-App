@@ -55,4 +55,55 @@ public class DoctorRepository {
     public List<Doctor> findAll() {
         return collection.find().into(new ArrayList<>());
     }
+
+    public void testDoctor() {
+        System.out.println("\n=== Rozpoczynam testowanie DoctorRepository ===");
+
+        try {
+            // Tworzenie lekarza
+            Doctor testDoctor = new Doctor.Builder()
+                    .firstName("Marek")
+                    .lastName("Zieliński")
+                    .specialization("Ortopeda")
+                    .availableDays(List.of("Poniedziałek", "Środa"))
+                    .age(50)
+                    .pesel(888999000)
+                    .build();
+
+            Doctor createdDoctor = createDoctor(testDoctor);
+            System.out.println("[OK] Utworzono lekarza: " + createdDoctor);
+
+            // Wyszukiwanie po ID
+            Optional<Doctor> foundById = findDoctorById(createdDoctor.getId());
+            System.out.println("[OK] Wyszukano lekarza po ID: " + foundById.orElse(null));
+
+            // Wyszukiwanie lekarzy po specjalizacji
+            List<Doctor> doctorsBySpecialization = findDoctorsBySpecialization("Ortopeda");
+            System.out.println("[OK] Wyszukano lekarzy specjalizujących się w Ortopedii: " + doctorsBySpecialization.size());
+
+            // Wyszukiwanie dostępnych lekarzy na określony dzień
+            List<Doctor> availableDoctors = findAvailableDoctorsOnDate(LocalDate.now());
+            System.out.println("[OK] Wyszukano dostępnych lekarzy na dzisiejszy dzień: " + availableDoctors.size());
+
+            // Pobranie wszystkich lekarzy
+            List<Doctor> allDoctors = findAll();
+            System.out.println("[OK] Liczba wszystkich lekarzy w bazie: " + allDoctors.size());
+
+            // Aktualizacja lekarza
+            createdDoctor.setAvailableDays(List.of("Wtorek", "Czwartek"));
+            Doctor updatedDoctor = updateDoctor(createdDoctor);
+            System.out.println("[OK] Zaktualizowano dni przyjęć lekarza: " + updatedDoctor.getAvailableDays());
+
+            // Usuwanie lekarza
+            deleteDoctor(createdDoctor.getId());
+            System.out.println("[OK] Usunięto lekarza o ID: " + createdDoctor.getId());
+
+            System.out.println("[SUCCESS] Wszystkie testy dla DoctorRepository zakończone pomyślnie!");
+
+        } catch (Exception e) {
+            System.err.println("[ERROR] Wystąpił błąd podczas testowania DoctorRepository: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }
