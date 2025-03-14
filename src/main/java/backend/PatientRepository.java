@@ -26,6 +26,9 @@ public class PatientRepository {
      * @return utworzony pacjent
      */
     public Patient createPatient(Patient patient) {
+        if (patient == null) {
+            throw new IllegalArgumentException("Patient cannot be null");
+        }
         collection.insertOne(patient);
         return patient;
     }
@@ -127,7 +130,7 @@ public class PatientRepository {
             Patient testPatient = new Patient.Builder()
                     .firstName("Testowy")
                     .lastName("Pacjent")
-                    .pesel(111222333)
+                    .pesel(11122233311L) // Valid PESEL
                     .birthDate(LocalDate.now())
                     .address("ul. Przykładowa 10, Kraków")
                     .age(25)

@@ -42,7 +42,7 @@ public class Doctor extends Person{
     public void setRoom(String room) { this.room = room; }
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
     public void setAge(int age) { super.setAge(age); }
-    public void setPesel(int pesel)throws PeselException { super.setPesel(pesel); }
+    public void setPesel(long pesel)throws PeselException { super.setPesel(pesel); }
 
     public static class Builder {
         private ObjectId id;
@@ -52,7 +52,7 @@ public class Doctor extends Person{
         private List<String> availableDays;
         private String room;
         private int age;
-        private int pesel;
+        private long pesel;
         private String contactInformation;
 
         public Builder() {}
@@ -95,7 +95,7 @@ public class Doctor extends Person{
             this.age = age;
             return this;
         }
-        public Builder pesel(int pesel) {
+        public Builder pesel(long pesel) {
             this.pesel = pesel;
             return this;
         }
