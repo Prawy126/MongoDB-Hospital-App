@@ -1,5 +1,6 @@
-package backend;
+package backend.klasy;
 
+import backend.status.AppointmentStatus;
 import org.bson.types.ObjectId;
 import java.time.LocalDate;
 

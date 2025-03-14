@@ -1,12 +1,15 @@
-package backend;
+package backend.klasy;
 
+import backend.wyjatki.AgeException;
+import backend.wyjatki.NullNameException;
+import backend.wyjatki.PeselException;
 import org.bson.types.ObjectId;
 import java.util.List;
 
 /**
  * Klasa Doctor reprezentuje lekarza w systemie.
  */
-public class Doctor extends Person{
+public class Doctor extends Person {
     private ObjectId id;
     private String specialization;
     private List<String> availableDays;
@@ -16,7 +19,7 @@ public class Doctor extends Person{
     public Doctor() {}
 
     public Doctor(String firstName, String lastName, String specialization,
-                  List<String> availableDays, String room, String contactInformation)throws NullNameException{
+                  List<String> availableDays, String room, String contactInformation)throws NullNameException {
         super(firstName, lastName);
         this.specialization = specialization;
         this.availableDays = availableDays;
@@ -41,7 +44,7 @@ public class Doctor extends Person{
     public void setAvailableDays(List<String> availableDays) { this.availableDays = availableDays; }
     public void setRoom(String room) { this.room = room; }
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
-    public void setAge(int age) { super.setAge(age); }
+    public void setAge(int age)throws AgeException { if(age >= 25)super.setAge(age);else throw new AgeException("Wiek lekarza nie może być mniejszy niż 25"); }
     public void setPesel(int pesel)throws PeselException { super.setPesel(pesel); }
 
     public static class Builder {
@@ -111,10 +114,17 @@ public class Doctor extends Person{
             doctor.setPesel(pesel);
             doctor.setAge(age);
             doctor.setContactInformation(contactInformation);
-            return doctor;}catch (PeselException e){
+            return doctor;
+            }catch (PeselException e){
                 System.out.println(e.getMessage());
                 return null;
             }catch (NullNameException e) {
+                System.out.println(e.getMessage());
+                return null;
+            }catch (AgeException e){
+                System.out.println(e.getMessage());
+                return null;
+            }catch (Exception e){
                 System.out.println(e.getMessage());
                 return null;
             }

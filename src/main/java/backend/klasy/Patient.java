@@ -1,5 +1,8 @@
-package backend;
+package backend.klasy;
 
+import backend.wyjatki.AgeException;
+import backend.wyjatki.NullNameException;
+import backend.wyjatki.PeselException;
 import org.bson.types.ObjectId;
 import java.time.LocalDate;
 
@@ -31,7 +34,7 @@ public class Patient extends Person {
         return address;
     }
 
-    public void setAge(int age) {
+    public void setAge(int age)throws AgeException {
         super.setAge(age);
     }
 
@@ -129,6 +132,12 @@ public class Patient extends Person {
                 System.out.println(e.getMessage());
                 return null;
             }catch (NullNameException e){
+                System.out.println(e.getMessage());
+                return null;
+            }catch (AgeException e){
+                System.out.println(e.getMessage());
+                return null;
+            }catch (Exception e){
                 System.out.println(e.getMessage());
                 return null;
             }

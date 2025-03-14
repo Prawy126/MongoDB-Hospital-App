@@ -1,4 +1,4 @@
-package backend;
+package backend.status;
 
 /**
  * Enum DoctorStatus reprezentuje status lekarza.

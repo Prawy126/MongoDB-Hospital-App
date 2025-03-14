@@ -1,4 +1,4 @@
-package backend;
+package backend.klasy;
 
 import org.bson.types.ObjectId;
 import java.util.List;

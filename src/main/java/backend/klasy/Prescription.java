@@ -1,5 +1,6 @@
-package backend;
+package backend.klasy;
 
+import backend.Exhibitor;
 import org.bson.types.ObjectId;
 
 import java.util.Date;

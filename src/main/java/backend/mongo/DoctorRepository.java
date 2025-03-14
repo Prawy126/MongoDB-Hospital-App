@@ -1,5 +1,6 @@
-package backend;
+package backend.mongo;
 
+import backend.klasy.Doctor;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;

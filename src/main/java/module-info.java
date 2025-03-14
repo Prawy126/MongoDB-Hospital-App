@@ -20,4 +20,8 @@ module org.example.projekt {
     exports org.example.projekt;
 
     exports backend;
+    exports backend.klasy;
+    exports backend.wyjatki;
+    exports backend.mongo;
+    exports backend.status;
 }

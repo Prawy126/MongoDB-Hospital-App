@@ -1,4 +1,4 @@
-package backend;
+package backend.status;
 
 /**
  * Enum AppointmentStatus reprezentuje status wizyty.

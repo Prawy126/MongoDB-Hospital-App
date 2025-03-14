@@ -1,4 +1,8 @@
-package backend;
+package backend.klasy;
+
+import backend.wyjatki.AgeException;
+import backend.wyjatki.NullNameException;
+import backend.wyjatki.PeselException;
 
 public class Person {
     private String firstName;
@@ -23,11 +27,12 @@ public class Person {
         if(pesel > 9999999999L){this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
     }
 
-    public Person(String firstName, String lastName, long pesel, int age)throws PeselException, NullNameException {
+    public Person(String firstName, String lastName, long pesel, int age)throws PeselException, NullNameException, AgeException {
         if(firstName.length() > 0 && lastName.length() > 0) {this.firstName = firstName;
         this.lastName = lastName;}else throw new NullNameException("Imię i nazwisko nie mogą być puste");
         if(pesel > 9999999999L){this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
-        this.age = age;
+        if(age >= 0)this.age = age;
+        else throw new AgeException("Wiek nie może być ujemny");
     }
 
     public String getFirstName() {
@@ -56,8 +61,9 @@ public class Person {
         else throw new NullNameException("Nazwisko nie może być puste");
     }
 
-    public void setAge(int age) {
-        this.age = age;
+    public void setAge(int age) throws AgeException {
+        if(age >= 0)this.age = age;
+        else throw new AgeException("Wiek nie może być ujemny");
     }
 
     public void setPesel(long pesel)throws PeselException {

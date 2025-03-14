@@ -1,5 +1,9 @@
-package backend;
+package backend.mongo;
 
+import backend.status.AppointmentStatus;
+import backend.klasy.Appointment;
+import backend.klasy.Doctor;
+import backend.klasy.Patient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;

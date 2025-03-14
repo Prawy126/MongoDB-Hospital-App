@@ -1,5 +1,6 @@
-package backend;
+package backend.mongo;
 
+import backend.klasy.Medicin;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
