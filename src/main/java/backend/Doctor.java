@@ -16,7 +16,7 @@ public class Doctor extends Person{
     public Doctor() {}
 
     public Doctor(String firstName, String lastName, String specialization,
-                  List<String> availableDays, String room, String contactInformation) {
+                  List<String> availableDays, String room, String contactInformation)throws NullNameException{
         super(firstName, lastName);
         this.specialization = specialization;
         this.availableDays = availableDays;
@@ -35,8 +35,8 @@ public class Doctor extends Person{
     public long getPesel() { return super.getPesel(); }
 
     public void setId(ObjectId id) { this.id = id; }
-    public void setFirstName(String firstName) { super.setFirstName(firstName); }
-    public void setLastName(String lastName) { super.setLastName(lastName); }
+    public void setFirstName(String firstName) throws NullNameException{ super.setFirstName(firstName); }
+    public void setLastName(String lastName) throws NullNameException{ super.setLastName(lastName); }
     public void setSpecialization(String specialization) { this.specialization = specialization; }
     public void setAvailableDays(List<String> availableDays) { this.availableDays = availableDays; }
     public void setRoom(String room) { this.room = room; }
@@ -112,6 +112,9 @@ public class Doctor extends Person{
             doctor.setAge(age);
             doctor.setContactInformation(contactInformation);
             return doctor;}catch (PeselException e){
+                System.out.println(e.getMessage());
+                return null;
+            }catch (NullNameException e) {
                 System.out.println(e.getMessage());
                 return null;
             }
