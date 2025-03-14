@@ -39,10 +39,10 @@ public class MongoDatabaseConnector {
 
             mongoClient = MongoClients.create(settings);
             MongoDatabase database = mongoClient.getDatabase(DB_NAME);
-            System.out.println("Połączono z bazą danych: " + DB_NAME);
+            System.out.println("[SUCESS] Połączono z bazą danych: " + DB_NAME);
             return database;
         } catch (MongoException e) {
-            System.err.println("Błąd połączenia: " + e.getMessage());
+            System.err.println("[SUCESS] Błąd połączenia: " + e.getMessage());
             return null;
         }
     }
@@ -54,12 +54,12 @@ public class MongoDatabaseConnector {
         if (mongoClient != null) {
             try {
                 mongoClient.close();
-                System.out.println("Połączenie z bazą danych zostało zamknięte.");
+                System.out.println("[SUCCESS] Połączenie z bazą danych zostało zamknięte.");
             } catch (Exception e) {
-                System.err.println("Błąd podczas zamykania połączenia: " + e.getMessage());
+                System.err.println("[ERROR] Błąd podczas zamykania połączenia: " + e.getMessage());
             }
         } else {
-            System.out.println("Brak aktywnego połączenia do zamknięcia.");
+            System.out.println("[INFO] Brak aktywnego połączenia do zamknięcia.");
         }
     }
 }

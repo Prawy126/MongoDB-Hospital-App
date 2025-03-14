@@ -4,17 +4,12 @@ import backend.klasy.Doctor;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
-import java.time.LocalDate;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.ne;
 
-/**
- * Klasa DoctorRepository zarządza operacjami CRUD dla kolekcji lekarzy w bazie danych MongoDB.
- */
 public class DoctorRepository {
     private final MongoCollection<Doctor> collection;
 
@@ -23,6 +18,9 @@ public class DoctorRepository {
     }
 
     public Doctor createDoctor(Doctor doctor) {
+        if (doctor == null) {
+            throw new IllegalArgumentException("Doctor cannot be null");
+        }
         collection.insertOne(doctor);
         return doctor;
     }
@@ -31,17 +29,20 @@ public class DoctorRepository {
         return Optional.ofNullable(collection.find(eq("_id", id)).first());
     }
 
-    public List<Doctor> findDoctorsBySpecialization(String specialization) {
-        return collection.find(eq("specialization", specialization)).into(new ArrayList<>());
+    public List<Doctor> findAll() {
+        return collection.find().into(new ArrayList<>());
     }
 
-    public List<Doctor> findAvailableDoctorsOnDate(LocalDate date) {
-        return collection.find(
-                and(
-                        eq("availableDays", date.getDayOfWeek().toString()),
-                        ne("status", "UNAVAILABLE")
-                )
-        ).into(new ArrayList<>());
+    public List<Doctor> findDoctorByFirstName(String firstName) {
+        return collection.find(eq("firstName", firstName)).into(new ArrayList<>());
+    }
+
+    public List<Doctor> findDoctorByLastName(String lastName) {
+        return collection.find(eq("lastName", lastName)).into(new ArrayList<>());
+    }
+
+    public List<Doctor> findDoctorBySpecialization(String specialization) {
+        return collection.find(eq("specialization", specialization)).into(new ArrayList<>());
     }
 
     public Doctor updateDoctor(Doctor doctor) {
@@ -53,22 +54,18 @@ public class DoctorRepository {
         collection.deleteOne(eq("_id", id));
     }
 
-    public List<Doctor> findAll() {
-        return collection.find().into(new ArrayList<>());
-    }
-
     public void testDoctor() {
         System.out.println("\n=== Rozpoczynam testowanie DoctorRepository ===");
 
         try {
             // Tworzenie lekarza
             Doctor testDoctor = new Doctor.Builder()
-                    .firstName("Marek")
-                    .lastName("Zieliński")
-                    .specialization("Ortopeda")
-                    .availableDays(List.of("Poniedziałek", "Środa"))
-                    .age(50)
-                    .pesel(888999000)
+                    .firstName("Testowy")
+                    .lastName("Lekarz")
+                    .specialization("Kardiolog")
+                    .pesel(11122233311L)
+                    .age(45)
+                    .availableDays(List.of("Poniedziałek", "Środa", "Piątek"))
                     .build();
 
             Doctor createdDoctor = createDoctor(testDoctor);
@@ -78,13 +75,17 @@ public class DoctorRepository {
             Optional<Doctor> foundById = findDoctorById(createdDoctor.getId());
             System.out.println("[OK] Wyszukano lekarza po ID: " + foundById.orElse(null));
 
-            // Wyszukiwanie lekarzy po specjalizacji
-            List<Doctor> doctorsBySpecialization = findDoctorsBySpecialization("Ortopeda");
-            System.out.println("[OK] Wyszukano lekarzy specjalizujących się w Ortopedii: " + doctorsBySpecialization.size());
+            // Wyszukiwanie po imieniu
+            List<Doctor> doctorsByFirstName = findDoctorByFirstName("Testowy");
+            System.out.println("[OK] Wyszukano lekarzy po imieniu 'Testowy': " + doctorsByFirstName.size());
 
-            // Wyszukiwanie dostępnych lekarzy na określony dzień
-            List<Doctor> availableDoctors = findAvailableDoctorsOnDate(LocalDate.now());
-            System.out.println("[OK] Wyszukano dostępnych lekarzy na dzisiejszy dzień: " + availableDoctors.size());
+            // Wyszukiwanie po nazwisku
+            List<Doctor> doctorsByLastName = findDoctorByLastName("Lekarz");
+            System.out.println("[OK] Wyszukano lekarzy po nazwisku 'Lekarz': " + doctorsByLastName.size());
+
+            // Wyszukiwanie po specjalizacji
+            List<Doctor> doctorsBySpecialization = findDoctorBySpecialization("Kardiolog");
+            System.out.println("[OK] Wyszukano lekarzy o specjalizacji 'Kardiolog': " + doctorsBySpecialization.size());
 
             // Pobranie wszystkich lekarzy
             List<Doctor> allDoctors = findAll();
@@ -99,12 +100,11 @@ public class DoctorRepository {
             deleteDoctor(createdDoctor.getId());
             System.out.println("[OK] Usunięto lekarza o ID: " + createdDoctor.getId());
 
-            System.out.println("[SUCCESS] Wszystkie testy dla DoctorRepository zakończone pomyślnie!");
+            System.out.println("[SUCCESS] Wszystkie testy zakończone pomyślnie!");
 
         } catch (Exception e) {
             System.err.println("[ERROR] Wystąpił błąd podczas testowania DoctorRepository: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
 }
