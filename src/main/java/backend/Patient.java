@@ -51,7 +51,7 @@ public class Patient extends Person {
         super.setLastName(lastName);
     }
 
-    public void setPesel(int pesel) {
+    public void setPesel(long pesel)throws PeselException {
         super.setPesel(pesel);
     }
 
@@ -64,8 +64,8 @@ public class Patient extends Person {
     }
 
     // Konstruktor z parametrami
-    public Patient(String firstName, String lastName, String pesel, LocalDate birthDate, String address) {
-        super(firstName, lastName, Integer.parseInt(pesel));
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address) throws PeselException {
+        super(firstName, lastName, pesel);
         this.birthDate = birthDate;
         this.address = address;
     }
@@ -74,7 +74,7 @@ public class Patient extends Person {
         private ObjectId id;
         private String firstName;
         private String lastName;
-        private int pesel;
+        private long pesel;
         private LocalDate birthDate;
         private int age;
         private String address;
@@ -96,7 +96,7 @@ public class Patient extends Person {
             return this;
         }
 
-        public Builder pesel(int pesel) {
+        public Builder pesel(long pesel) {
             this.pesel = pesel;
             return this;
         }
@@ -117,7 +117,7 @@ public class Patient extends Person {
         }
 
         public Patient build() {
-            Patient patient = new Patient();
+            try{Patient patient = new Patient();
             patient.setId(id);
             patient.setFirstName(firstName);
             patient.setLastName(lastName);
@@ -125,7 +125,10 @@ public class Patient extends Person {
             patient.setBirthDate(birthDate);
             patient.setAge(age);
             patient.setAddress(address);
-            return patient;
+            return patient;}catch (PeselException e){
+                System.out.println(e.getMessage());
+                return null;
+            }
         }
     }
 

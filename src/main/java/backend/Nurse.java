@@ -11,7 +11,7 @@ import java.util.List;
 public class Nurse extends Person {
     private String specialization;
     private List<Assignment> assignments;
-    public Nurse(String firstName, String lastName, int pesel, int age,String specialization) {
+    public Nurse(String firstName, String lastName, int pesel, int age,String specialization)throws PeselException {
         super(firstName, lastName, pesel, age);
         this.specialization = specialization;
     }

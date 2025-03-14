@@ -32,7 +32,7 @@ public class Doctor extends Person{
     public String getRoom() { return room; }
     public String getContactInformation() { return contactInformation; }
     public int getAge() { return super.getAge(); }
-    public int getPesel() { return super.getPesel(); }
+    public long getPesel() { return super.getPesel(); }
 
     public void setId(ObjectId id) { this.id = id; }
     public void setFirstName(String firstName) { super.setFirstName(firstName); }
@@ -42,7 +42,7 @@ public class Doctor extends Person{
     public void setRoom(String room) { this.room = room; }
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
     public void setAge(int age) { super.setAge(age); }
-    public void setPesel(int pesel) { super.setPesel(pesel); }
+    public void setPesel(int pesel)throws PeselException { super.setPesel(pesel); }
 
     public static class Builder {
         private ObjectId id;
@@ -101,7 +101,7 @@ public class Doctor extends Person{
         }
 
         public Doctor build() {
-            Doctor doctor = new Doctor();
+            try{Doctor doctor = new Doctor();
             doctor.setId(id);
             doctor.setFirstName(firstName);
             doctor.setLastName(lastName);
@@ -111,7 +111,10 @@ public class Doctor extends Person{
             doctor.setPesel(pesel);
             doctor.setAge(age);
             doctor.setContactInformation(contactInformation);
-            return doctor;
+            return doctor;}catch (PeselException e){
+                System.out.println(e.getMessage());
+                return null;
+            }
         }
     }
 

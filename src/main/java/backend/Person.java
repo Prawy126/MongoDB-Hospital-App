@@ -4,7 +4,7 @@ public class Person {
     private String firstName;
     private String lastName;
     private int age;
-    private int pesel;
+    private long pesel;
     Person(){
 
     };
@@ -12,16 +12,16 @@ public class Person {
         this.firstName = firstName;
         this.lastName= lastName;
     }
-    public Person(String firstName, String lastName, int pesel){
+    public Person(String firstName, String lastName, long pesel) throws PeselException {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.pesel = pesel;
+        if(pesel > 9999999999L){this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
     }
 
-    public Person(String firstName, String lastName, int pesel, int age){
+    public Person(String firstName, String lastName, long pesel, int age)throws PeselException {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.pesel = pesel;
+        if(pesel > 9999999999L){this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
         this.age = age;
     }
 
@@ -37,7 +37,7 @@ public class Person {
         return lastName;
     }
 
-    public int getPesel() {
+    public long getPesel() {
         return pesel;
     }
 
@@ -53,7 +53,8 @@ public class Person {
         this.age = age;
     }
 
-    public void setPesel(int pesel) {
-        this.pesel = pesel;
+    public void setPesel(long pesel)throws PeselException {
+        if(pesel > 9999999999L){this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
+
     }
 }

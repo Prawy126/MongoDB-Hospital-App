@@ -1,4 +1,3 @@
-//Na tej klasie skończyłem muszę od niej zacząć następnym razme
 package backend;
 
 import com.mongodb.client.MongoCollection;
@@ -18,16 +17,16 @@ public class MedicinRepository {
     }
 
     // Dodawanie nowego leku
-    public Medicin addMedicin(Medicin lek) {
-        collection.insertOne(lek);
-        return lek;
+    public Medicin addMedicin(Medicin medicin) {
+        collection.insertOne(medicin);
+        return medicin;
     }
 
     // Wyszukiwanie leków po nazwie i dawce
-    public List<Medicin> znajdzLeki(String nazwa, String dawka) {
+    public List<Medicin> findMedicin(String name, String dose) {
         Bson filter = Filters.and(
-                eq("nazwa", nazwa),
-                eq("dawka", dawka)
+                eq("nazwa", name),
+                eq("dawka", dose)
         );
         return collection.find(filter).into(new ArrayList<>());
     }
