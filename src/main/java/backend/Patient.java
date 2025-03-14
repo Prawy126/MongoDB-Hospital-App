@@ -43,11 +43,11 @@ public class Patient extends Person {
         this.id = id;
     }
 
-    public void setFirstName(String firstName) {
+    public void setFirstName(String firstName) throws NullNameException {
         super.setFirstName(firstName);
     }
 
-    public void setLastName(String lastName) {
+    public void setLastName(String lastName)throws NullNameException {
         super.setLastName(lastName);
     }
 
@@ -64,7 +64,7 @@ public class Patient extends Person {
     }
 
     // Konstruktor z parametrami
-    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address) throws PeselException {
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address) throws PeselException, NullNameException {
         super(firstName, lastName, pesel);
         this.birthDate = birthDate;
         this.address = address;
@@ -126,6 +126,9 @@ public class Patient extends Person {
             patient.setAge(age);
             patient.setAddress(address);
             return patient;}catch (PeselException e){
+                System.out.println(e.getMessage());
+                return null;
+            }catch (NullNameException e){
                 System.out.println(e.getMessage());
                 return null;
             }
