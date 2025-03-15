@@ -46,7 +46,7 @@ public class Doctor extends Person {
     public void setRoom(String room) { this.room = room; }
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
     public void setAge(int age)throws AgeException { if(age >= 25)super.setAge(age);else throw new AgeException("Wiek lekarza nie może być mniejszy niż 25"); }
-    public void setPesel(int pesel)throws PeselException { super.setPesel(pesel); }
+    public void setPesel(long pesel) throws PeselException { super.setPesel(pesel); }
 
     public static class Builder {
         private ObjectId id;

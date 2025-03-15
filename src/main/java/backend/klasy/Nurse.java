@@ -12,12 +12,20 @@ import java.util.List;
  * Klasa Nurse reprezentuje pielęgniarkę w systemie.
  */
 public class Nurse extends Person {
+    private ObjectId id;
     private String specialization;
     private List<Assignment> assignments;
-    public Nurse(String firstName, String lastName, int pesel, int age,String specialization)throws PeselException, NullNameException, AgeException {
+    public Nurse(String firstName, String lastName, long pesel, int age,String specialization)throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age);
         this.specialization = specialization;
     }
+
+    public Nurse() {
+        super(); // Wywołanie konstruktora klasy bazowej (jeśli wymagane)
+    }
+
+
+    public ObjectId getId() { return id; }
     public String getFirstName(){
         return super.getFirstName();
     }
@@ -49,6 +57,11 @@ public class Nurse extends Person {
     public void setPesel(long pesel) throws PeselException {
         super.setPesel(pesel);
     }
+
+    public void setId(ObjectId id) {
+        this.id = id;
+    }
+
 
     public String getSpecialization() {
         return specialization;

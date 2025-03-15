@@ -16,6 +16,7 @@ public class Main {
                 DoctorRepository doctorRepo = new DoctorRepository(database);
                 AppointmentRepository appointmentRepo = new AppointmentRepository(database);
                 MedicinRepository medicinRepo = new MedicinRepository(database);
+                NurseRepository nurseRepo = new NurseRepository(database);
 
                 // Testowanie metod PatientRepository
                 System.out.println("\n=== [TEST] PatientRepository ===");
@@ -33,12 +34,18 @@ public class Main {
                 System.out.println("\n=== [TEST] MedicinRepository ===");
                 medicinRepo.testMedicin();
 
+                // Testowanie metod NurseRepository
+                System.out.println("\n=== [TEST] NurseRepository ===");
+                nurseRepo.testNurse();
+
             } catch (Exception e) {
                 System.err.println("[ERROR] Wystąpił błąd podczas testowania: " + e.getMessage());
                 e.printStackTrace();
             } finally {
                 MongoDatabaseConnector.close();
             }
+        } else {
+            System.err.println("[ERROR] Połączenie z bazą danych nie powiodło się.");
         }
     }
 }
