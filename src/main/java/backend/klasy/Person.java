@@ -52,9 +52,12 @@ public class Person {
     }
 
     public void setFirstName(String firstName) throws NullNameException {
-        if(firstName.length()>0)this.firstName = firstName;
-        else throw new NullNameException("Imię nie może być puste");
+        if (firstName == null || firstName.length() == 0) {
+            throw new NullNameException("Imię nie może być puste");
+        }
+        this.firstName = firstName;
     }
+
 
     public void setLastName(String lastName) throws NullNameException {
         if(lastName.length()>0)this.lastName = lastName;
@@ -62,8 +65,10 @@ public class Person {
     }
 
     public void setAge(int age) throws AgeException {
-        if(age >= 0)this.age = age;
-        else throw new AgeException("Wiek nie może być ujemny");
+        if (age < 0) {
+            throw new AgeException("Wiek pacjenta musi być większy niż 0.");
+        }
+        this.age = age;
     }
 
     public void setPesel(long pesel)throws PeselException {

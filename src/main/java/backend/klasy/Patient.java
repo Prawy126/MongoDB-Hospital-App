@@ -73,6 +73,18 @@ public class Patient extends Person {
         this.address = address;
     }
 
+    @Override
+    public String toString() {
+        return "Patient{" +
+                "id=" + id +
+                ", firstName='" + super.getFirstName() + '\'' +
+                ", lastName='" + super.getLastName() + '\'' +
+                ", pesel='" + super.getPesel() + '\'' +
+                ", birthDate=" + birthDate +
+                ", address='" + address + '\'' +
+                '}';
+    }
+
     public static class Builder {
         private ObjectId id;
         private String firstName;
@@ -119,53 +131,43 @@ public class Patient extends Person {
             return this;
         }
 
-        public Patient build() {
-            try{Patient patient = new Patient();
-            patient.setId(id);
-            patient.setFirstName(firstName);
-            patient.setLastName(lastName);
-            patient.setPesel(pesel);
-            patient.setBirthDate(birthDate);
-            patient.setAge(age);
-            patient.setAddress(address);
-            return patient;}catch (PeselException e){
-                System.out.println(e.getMessage());
-                return null;
-            }catch (NullNameException e){
-                System.out.println(e.getMessage());
-                return null;
-            }catch (AgeException e){
-                System.out.println(e.getMessage());
-                return null;
-            }catch (Exception e){
-                System.out.println(e.getMessage());
-                return null;
+        public Patient build() throws PeselException, NullNameException, AgeException {
+            if (firstName == null || firstName.isEmpty()) {
+                throw new NullNameException("Imię nie może być puste.");
             }
+            if (lastName == null || lastName.isEmpty()) {
+                throw new NullNameException("Nazwisko nie może być puste.");
+            }
+            if (age <= 0) {
+                throw new AgeException("Wiek pacjenta musi być większy niż 0.");
+            }
+            if (pesel < 10000000000L || pesel > 99999999999L) {
+                throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
+            }
+
+            Patient patient = new Patient(firstName, lastName, pesel, birthDate, address);
+            if (id == null) {
+                patient.setId(new ObjectId());
+            } else {
+                patient.setId(id);
+            }
+            return patient;
         }
-    }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Patient)) return false;
-        Patient patient = (Patient) o;
-        return getId().equals(patient.getId());
-    }
 
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
-    }
 
-    @Override
-    public String toString() {
-        return "Patient{" +
-                "id=" + id +
-                ", firstName='" + super.getFirstName() + '\'' +
-                ", lastName='" + super.getLastName() + '\'' +
-                ", pesel='" + super.getPesel() + '\'' +
-                ", birthDate=" + birthDate +
-                ", address='" + address + '\'' +
-                '}';
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Patient patient = (Patient) o;
+            return id != null && id.equals(patient.id);
+        }
+
+
+        @Override
+        public int hashCode() {
+            return id != null ? id.hashCode() : 0;
+        }
     }
 }

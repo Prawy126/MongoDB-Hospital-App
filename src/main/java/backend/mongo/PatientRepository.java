@@ -1,6 +1,9 @@
 package backend.mongo;
 
 import backend.klasy.Patient;
+import backend.wyjatki.AgeException;
+import backend.wyjatki.NullNameException;
+import backend.wyjatki.PeselException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
@@ -72,14 +75,13 @@ public class PatientRepository {
     public List<Patient> findPatientByLastName(String lastName) {
         return collection.find(eq("lastName", lastName)).into(new ArrayList<>());
     }
-
     /**
      * Znajduje pacjentów po ich numerze PESEL.
      *
      * @param pesel numer PESEL pacjentów
      * @return lista pacjentów o podanym numerze PESEL
      */
-    public List<Patient> findPatientByPesel(int pesel) {
+    public List<Patient> findPatientByPesel(long pesel) {
         return collection.find(eq("pesel", pesel)).into(new ArrayList<>());
     }
 
@@ -110,7 +112,14 @@ public class PatientRepository {
      * @return zaktualizowany pacjent
      */
     public Patient updatePatient(Patient patient) {
-        collection.replaceOne(eq("_id", patient.getId()), patient);
+        if (patient == null || patient.getId() == null) {
+            throw new IllegalArgumentException("Patient or ID cannot be null");
+        }
+
+        long modifiedCount = collection.replaceOne(eq("_id", patient.getId()), patient).getModifiedCount();
+        if (modifiedCount == 0) {
+            throw new IllegalStateException("Pacjent o ID " + patient.getId() + " nie istnieje w bazie.");
+        }
         return patient;
     }
 
@@ -140,9 +149,60 @@ public class PatientRepository {
             Patient createdPatient = createPatient(testPatient);
             System.out.println("[OK] Utworzono pacjenta: " + createdPatient);
 
+            try {
+                Patient youngPatient = new Patient.Builder()
+                        .firstName("Test")
+                        .lastName("Patient")
+                        .pesel(11122233311L)
+                        .birthDate(LocalDate.now())
+                        .address("Test Address")
+                        .age(0) // Nieprawidłowy wiek
+                        .build();
+                createPatient(youngPatient);
+                System.err.println("[FAIL] Powinien wystąpić AgeException dla wieku = 0");
+            } catch (AgeException e) {
+                System.out.println("[OK] Poprawnie przechwycono AgeException: " + e.getMessage());
+            }
+
+            // Test walidacji PESEL
+            try {
+                Patient invalidPeselPatient = new Patient.Builder()
+                        .firstName("Test")
+                        .lastName("Patient")
+                        .pesel(-1) // Nieprawidłowy PESEL
+                        .birthDate(LocalDate.now())
+                        .address("Test Address")
+                        .age(25)
+                        .build();
+                createPatient(invalidPeselPatient);
+                System.err.println("[FAIL] Powinien wystąpić PeselException dla nieprawidłowego PESEL");
+            } catch (PeselException e) {
+                System.out.println("[OK] Poprawnie przechwycono PeselException: " + e.getMessage());
+            }
+
+            // Test pustego imienia
+            try {
+                Patient nullNamePatient = new Patient.Builder()
+                        .firstName(null)
+                        .lastName("Patient")
+                        .pesel(11122233311L)
+                        .birthDate(LocalDate.now())
+                        .address("Test Address")
+                        .age(25)
+                        .build();
+                createPatient(nullNamePatient);
+                System.err.println("[FAIL] Powinien wystąpić NullNameException dla pustego imienia");
+            } catch (NullNameException e) {
+                System.out.println("[OK] Poprawnie przechwycono NullNameException: " + e.getMessage());
+            }
+
             // Wyszukiwanie po ID
             Optional<Patient> foundById = findPatientById(createdPatient.getId());
-            System.out.println("[OK] Wyszukano pacjenta po ID: " + foundById.orElse(null));
+            if (foundById.isPresent()) {
+                System.out.println("[OK] Wyszukano pacjenta po ID: " + foundById.get());
+            } else {
+                System.err.println("[ERROR] Nie znaleziono pacjenta o ID: " + createdPatient.getId());
+            }
 
             // Wyszukiwanie po imieniu
             List<Patient> patientsByFirstName = findPatientByFirstName("Testowy");
@@ -153,8 +213,8 @@ public class PatientRepository {
             System.out.println("[OK] Wyszukano pacjentów po nazwisku 'Pacjent': " + patientsByLastName.size());
 
             // Wyszukiwanie po PESEL
-            List<Patient> patientsByPesel = findPatientByPesel(111222333);
-            System.out.println("[OK] Wyszukano pacjentów po PESEL '111222333': " + patientsByPesel.size());
+            List<Patient> patientsByPesel = findPatientByPesel(11122233311L);
+            System.out.println("[OK] Wyszukano pacjentów po PESEL '11122233311': " + patientsByPesel.size());
 
             // Wyszukiwanie po adresie
             List<Patient> patientsByAddress = findPatientByAddress("ul. Przykładowa 10, Kraków");
@@ -169,9 +229,14 @@ public class PatientRepository {
             System.out.println("[OK] Liczba wszystkich pacjentów w bazie: " + allPatients.size());
 
             // Aktualizacja pacjenta
-            createdPatient.setAddress("ul. Zmieniona 20, Kraków");
-            Patient updatedPatient = updatePatient(createdPatient);
-            System.out.println("[OK] Zaktualizowano adres pacjenta: " + updatedPatient.getAddress());
+            try {
+                createdPatient.setAddress("ul. Zmieniona 20, Kraków");
+                Patient updatedPatient = updatePatient(createdPatient);
+                System.out.println("[OK] Zaktualizowano adres pacjenta: " + updatedPatient.getAddress());
+            } catch (Exception e) {
+                System.err.println("[ERROR] Nie udało się zaktualizować pacjenta: " + e.getMessage());
+            }
+
 
             // Usuwanie pacjenta
             deletePatient(createdPatient.getId());
