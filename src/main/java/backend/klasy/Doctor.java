@@ -104,9 +104,21 @@ public class Doctor extends Person {
             return this;
         }
 
-        public Doctor build() {
-            try{Doctor doctor = new Doctor();
-            doctor.setId(id);
+        public Doctor build() throws PeselException, NullNameException, AgeException {
+            if (firstName == null || firstName.isEmpty()) {
+                throw new NullNameException("Imię nie może być puste.");
+            }
+            if (lastName == null || lastName.isEmpty()) {
+                throw new NullNameException("Nazwisko nie może być puste.");
+            }
+            if (age < 25) {
+                throw new AgeException("Wiek lekarza musi być co najmniej 25 lat.");
+            }
+            if (pesel < 10000000000L || pesel > 99999999999L) {
+                throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
+            }
+
+            Doctor doctor = new Doctor();
             doctor.setFirstName(firstName);
             doctor.setLastName(lastName);
             doctor.setSpecialization(specialization);
@@ -115,21 +127,16 @@ public class Doctor extends Person {
             doctor.setPesel(pesel);
             doctor.setAge(age);
             doctor.setContactInformation(contactInformation);
-            return doctor;
-            }catch (PeselException e){
-                System.out.println(e.getMessage());
-                return null;
-            }catch (NullNameException e) {
-                System.out.println(e.getMessage());
-                return null;
-            }catch (AgeException e){
-                System.out.println(e.getMessage());
-                return null;
-            }catch (Exception e){
-                System.out.println(e.getMessage());
-                return null;
+
+            if (id == null) {
+                doctor.setId(new ObjectId());  // Generowanie nowego ID
+            } else {
+                doctor.setId(id);
             }
+
+            return doctor;
         }
+
     }
 
     @Override

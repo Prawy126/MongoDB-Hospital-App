@@ -2,6 +2,9 @@ package backend.mongo;
 
 import backend.klasy.Doctor;
 import backend.status.Day;
+import backend.wyjatki.AgeException;
+import backend.wyjatki.NullNameException;
+import backend.wyjatki.PeselException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
@@ -71,6 +74,53 @@ public class DoctorRepository {
 
             Doctor createdDoctor = createDoctor(testDoctor);
             System.out.println("[OK] Utworzono lekarza: " + createdDoctor);
+
+            try {
+                Doctor youngDoctor = new Doctor.Builder()
+                        .firstName("Test")
+                        .lastName("Doctor")
+                        .specialization("Kardiolog")
+                        .pesel(11122233311L)
+                        .age(20) // Wiek poniżej wymaganego minimum 25 lat
+                        .availableDays(List.of(Day.MONDAY))
+                        .build();
+                createDoctor(youngDoctor);
+                System.err.println("[FAIL] Powinien wystąpić AgeException dla wieku < 25");
+            } catch (AgeException e) {
+                System.out.println("[OK] Poprawnie przechwycono AgeException: " + e.getMessage());
+            }
+
+            // Test walidacji PESEL
+            try {
+                Doctor invalidPeselDoctor = new Doctor.Builder()
+                        .firstName("Test")
+                        .lastName("Doctor")
+                        .specialization("Kardiolog")
+                        .pesel(-1) // Nieprawidłowy PESEL
+                        .age(30)
+                        .availableDays(List.of(Day.MONDAY))
+                        .build();
+                createDoctor(invalidPeselDoctor);
+                System.err.println("[FAIL] Powinien wystąpić PeselException dla nieprawidłowego PESEL");
+            } catch (PeselException e) {
+                System.out.println("[OK] Poprawnie przechwycono PeselException: " + e.getMessage());
+            }
+
+            // Test pustego imienia
+            try {
+                Doctor nullNameDoctor = new Doctor.Builder()
+                        .firstName(null)
+                        .lastName("Doctor")
+                        .specialization("Kardiolog")
+                        .pesel(11122233311L)
+                        .age(30)
+                        .availableDays(List.of(Day.MONDAY))
+                        .build();
+                createDoctor(nullNameDoctor);
+                System.err.println("[FAIL] Powinien wystąpić NullNameException dla pustego imienia");
+            } catch (NullNameException e) {
+                System.out.println("[OK] Poprawnie przechwycono NullNameException: " + e.getMessage());
+            }
 
             // Wyszukiwanie po ID
             Optional<Doctor> foundById = findDoctorById(createdDoctor.getId());
