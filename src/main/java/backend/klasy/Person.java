@@ -4,6 +4,8 @@ import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
 
+/**
+ * Klasa ta jest klasą nadrzędną po której dziedziczą inne klasy*/
 public class Person {
     private String firstName;
     private String lastName;

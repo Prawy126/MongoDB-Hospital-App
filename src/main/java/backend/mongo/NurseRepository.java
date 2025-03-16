@@ -16,14 +16,30 @@ import static com.mongodb.client.model.Filters.eq;
 
 /**
  * Klasa NurseRepository zarządza operacjami CRUD dla kolekcji pielęgniarek w bazie danych MongoDB.
+ * <p>
+ * Metody tej klasy pozwalają na tworzenie, wyszukiwanie, aktualizowanie i usuwanie pielęgniarek.
+ * Klasa ta zapewnia również metody do testowania operacji na kolekcji pielęgniarek.
+ * </p>
  */
 public class NurseRepository {
     private final MongoCollection<Nurse> collection;
 
+    /**
+     * Konstruktor inicjalizujący kolekcję pielęgniarek.
+     *
+     * @param database obiekt MongoDatabase reprezentujący połączenie z bazą danych
+     */
     public NurseRepository(MongoDatabase database) {
         this.collection = database.getCollection("nurses", Nurse.class);
     }
 
+    /**
+     * Tworzy nową pielęgniarkę w bazie danych.
+     *
+     * @param nurse pielęgniarka do utworzenia
+     * @return utworzona pielęgniarka
+     * @throws IllegalArgumentException jeśli pielęgniarka jest null
+     */
     public Nurse createNurse(Nurse nurse) {
         if (nurse == null) {
             throw new IllegalArgumentException("Nurse cannot be null");
@@ -32,23 +48,51 @@ public class NurseRepository {
         return nurse;
     }
 
+    /**
+     * Znajduje pielęgniarkę po jej ID.
+     *
+     * @param id ID pielęgniarki
+     * @return Optional zawierający znalezioną pielęgniarkę lub pusty, jeśli nie znaleziono
+     */
     public Optional<Nurse> findNurseById(ObjectId id) {
         return Optional.ofNullable(collection.find(eq("_id", id)).first());
     }
 
+    /**
+     * Znajduje wszystkie pielęgniarki w bazie danych.
+     *
+     * @return lista wszystkich pielęgniarek
+     */
     public List<Nurse> findAll() {
         return collection.find().into(new ArrayList<>());
     }
 
+    /**
+     * Aktualizuje dane pielęgniarki w bazie danych.
+     *
+     * @param nurse pielęgniarka do zaktualizowania
+     * @return zaktualizowana pielęgniarka
+     */
     public Nurse updateNurse(Nurse nurse) {
         collection.replaceOne(eq("_id", nurse.getId()), nurse);
         return nurse;
     }
 
+    /**
+     * Usuwa pielęgniarkę po jej ID.
+     *
+     * @param id ID pielęgniarki do usunięcia
+     */
     public void deleteNurse(ObjectId id) {
         collection.deleteOne(eq("_id", id));
     }
 
+    /**
+     * Metoda testująca operacje na kolekcji pielęgniarek.
+     * <p>
+     * Tworzy przykładowe pielęgniarki, testuje wyjątki oraz operacje CRUD.
+     * </p>
+     */
     public void testNurse() {
         System.out.println("\n=== Rozpoczynam testowanie NurseRepository ===");
 
@@ -137,6 +181,4 @@ public class NurseRepository {
             e.printStackTrace();
         }
     }
-
-
 }
