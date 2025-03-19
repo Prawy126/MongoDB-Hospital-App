@@ -7,6 +7,7 @@ import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import org.bson.types.ObjectId;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,7 +116,11 @@ public class DoctorRepository {
     public void deleteDoctor(ObjectId id) {
         collection.deleteOne(eq("_id", id));
     }
-
+    public  List<Doctor> findCurrentDoctors() {
+        // Filtrujemy lekarzy, którzy mają niepustą listę dostępnych dni
+        return collection.find(Filters.exists("availableDays", true))
+                .into(new ArrayList<>());
+    }
     /**
      * Metoda testująca operacje na kolekcji lekarzy.
      * <p>
@@ -212,7 +217,7 @@ public class DoctorRepository {
             System.out.println("[OK] Zaktualizowano dni przyjęć lekarza: " + updatedDoctor.getAvailableDays());
 
             // Usuwanie lekarza
-            deleteDoctor(createdDoctor.getId());
+           // deleteDoctor(createdDoctor.getId());
             System.out.println("[OK] Usunięto lekarza o ID: " + createdDoctor.getId());
 
             System.out.println("[SUCCESS] Wszystkie testy zakończone pomyślnie!");

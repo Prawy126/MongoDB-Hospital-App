@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import static com.mongodb.client.model.Filters.eq;
 
-/*
+/**
  * Klasa zarządzajaca zapisem danych pacjenta do bazy MongoDB w sposób obiektowy*/
 public class PatientRepository {
     private final MongoCollection<Patient> collection;
@@ -196,6 +196,21 @@ public class PatientRepository {
                 System.out.println("[OK] Poprawnie przechwycono NullNameException: " + e.getMessage());
             }
 
+            try {
+                System.out.println("Test dla nieprawidłowego MongoDB");
+                Patient invalidPatient = new Patient.Builder()
+                        .firstName("Test")
+                        .lastName("Błąd")
+                        .pesel(1111111111L)// Nieprawidłowy PESEL
+                        .birthDate(LocalDate.of(2020, 1, 1))
+                        .address("Test")
+                        .age(10)
+                        .build();
+                createPatient(invalidPatient);
+            } catch (Exception e) {
+                System.out.println("Błąd: " + e.getMessage()); // Powinien zostać rzucony wyjątek
+            }
+
             // Wyszukiwanie po ID
             Optional<Patient> foundById = findPatientById(createdPatient.getId());
             if (foundById.isPresent()) {
@@ -248,6 +263,7 @@ public class PatientRepository {
             System.err.println("[ERROR] Wystąpił błąd podczas testowania PatientRepository: " + e.getMessage());
             e.printStackTrace();
         }
+
     }
 
 }

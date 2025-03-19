@@ -142,7 +142,7 @@ public class Patient extends Person {
                 throw new AgeException("Wiek pacjenta musi być większy niż 0.");
             }
             if (pesel < 10000000000L || pesel > 99999999999L) {
-                throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
+                //throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
             }
 
             Patient patient = new Patient(firstName, lastName, pesel, birthDate, address);

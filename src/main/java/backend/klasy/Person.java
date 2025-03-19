@@ -29,7 +29,7 @@ public class Person {
         if(pesel > 9999999999L){this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
     }
 
-    public Person(String firstName, String lastName, long pesel, int age)throws PeselException, NullNameException, AgeException {
+    public Person(String firstName, String lastName, long pesel, int age)throws  PeselException, NullNameException, AgeException {
         if(firstName.length() > 0 && lastName.length() > 0) {this.firstName = firstName;
         this.lastName = lastName;}else throw new NullNameException("Imię i nazwisko nie mogą być puste");
         if(pesel > 9999999999L){this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
