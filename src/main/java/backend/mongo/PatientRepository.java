@@ -1,15 +1,22 @@
 package backend.mongo;
 
+import org.bson.Document;
 import backend.klasy.Patient;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Field;
+import com.mongodb.client.model.Projections;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import static com.mongodb.client.model.Filters.eq;
@@ -130,6 +137,55 @@ public class PatientRepository {
      */
     public void deletePatient(ObjectId id) {
         collection.deleteOne(eq("_id", id));
+    }
+
+    public boolean isPeselValid(ObjectId patientId) {
+        MongoCollection<Document> documentCollection = collection.withDocumentClass(Document.class);
+
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(eq("_id", patientId)),
+                Aggregates.addFields(new Field<>("peselValid",
+                        new Document("$function",
+                                new Document()
+                                        .append("body", "function(pesel, birthDateStr) {" +
+                                                "if (pesel.length !== 11) return false;" +
+                                                "const yearPart = pesel.slice(0, 2);" +
+                                                "let monthPart = pesel.slice(2, 4);" +
+                                                "const dayPart = pesel.slice(4, 6);" +
+                                                "let century = 1900;" +
+                                                "if (monthPart >= 21 && monthPart <= 32) {" +
+                                                "    monthPart -= 20;" +
+                                                "    century = 2000;" +
+                                                "} else if (monthPart >= 81 && monthPart <= 92) {" +
+                                                "    monthPart -= 80;" +
+                                                "    century = 1800;" +
+                                                "}" +
+                                                "const peselDate = new Date(century + parseInt(yearPart), parseInt(monthPart)-1, parseInt(dayPart));" +
+                                                "const documentDate = new Date(birthDateStr);" +
+                                                "if (peselDate.getTime() !== documentDate.getTime()) return false;" +
+                                                "const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];" +
+                                                "let sum = 0;" +
+                                                "for (let i = 0; i < 10; i++) {" +
+                                                "    sum += parseInt(pesel[i]) * weights[i];" +
+                                                "}" +
+                                                "const controlDigit = (10 - (sum % 10)) % 10;" +
+                                                "return controlDigit === parseInt(pesel[10]);" +
+                                                "}")
+                                        .append("args", Arrays.asList("$pesel", "$birthDate"))
+                                        .append("lang", "js")
+                        )
+                )),
+                Aggregates.project(Projections.fields(
+                        Projections.include("peselValid"),
+                        Projections.excludeId()
+                ))
+        );
+
+        Document result = documentCollection.aggregate(pipeline).first();
+        if (result == null) {
+            throw new IllegalArgumentException("Pacjent o ID " + patientId + " nie istnieje");
+        }
+        return result.getBoolean("peselValid", false);
     }
 
     public void testPatient() {

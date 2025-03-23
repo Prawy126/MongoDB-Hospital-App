@@ -15,6 +15,7 @@ module org.example.projekt {
     requires morphia.core;
     requires org.mongodb.bson;
     requires java.management;
+    requires java.desktop;
 
     opens org.example.projekt to javafx.fxml;
     exports org.example.projekt;
