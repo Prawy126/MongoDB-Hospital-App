@@ -77,11 +77,11 @@ public class Patient extends Person {
     public String toString() {
         return "Patient{" +
                 "id=" + id +
-                ", firstName='" + super.getFirstName() + '\'' +
-                ", lastName='" + super.getLastName() + '\'' +
-                ", pesel='" + super.getPesel() + '\'' +
-                ", birthDate=" + birthDate +
-                ", address='" + address + '\'' +
+                ", firstName='" + (getFirstName() != null ? getFirstName() : "null") + '\'' +
+                ", lastName='" + (getLastName() != null ? getLastName() : "null") + '\'' +
+                ", pesel='" + (getPesel() != 0 ? getPesel() : "null") + '\'' +
+                ", birthDate=" + (birthDate != null ? birthDate : "null") +
+                ", address='" + (address != null ? address : "null") + '\'' +
                 '}';
     }
 
@@ -93,6 +93,8 @@ public class Patient extends Person {
         private LocalDate birthDate;
         private int age;
         private String address;
+
+        private boolean skipValidation = false;
 
         public Builder() {}
 
@@ -131,18 +133,26 @@ public class Patient extends Person {
             return this;
         }
 
+        public Builder skipValidation(boolean skipValidation) {
+            this.skipValidation = skipValidation;
+            return this;
+        }
+
+
         public Patient build() throws PeselException, NullNameException, AgeException {
-            if (firstName == null || firstName.isEmpty()) {
-                throw new NullNameException("Imię nie może być puste.");
-            }
-            if (lastName == null || lastName.isEmpty()) {
-                throw new NullNameException("Nazwisko nie może być puste.");
-            }
-            if (age <= 0) {
-                throw new AgeException("Wiek pacjenta musi być większy niż 0.");
-            }
-            if (pesel < 10000000000L || pesel > 99999999999L) {
-                //throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
+            if (!skipValidation) {
+                if (firstName == null || firstName.isEmpty()) {
+                    throw new NullNameException("Imię nie może być puste.");
+                }
+                if (lastName == null || lastName.isEmpty()) {
+                    throw new NullNameException("Nazwisko nie może być puste.");
+                }
+                if (age <= 0) {
+                    throw new AgeException("Wiek pacjenta musi być większy niż 0.");
+                }
+                if (pesel < 10000000000L || pesel > 99999999999L) {
+                    throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
+                }
             }
 
             Patient patient = new Patient(firstName, lastName, pesel, birthDate, address);
@@ -153,6 +163,7 @@ public class Patient extends Person {
             }
             return patient;
         }
+
 
 
 

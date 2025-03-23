@@ -14,7 +14,7 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
  * Klasa MongoDatabaseConnector służy do zarządzania połączeniem z bazą danych MongoDB.
  */
 public class MongoDatabaseConnector {
-    private static final String DB_IP = "192.168.0.50";
+    private static final String DB_IP = "192.168.154.79";
     private static final int DB_PORT = 27017;
     private static final String DB_NAME = "hospitalDB";
 
@@ -40,6 +40,7 @@ public class MongoDatabaseConnector {
             mongoClient = MongoClients.create(settings);
             MongoDatabase database = mongoClient.getDatabase(DB_NAME);
             System.out.println("[SUCESS] Połączono z bazą danych: " + DB_NAME);
+            PatientCollectionInitializer.ensurePatientCollectionWithValidation(database);
             return database;
         } catch (MongoException e) {
             System.err.println("[SUCESS] Błąd połączenia: " + e.getMessage());

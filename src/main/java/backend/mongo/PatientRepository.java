@@ -252,21 +252,6 @@ public class PatientRepository {
                 System.out.println("[OK] Poprawnie przechwycono NullNameException: " + e.getMessage());
             }
 
-            try {
-                System.out.println("Test dla nieprawidłowego MongoDB");
-                Patient invalidPatient = new Patient.Builder()
-                        .firstName("Test")
-                        .lastName("Błąd")
-                        .pesel(1111111111L)// Nieprawidłowy PESEL
-                        .birthDate(LocalDate.of(2020, 1, 1))
-                        .address("Test")
-                        .age(10)
-                        .build();
-                createPatient(invalidPatient);
-            } catch (Exception e) {
-                System.out.println("Błąd: " + e.getMessage()); // Powinien zostać rzucony wyjątek
-            }
-
             // Wyszukiwanie po ID
             Optional<Patient> foundById = findPatientById(createdPatient.getId());
             if (foundById.isPresent()) {
@@ -313,13 +298,75 @@ public class PatientRepository {
             deletePatient(createdPatient.getId());
             System.out.println("[OK] Usunięto pacjenta o ID: " + createdPatient.getId());
 
-            System.out.println("[SUCCESS] Wszystkie testy zakończone pomyślnie!");
+            System.out.println("[SUCCESS] Wszystkie testy aplikacyjne zakończone.");
 
         } catch (Exception e) {
             System.err.println("[ERROR] Wystąpił błąd podczas testowania PatientRepository: " + e.getMessage());
             e.printStackTrace();
         }
 
+        testMongoValidation();
+
     }
+
+    private void testMongoValidation() {
+        System.out.println("\n=== [TEST] Walidacja po stronie MongoDB ===");
+
+        // Przykłady testów: każdy case ma opis i dane, które łamią reguły walidacji
+        List<ValidationCase> testCases = List.of(
+                new ValidationCase("Brak imienia (firstName = null)", new Patient.Builder()
+                        .skipValidation(true)
+                        .lastName("BezImienia")
+                        .pesel(11122233311L)
+                        .birthDate(LocalDate.now())
+                        .address("ul. Błędna 1")
+                        .age(30)
+                ),
+                new ValidationCase("Nieprawidłowy PESEL (za krótki)", new Patient.Builder()
+                        .skipValidation(true)
+                        .firstName("Jan")
+                        .lastName("ZłyPesel")
+                        .pesel(123456789L)
+                        .birthDate(LocalDate.now())
+                        .address("ul. Niepoprawna")
+                        .age(40)
+                ),
+                new ValidationCase("Brak daty urodzenia", new Patient.Builder()
+                        .skipValidation(true)
+                        .firstName("Anna")
+                        .lastName("BrakDaty")
+                        .pesel(11122233344L)
+                        .address("ul. Brakowa 1")
+                        .age(28)
+                )
+        );
+
+        for (ValidationCase test : testCases) {
+            runMongoValidationTest(test.description, test.builder);
+        }
+    }
+
+    private void runMongoValidationTest(String description, Patient.Builder builder) {
+        try {
+            System.out.println("\n[TEST CASE] " + description);
+            Patient p = builder.build(); // budujemy pacjenta bez walidacji aplikacyjnej (bo wyjątki zakomentowane)
+            createPatient(p);
+            System.err.println("[FAIL] Dokument powinien zostać odrzucony przez MongoDB, ale został zapisany.");
+        } catch (Exception e) {
+            System.out.println("[OK] MongoDB prawidłowo odrzucił dokument: " + e.getMessage());
+        }
+    }
+
+    private static class ValidationCase {
+        String description;
+        Patient.Builder builder;
+
+        public ValidationCase(String description, Patient.Builder builder) {
+            this.description = description;
+            this.builder = builder;
+        }
+    }
+
+
 
 }
