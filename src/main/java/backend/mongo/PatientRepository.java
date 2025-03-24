@@ -1,5 +1,6 @@
 package backend.mongo;
 
+import org.bson.Document;
 import backend.klasy.Patient;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
@@ -9,9 +10,9 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Field;
 import com.mongodb.client.model.Projections;
-import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -128,17 +129,9 @@ public class PatientRepository {
         }
         return patient;
     }
-
-    /**
-     * Usuwa pacjenta po jego ID.
-     *
-     * @param id ID pacjenta do usunięcia
-     */
     public void deletePatient(ObjectId id) {
         collection.deleteOne(eq("_id", id));
     }
-
-
     /**
      * Sprawdza poprawność PESEL pacjenta na podstawie daty urodzenia.
      *
@@ -146,53 +139,53 @@ public class PatientRepository {
      * @return true jeśli PESEL jest poprawny
      */
     public boolean isPeselValid(ObjectId patientId) {
-        List<Bson> pipeline = Arrays.asList(
-                Aggregates.match(eq("_id", patientId)),
-                Aggregates.addFields(new Field<>("peselValid",
-                        new Document("$function",
-                                new Document()
-                                        .append("body", "function(pesel, birthDateStr) {" +
-                                                "if (pesel.length !== 11) return false;" +
-                                                "const yearPart = pesel.slice(0, 2);" +
-                                                "let monthPart = pesel.slice(2, 4);" +
-                                                "const dayPart = pesel.slice(4, 6);" +
-                                                "let century = 1900;" +
-                                                "if (monthPart >= 21 && monthPart <= 32) {" +
-                                                "    monthPart -= 20;" +
-                                                "    century = 2000;" +
-                                                "} else if (monthPart >= 81 && monthPart <= 92) {" +
-                                                "    monthPart -= 80;" +
-                                                "    century = 1800;" +
-                                                "}" +
-                                                "const peselDate = new Date(century + parseInt(yearPart), parseInt(monthPart)-1, parseInt(dayPart));" +
-                                                "const documentDate = new Date(birthDateStr);" +
-                                                "if (peselDate.getTime() !== documentDate.getTime()) return false;" +
-                                                "const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];" +
-                                                "let sum = 0;" +
-                                                "for (let i = 0; i < 10; i++) {" +
-                                                "    sum += parseInt(pesel[i]) * weights[i];" +
-                                                "}" +
-                                                "const controlDigit = (10 - (sum % 10)) % 10;" +
-                                                "return controlDigit === parseInt(pesel[10]);" +
-                                                "}")
-                                        .append("args", Arrays.asList("$pesel", "$birthDate"))
-                                        .append("lang", "js")
-                        )
-                )),
-                Aggregates.project(Projections.fields(
-                        Projections.include("peselValid"),
-                        Projections.excludeId()
-                ))
-        );
+            List<Bson> pipeline = Arrays.asList(
+                    Aggregates.match(eq("_id", patientId)),
+                    Aggregates.addFields(new Field<>("peselValid",
+                            new Document("$function",
+                                    new Document()
+                                            .append("body", "function(pesel, birthDateStr) {" +
+                                                    "if (pesel.length !== 11) return false;" +
+                                                    "const yearPart = pesel.slice(0, 2);" +
+                                                    "let monthPart = pesel.slice(2, 4);" +
+                                                    "const dayPart = pesel.slice(4, 6);" +
+                                                    "let century = 1900;" +
+                                                    "if (monthPart >= 21 && monthPart <= 32) {" +
+                                                    "    monthPart -= 20;" +
+                                                    "    century = 2000;" +
+                                                    "} else if (monthPart >= 81 && monthPart <= 92) {" +
+                                                    "    monthPart -= 80;" +
+                                                    "    century = 1800;" +
+                                                    "}" +
+                                                    "const peselDate = new Date(century + parseInt(yearPart), parseInt(monthPart)-1, parseInt(dayPart));" +
+                                                    "const documentDate = new Date(birthDateStr);" +
+                                                    "if (peselDate.getTime() !== documentDate.getTime()) return false;" +
+                                                    "const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];" +
+                                                    "let sum = 0;" +
+                                                    "for (let i = 0; i < 10; i++) {" +
+                                                    "    sum += parseInt(pesel[i]) * weights[i];" +
+                                                    "}" +
+                                                    "const controlDigit = (10 - (sum % 10)) % 10;" +
+                                                    "return controlDigit === parseInt(pesel[10]);" +
+                                                    "}")
+                                            .append("args", Arrays.asList("$pesel", "$birthDate"))
+                                            .append("lang", "js")
+                            )
+                    )),
+                    Aggregates.project(Projections.fields(
+                            Projections.include("peselValid"),
+                            Projections.excludeId()
+                    ))
+            );
 
-        // ZMIANA: Odczytaj jako Document, a nie Patient
-        Document result = collection.withDocumentClass(Document.class).aggregate(pipeline).first();
-        if (result == null) {
-            throw new IllegalArgumentException("Pacjent o ID " + patientId + " nie istnieje");
+            // ZMIANA: Odczytaj jako Document, a nie Patient
+            Document result = collection.withDocumentClass(Document.class).aggregate(pipeline).first();
+            if (result == null) {
+                throw new IllegalArgumentException("Pacjent o ID " + patientId + " nie istnieje");
+            }
+
+            return result.getBoolean("peselValid", false);
         }
-
-        return result.getBoolean("peselValid", false);
-    }
 
 
     public void testPatient() {
@@ -321,13 +314,75 @@ public class PatientRepository {
             deletePatient(createdPatient.getId());
             System.out.println("[OK] Usunięto pacjenta o ID: " + createdPatient.getId());
 
-            System.out.println("[SUCCESS] Wszystkie testy zakończone pomyślnie!");
+            System.out.println("[SUCCESS] Wszystkie testy aplikacyjne zakończone.");
 
         } catch (Exception e) {
             System.err.println("[ERROR] Wystąpił błąd podczas testowania PatientRepository: " + e.getMessage());
             e.printStackTrace();
         }
 
+        testMongoValidation();
+
     }
+
+    private void testMongoValidation() {
+        System.out.println("\n=== [TEST] Walidacja po stronie MongoDB ===");
+
+        // Przykłady testów: każdy case ma opis i dane, które łamią reguły walidacji
+        List<ValidationCase> testCases = List.of(
+                new ValidationCase("Brak imienia (firstName = null)", new Patient.Builder()
+                        .skipValidation(true)
+                        .lastName("BezImienia")
+                        .pesel(11122233311L)
+                        .birthDate(LocalDate.now())
+                        .address("ul. Błędna 1")
+                        .age(30)
+                ),
+                new ValidationCase("Nieprawidłowy PESEL (za krótki)", new Patient.Builder()
+                        .skipValidation(true)
+                        .firstName("Jan")
+                        .lastName("ZłyPesel")
+                        .pesel(123456789L)
+                        .birthDate(LocalDate.now())
+                        .address("ul. Niepoprawna")
+                        .age(40)
+                ),
+                new ValidationCase("Brak daty urodzenia", new Patient.Builder()
+                        .skipValidation(true)
+                        .firstName("Anna")
+                        .lastName("BrakDaty")
+                        .pesel(11122233344L)
+                        .address("ul. Brakowa 1")
+                        .age(28)
+                )
+        );
+
+        for (ValidationCase test : testCases) {
+            runMongoValidationTest(test.description, test.builder);
+        }
+    }
+
+    private void runMongoValidationTest(String description, Patient.Builder builder) {
+        try {
+            System.out.println("\n[TEST CASE] " + description);
+            Patient p = builder.build(); // budujemy pacjenta bez walidacji aplikacyjnej (bo wyjątki zakomentowane)
+            createPatient(p);
+            System.err.println("[FAIL] Dokument powinien zostać odrzucony przez MongoDB, ale został zapisany.");
+        } catch (Exception e) {
+            System.out.println("[OK] MongoDB prawidłowo odrzucił dokument: " + e.getMessage());
+        }
+    }
+
+    private static class ValidationCase {
+        String description;
+        Patient.Builder builder;
+
+        public ValidationCase(String description, Patient.Builder builder) {
+            this.description = description;
+            this.builder = builder;
+        }
+    }
+
+
 
 }

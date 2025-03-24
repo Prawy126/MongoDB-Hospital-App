@@ -1,4 +1,4 @@
-# Projekt zaliczeniowy z przedmiotu nie relacyjne bazy danych
+# Projekt zaliczeniowy z przedmiotu nierelacyjne bazy danych
 ## Aplikacja zarządzająca szpitalem z użyciem MongoDB(Obiektowo) oraz Java
 
 Ten projekt stanowi zaliczenie z przedmiotu dotyczącego nierelacyjnych baz danych. Został napisany w języku Java i prezentuje implementację rozwiązań typowych dla systemów bazodanowych działających w modelu nierelacyjnym.
