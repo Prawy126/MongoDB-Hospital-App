@@ -129,7 +129,7 @@ public class AppointmentRepository {
      * @param endTime Czas zakończenia "HH:mm"
      * @return true jeśli dostępny
      */
-    public boolean isDoctorAvailable(ObjectId doctorId, String date, String startTime, String endTime) {
+    /*public boolean isDoctorAvailable(ObjectId doctorId, String date, String startTime, String endTime) {
         List<Bson> pipeline = Arrays.asList(
                 Aggregates.match(Filters.and(
                         Filters.eq("doctorId", doctorId),
@@ -144,7 +144,7 @@ public class AppointmentRepository {
 
         Document result = collection.aggregate(pipeline).first();
         return result == null || result.getInteger("count", 0) == 0;
-    }
+    }*/
     /**
      * Metoda testująca operacje na kolekcji wizyt.
      * <p>
