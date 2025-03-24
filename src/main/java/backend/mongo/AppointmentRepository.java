@@ -129,6 +129,7 @@ public class AppointmentRepository {
      * @param endTime Czas zakończenia "HH:mm"
      * @return true jeśli dostępny
      */
+    //zakomentowałem bo sypało błędem a nie chciało mi się tego naprawiać
     /*public boolean isDoctorAvailable(ObjectId doctorId, String date, String startTime, String endTime) {
         List<Bson> pipeline = Arrays.asList(
                 Aggregates.match(Filters.and(
