@@ -6,9 +6,16 @@ import backend.klasy.Patient;
 import backend.status.Day;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Filters;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import static com.mongodb.client.model.Filters.eq;
@@ -113,7 +120,31 @@ public class AppointmentRepository {
     public void deleteAppointment(ObjectId id) {
         collection.deleteOne(eq("_id", id));
     }
+    /**
+     * Sprawdza dostępność lekarza w danym terminie.
+     *
+     * @param doctorId ID lekarza
+     * @param date Data w formacie "YYYY-MM-DD"
+     * @param startTime Czas rozpoczęcia "HH:mm"
+     * @param endTime Czas zakończenia "HH:mm"
+     * @return true jeśli dostępny
+     */
+    public boolean isDoctorAvailable(ObjectId doctorId, String date, String startTime, String endTime) {
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(Filters.and(
+                        Filters.eq("doctorId", doctorId),
+                        Filters.eq("date", date),
+                        Filters.or(
+                                Filters.lt("endTime", startTime),
+                                Filters.gt("startTime", endTime)
+                        )
+                )),
+                Aggregates.count("count")
+        );
 
+        Document result = collection.aggregate(pipeline).first();
+        return result == null || result.getInteger("count", 0) == 0;
+    }
     /**
      * Metoda testująca operacje na kolekcji wizyt.
      * <p>
@@ -148,7 +179,7 @@ public class AppointmentRepository {
             Appointment testAppointment = new Appointment.Builder()
                     .patientId(testPatient)
                     .doctorId(testDoctor)
-                    .date(LocalDate.now())
+                    .date(LocalDateTime.now())
                     .room("Sala 205")
                     .description("Konsultacja kardiologiczna")
                     .build();
