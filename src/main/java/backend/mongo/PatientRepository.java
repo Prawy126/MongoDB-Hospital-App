@@ -43,29 +43,49 @@ public class PatientRepository {
             throw new IllegalArgumentException("Patient cannot be null");
         }
 
-        // Parametry pacjenta, które mają zostać zapisane
+        // Parametry pacjenta
         String firstName = patient.getFirstName();
         String lastName = patient.getLastName();
         long pesel = patient.getPesel();
-        String birthDate = patient.getBirthDate().toString(); // Konwersja daty na String
+        String birthDate = patient.getBirthDate().toString();  // Zmieniamy na String
         String address = patient.getAddress();
         int age = patient.getAge();
 
-        // Tworzymy zapytanie do MongoDB, aby uruchomić funkcję zapisaną w kolekcji 'orderFunctions'
-        Document result = database.runCommand(new Document("eval",
-                "var patient = db.orderFunctions.findOne({name: 'createPatient'}).code;" +
-                        "patient(firstName, lastName, pesel, birthDate, address, age);")
-                .append("args", Arrays.asList(firstName, lastName, pesel, birthDate, address, age))
-        );
+        // Przygotowanie zapytania do wywołania funkcji JavaScript w MongoDB
+        String jsFunctionCall = "addPatient('" + firstName + "', '" + lastName + "', " + pesel + ", '" + birthDate + "', '" + address + "', " + age + ")";
 
-        if(result==null){
-            return false;
-        }else{
+        try {
+            // Wykonaj zapytanie do MongoDB, wywołując funkcję z kolekcji 'orderFunctions'
+            Document result = database.runCommand(new Document("aggregate", "patients")
+                    .append("pipeline", Arrays.asList(
+                            new Document("$addFields", new Document("patientInfo",
+                                    new Document("$function", new Document()
+                                            .append("body", jsFunctionCall)
+                                            .append("args", Arrays.asList())
+                                            .append("lang", "js")
+                                    )
+                            ))
+                    ))
+                    .append("cursor", new Document()));
+
+            // Przekształcamy wynik w obiekt pacjenta (zwrócony dokument z MongoDB)
+            Document patientDoc = (Document) result.get("cursor");
+            Document firstBatch = (Document) patientDoc.get("firstBatch");
+            Patient createdPatient = new Patient(
+                    firstBatch.getString("firstName"),
+                    firstBatch.getString("lastName"),
+                    firstBatch.getLong("pesel"),
+                    LocalDate.parse(firstBatch.getString("birthDate")),
+                    firstBatch.getString("address")
+            );
+            createdPatient.setId(firstBatch.getObjectId("_id"));
+
             return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
-
-
 
     /**
      * Znajduje pacjenta po jego ID.

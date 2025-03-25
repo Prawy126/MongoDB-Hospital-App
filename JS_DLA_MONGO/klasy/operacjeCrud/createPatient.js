@@ -1,7 +1,8 @@
 db.orderFunctions.insertOne({
-    name: "createPatient",
+    name: "addPatient",
     code: `
-        function createPatient(firstName, lastName, pesel, birthDate, address, age) {
+        function addPatient(firstName, lastName, pesel, birthDate, address, age) {
+            // Sprawdzamy dane pacjenta
             if (!firstName || firstName.trim().length === 0) {
                 throw new Error("Imię nie może być puste.");
             }
@@ -15,8 +16,8 @@ db.orderFunctions.insertOne({
                 throw new Error("Pesel musi mieć dokładnie 11 cyfr.");
             }
 
-            // Tworzenie dokumentu pacjenta
-            var patient = {
+            // Tworzymy nowy dokument pacjenta
+            const patient = {
                 firstName: firstName,
                 lastName: lastName,
                 pesel: pesel,
@@ -26,9 +27,9 @@ db.orderFunctions.insertOne({
                 id: new ObjectId()  // Generowanie ID
             };
 
-            // Wstawienie do kolekcji 'patients'
+            // Wstawiamy pacjenta do bazy
             db.patients.insertOne(patient);
-            return patient;  // Zwróć wstawiony pacjent jako wynik
+            return patient;  // Zwracamy pacjenta po zapisaniu
         }
     `
 });
