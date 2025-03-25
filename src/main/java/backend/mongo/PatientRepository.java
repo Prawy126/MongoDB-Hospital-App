@@ -40,7 +40,67 @@ public class PatientRepository {
         if (patient == null) {
             throw new IllegalArgumentException("Patient cannot be null");
         }
-        collection.insertOne(patient);
+
+        // Tworzymy dokument wejściowy na podstawie pól obiektu patient
+        Document patientInput = new Document("firstName", patient.getFirstName())
+                .append("lastName", patient.getLastName())
+                .append("pesel", patient.getPesel())
+                .append("birthDate", patient.getBirthDate().toString())
+                .append("address", patient.getAddress())
+                .append("age", patient.getAge());
+
+        // Definicja funkcji JS z walidacją
+        String functionBody = "function(firstName, lastName, pesel, birthDate, address, age) { " +
+                "    if (!firstName || firstName.trim().length === 0) { " +
+                "       throw new Error('Imię nie może być puste.'); " +
+                "    } " +
+                "    if (!lastName || lastName.trim().length === 0) { " +
+                "       throw new Error('Nazwisko nie może być puste.'); " +
+                "    } " +
+                "    if (age <= 0) { " +
+                "       throw new Error('Wiek pacjenta musi być większy niż 0.'); " +
+                "    } " +
+                "    if (pesel.toString().length !== 11) { " +
+                "       throw new Error('Pesel musi mieć dokładnie 11 cyfr.'); " +
+                "    } " +
+                "    return { " +
+                "        firstName: firstName, " +
+                "        lastName: lastName, " +
+                "        pesel: pesel, " +
+                "        birthDate: birthDate, " +
+                "        address: address, " +
+                "        age: age, " +
+                "        computedField: age * 2 " +
+                "    }; " +
+                "}";
+
+        List<Document> pipeline = Arrays.asList(
+                new Document("$documents", Arrays.asList(patientInput)),
+                new Document("$addFields", new Document("newPatient",
+                        new Document("$function", new Document()
+                                .append("body", functionBody)
+                                .append("args", Arrays.asList("$firstName", "$lastName", "$pesel", "$birthDate", "$address", "$age"))
+                                .append("lang", "js")
+                        )
+                )),
+                new Document("$replaceRoot", new Document("newRoot", "$newPatient"))
+        );
+
+        // Wykonujemy agregację na kolekcji patients
+        Document computedPatientDoc = collection.withDocumentClass(Document.class)
+                .aggregate(pipeline)
+                .first();
+
+        if (computedPatientDoc == null) {
+            throw new RuntimeException("Agregacja nie zwróciła rezultatu.");
+        }
+
+        // Wstawiamy zwalidowany dokument do kolekcji
+        collection.withDocumentClass(Document.class).insertOne(computedPatientDoc);
+
+        // Ustawiamy ID dla pacjenta
+        patient.setId(computedPatientDoc.getObjectId("_id"));
+
         return patient;
     }
 
