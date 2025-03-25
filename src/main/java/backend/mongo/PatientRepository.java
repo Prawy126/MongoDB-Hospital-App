@@ -25,8 +25,10 @@ import static com.mongodb.client.model.Filters.eq;
  * Klasa zarządzajaca zapisem danych pacjenta do bazy MongoDB w sposób obiektowy*/
 public class PatientRepository {
     private final MongoCollection<Patient> collection;
+    private final MongoDatabase database;
 
     public PatientRepository(MongoDatabase database) {
+        this.database = database;
         this.collection = database.getCollection("patients", Patient.class);
     }
 
@@ -36,73 +38,34 @@ public class PatientRepository {
      * @param patient pacjent do utworzenia
      * @return utworzony pacjent
      */
-    public Patient createPatient(Patient patient) {
+    public boolean createPatient(Patient patient) {
         if (patient == null) {
             throw new IllegalArgumentException("Patient cannot be null");
         }
 
-        // Tworzymy dokument wejściowy na podstawie pól obiektu patient
-        Document patientInput = new Document("firstName", patient.getFirstName())
-                .append("lastName", patient.getLastName())
-                .append("pesel", patient.getPesel())
-                .append("birthDate", patient.getBirthDate().toString())
-                .append("address", patient.getAddress())
-                .append("age", patient.getAge());
+        // Parametry pacjenta, które mają zostać zapisane
+        String firstName = patient.getFirstName();
+        String lastName = patient.getLastName();
+        long pesel = patient.getPesel();
+        String birthDate = patient.getBirthDate().toString(); // Konwersja daty na String
+        String address = patient.getAddress();
+        int age = patient.getAge();
 
-        // Definicja funkcji JS z walidacją
-        String functionBody = "function(firstName, lastName, pesel, birthDate, address, age) { " +
-                "    if (!firstName || firstName.trim().length === 0) { " +
-                "       throw new Error('Imię nie może być puste.'); " +
-                "    } " +
-                "    if (!lastName || lastName.trim().length === 0) { " +
-                "       throw new Error('Nazwisko nie może być puste.'); " +
-                "    } " +
-                "    if (age <= 0) { " +
-                "       throw new Error('Wiek pacjenta musi być większy niż 0.'); " +
-                "    } " +
-                "    if (pesel.toString().length !== 11) { " +
-                "       throw new Error('Pesel musi mieć dokładnie 11 cyfr.'); " +
-                "    } " +
-                "    return { " +
-                "        firstName: firstName, " +
-                "        lastName: lastName, " +
-                "        pesel: pesel, " +
-                "        birthDate: birthDate, " +
-                "        address: address, " +
-                "        age: age, " +
-                "        computedField: age * 2 " +
-                "    }; " +
-                "}";
-
-        List<Document> pipeline = Arrays.asList(
-                new Document("$documents", Arrays.asList(patientInput)),
-                new Document("$addFields", new Document("newPatient",
-                        new Document("$function", new Document()
-                                .append("body", functionBody)
-                                .append("args", Arrays.asList("$firstName", "$lastName", "$pesel", "$birthDate", "$address", "$age"))
-                                .append("lang", "js")
-                        )
-                )),
-                new Document("$replaceRoot", new Document("newRoot", "$newPatient"))
+        // Tworzymy zapytanie do MongoDB, aby uruchomić funkcję zapisaną w kolekcji 'orderFunctions'
+        Document result = database.runCommand(new Document("eval",
+                "var patient = db.orderFunctions.findOne({name: 'createPatient'}).code;" +
+                        "patient(firstName, lastName, pesel, birthDate, address, age);")
+                .append("args", Arrays.asList(firstName, lastName, pesel, birthDate, address, age))
         );
 
-        // Wykonujemy agregację na kolekcji patients
-        Document computedPatientDoc = collection.withDocumentClass(Document.class)
-                .aggregate(pipeline)
-                .first();
-
-        if (computedPatientDoc == null) {
-            throw new RuntimeException("Agregacja nie zwróciła rezultatu.");
+        if(result==null){
+            return false;
+        }else{
+            return true;
         }
-
-        // Wstawiamy zwalidowany dokument do kolekcji
-        collection.withDocumentClass(Document.class).insertOne(computedPatientDoc);
-
-        // Ustawiamy ID dla pacjenta
-        patient.setId(computedPatientDoc.getObjectId("_id"));
-
-        return patient;
     }
+
+
 
     /**
      * Znajduje pacjenta po jego ID.
@@ -262,8 +225,10 @@ public class PatientRepository {
                     .age(25)
                     .build();
 
-            Patient createdPatient = createPatient(testPatient);
-            System.out.println("[OK] Utworzono pacjenta: " + createdPatient);
+            if(createPatient(testPatient)){
+                System.out.println("Pacjent został dodany do bazy");
+            }
+            System.out.println("[OK] Utworzono pacjenta: " + testPatient);
 
             try {
                 Patient youngPatient = new Patient.Builder()
@@ -329,11 +294,11 @@ public class PatientRepository {
             }
 
             // Wyszukiwanie po ID
-            Optional<Patient> foundById = findPatientById(createdPatient.getId());
+            Optional<Patient> foundById = findPatientById(testPatient.getId());
             if (foundById.isPresent()) {
                 System.out.println("[OK] Wyszukano pacjenta po ID: " + foundById.get());
             } else {
-                System.err.println("[ERROR] Nie znaleziono pacjenta o ID: " + createdPatient.getId());
+                System.err.println("[ERROR] Nie znaleziono pacjenta o ID: " + testPatient.getId());
             }
 
             // Wyszukiwanie po imieniu
@@ -362,8 +327,8 @@ public class PatientRepository {
 
             // Aktualizacja pacjenta
             try {
-                createdPatient.setAddress("ul. Zmieniona 20, Kraków");
-                Patient updatedPatient = updatePatient(createdPatient);
+                testPatient.setAddress("ul. Zmieniona 20, Kraków");
+                Patient updatedPatient = updatePatient(testPatient);
                 System.out.println("[OK] Zaktualizowano adres pacjenta: " + updatedPatient.getAddress());
             } catch (Exception e) {
                 System.err.println("[ERROR] Nie udało się zaktualizować pacjenta: " + e.getMessage());
@@ -371,8 +336,8 @@ public class PatientRepository {
 
 
             // Usuwanie pacjenta
-            deletePatient(createdPatient.getId());
-            System.out.println("[OK] Usunięto pacjenta o ID: " + createdPatient.getId());
+            deletePatient(testPatient.getId());
+            System.out.println("[OK] Usunięto pacjenta o ID: " + testPatient.getId());
 
             System.out.println("[SUCCESS] Wszystkie testy aplikacyjne zakończone.");
 
