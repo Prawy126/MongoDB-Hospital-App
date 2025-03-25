@@ -60,7 +60,18 @@ public class Main {
                                         new Document("$function", new Document()
                                                 .append("body", "function() {" +
                                                         "  function Patient(firstName, lastName, pesel, birthDate, address, age) {" +
-                                                        "      // ... (walidacje)" +
+                                                        "      if (!firstName || firstName.trim().length === 0) {" +
+                                                        "          throw new Error('Imię nie może być puste.');" +
+                                                        "      }" +
+                                                        "      if (!lastName || lastName.trim().length === 0) {" +
+                                                        "          throw new Error('Nazwisko nie może być puste.');" +
+                                                        "      }" +
+                                                        "      if (age <= 0) {" +
+                                                        "          throw new Error('Wiek pacjenta musi być większy niż 0.');" +
+                                                        "      }" +
+                                                        "      if (pesel < 10000000000 || pesel > 99999999999) {" +
+                                                        "          throw new Error('Pesel musi mieć dokładnie 11 cyfr.');" +
+                                                        "      }" +
                                                         "      return {" +
                                                         "          firstName: firstName," +
                                                         "          lastName: lastName," +
@@ -68,23 +79,16 @@ public class Main {
                                                         "          birthDate: birthDate," +
                                                         "          address: address," +
                                                         "          age: age," +
-                                                        "          getLastName: function() { return this.lastName; }," +
-                                                        "          getPesel: function() { return this.pesel; }," +
-                                                        "          get birthDate() { return this.birthDate; }," +  // Getter dla daty
-                                                        "          getAddress: function() { return this.address; }," +  // ✅ Przecinek
-                                                        "          getAge: function() { return this.age; }," +
-                                                        "          getFirstName: function() { return this.firstName; }" +
+                                                        "          getFirstName: function() { return this.firstName; }," +
+                                                        "          getLastName: function() {return this.lastName; }," +
+                                                        "          getPesel: function() {return this.pesel; }," +
+                                                        "          getBirthDate: function() {return this.birthDate;}" +
+                                                        "          getAddress: function() {return this.address; }," +
+                                                        "          getAge: function() {return this.age}" +
                                                         "      };" +
                                                         "  }" +
                                                         "  var patient = Patient('" + firstName + "', '" + lastName + "', " + pesel + ", '" + birthDate + "', '" + address + "', " + age + ");" +
-                                                        "  return {" +
-                                                        "      firstName: patient.getFirstName()," +
-                                                        "      age: patient.getAge()," +
-                                                        "      lastName: patient.getLastName()," +
-                                                        "      address: patient.getAddress()," +  // ✅ Poprawiona literówka
-                                                        "      pesel: patient.getPesel()," +
-                                                        "      birthDate: patient.birthDate" +  // ✅ Bez nawiasów ()
-                                                        "  };" +
+                                                        "  return { firstName: patient.getFirstName(), lastName: patient.getLastName(), pesel: patient.getPesel(), birthDate: patient.getBirthDate(), address: patient.getAddress(), age: patient.getAge()};" +
                                                         "}")
                                                 .append("args", Arrays.asList())
                                                 .append("lang", "js")
@@ -102,12 +106,13 @@ public class Main {
                     Document firstBatchDoc = firstBatch.get(0);
                     Document patientInfo = firstBatchDoc.get("patientInfo", Document.class);
                     if (patientInfo != null) {
+                        System.out.println("Wynik:");
                         System.out.println("Imię: " + patientInfo.getString("firstName"));
-                        System.out.println("Nazwisko: " + patientInfo.getString("getLastName"));
-                        System.out.println("Pesel: " + patientInfo.getDouble("getPesel"));
-                        System.out.println("Wiek: " + patientInfo.getInteger("age"));
-                        System.out.println("Data urodzenia: " + patientInfo.getString("birthDate"));
-                        System.out.println("Adres: " + patientInfo.getString("getAddress"));
+                        System.out.println("Nazwisko: " + patientInfo.getString("lastName"));
+                        System.out.println("Pesel: " + patientInfo.getDouble("pesel"));
+                        System.out.println("Data urodzenia: " + patientInfo.getDate("birthDate"));
+                        System.out.println("Adres: " + patientInfo.getString("address"));
+                        System.out.println("Wiek: " + patientInfo.getDouble("age"));
                     } else {
                         System.out.println("Brak informacji o pacjencie.");
                     }
