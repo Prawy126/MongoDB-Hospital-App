@@ -38,6 +38,7 @@ public class PatientRepository {
      * @param patient pacjent do utworzenia
      * @return utworzony pacjent
      */
+    //pytanie dlaczego wiek pacjenta jest zerem taki aktualnie jest błąd
     public boolean createPatient(Patient patient) {
         if (patient == null) {
             throw new IllegalArgumentException("Patient cannot be null");
@@ -52,7 +53,24 @@ public class PatientRepository {
         int age = patient.getAge();
 
         // Przygotowanie zapytania do wywołania funkcji JavaScript w MongoDB
-        String jsFunctionCall = "addPatient('" + firstName + "', '" + lastName + "', " + pesel + ", '" + birthDate + "', '" + address + "', " + age + ")";
+        String jsFunctionCall = "function addPatient(firstName, lastName, pesel, birthDate, address, age) {" +
+                "if (!firstName || firstName.trim().length === 0) throw new Error('Imię nie może być puste.');" +
+                "if (!lastName || lastName.trim().length === 0) throw new Error('Nazwisko nie może być puste.');" +
+                "if (age <= 0) throw new Error('Wiek pacjenta musi być większy niż 0.');" +
+                "if (pesel.toString().length !== 11) throw new Error('Pesel musi mieć dokładnie 11 cyfr.');" +
+                "const patient = {" +
+                "    firstName: firstName," +
+                "    lastName: lastName," +
+                "    pesel: pesel," +
+                "    birthDate: birthDate," +
+                "    address: address," +
+                "    age: age," +
+                "    id: new ObjectId()" +
+                "};" +
+                "db.patients.insertOne(patient);" +
+                "return patient;" +
+                "};" +
+                "addPatient('" + firstName + "', '" + lastName + "', " + pesel + ", '" + birthDate + "', '" + address + "', " + age + ");";
 
         try {
             // Wykonaj zapytanie do MongoDB, wywołując funkcję z kolekcji 'orderFunctions'
@@ -70,22 +88,27 @@ public class PatientRepository {
 
             // Przekształcamy wynik w obiekt pacjenta (zwrócony dokument z MongoDB)
             Document patientDoc = (Document) result.get("cursor");
-            Document firstBatch = (Document) patientDoc.get("firstBatch");
-            Patient createdPatient = new Patient(
-                    firstBatch.getString("firstName"),
-                    firstBatch.getString("lastName"),
-                    firstBatch.getLong("pesel"),
-                    LocalDate.parse(firstBatch.getString("birthDate")),
-                    firstBatch.getString("address")
-            );
-            createdPatient.setId(firstBatch.getObjectId("_id"));
-
-            return true;
+            List<Document> firstBatch = patientDoc.getList("firstBatch", Document.class);
+            if (firstBatch != null && !firstBatch.isEmpty()) {
+                Document firstBatchDoc = firstBatch.get(0);
+                Patient createdPatient = new Patient(
+                        firstBatchDoc.getString("firstName"),
+                        firstBatchDoc.getString("lastName"),
+                        firstBatchDoc.getLong("pesel"),
+                        LocalDate.parse(firstBatchDoc.getString("birthDate")),
+                        firstBatchDoc.getString("address")
+                );
+                createdPatient.setId(firstBatchDoc.getObjectId("_id"));
+                return true;
+            } else {
+                return false;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
+
 
     /**
      * Znajduje pacjenta po jego ID.
