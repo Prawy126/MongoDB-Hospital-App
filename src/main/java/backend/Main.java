@@ -27,7 +27,7 @@ public class Main {
         Patient patient = new Patient.Builder()
                 .firstName("Jan")
                 .lastName("Kowalski")
-                .pesel(12345678901L)
+                .pesel("12345678901")
                 .birthDate(LocalDate.of(1990, 1, 1))
                 .address("ul. Testowa 123, Warszawa")
                 .age(30)

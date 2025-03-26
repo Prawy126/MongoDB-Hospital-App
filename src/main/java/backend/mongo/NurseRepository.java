@@ -102,7 +102,7 @@ public class NurseRepository {
                     .firstName("Anna")
                     .lastName("Kowalska")
                     .specialization("Pediatria")
-                    .pesel(12345678901L)
+                    .pesel("12345678901")
                     .age(30)
                     .build();
 
@@ -115,7 +115,7 @@ public class NurseRepository {
                         .firstName("Test")
                         .lastName("Nurse")
                         .specialization("Pediatria")
-                        .pesel(11122233311L)
+                        .pesel("11122233311")
                         .age(19) // Wiek poniżej 20
                         .build();
                 System.err.println("[FAIL] Powinien wystąpić AgeException dla wieku < 20");
@@ -129,7 +129,7 @@ public class NurseRepository {
                         .firstName("Test")
                         .lastName("Nurse")
                         .specialization("Pediatria")
-                        .pesel(999) // Nieprawidłowy PESEL
+                        .pesel("999") // Nieprawidłowy PESEL
                         .age(25)
                         .build();
                 System.err.println("[FAIL] Powinien wystąpić PeselException");
@@ -143,7 +143,7 @@ public class NurseRepository {
                         .firstName(null) // Puste imię
                         .lastName("Nurse")
                         .specialization("Pediatria")
-                        .pesel(11122233311L)
+                        .pesel("11122233311")
                         .age(25)
                         .build();
                 System.err.println("[FAIL] Powinien wystąpić NullNameException");

@@ -136,7 +136,7 @@ public class DoctorRepository {
                     .firstName("Testowy")
                     .lastName("Lekarz")
                     .specialization("Kardiolog")
-                    .pesel(11122233311L)
+                    .pesel("11122233311")
                     .age(45)
                     .availableDays(List.of(Day.MONDAY, Day.WEDNESDAY, Day.FRIDAY))
                     .build();
@@ -149,7 +149,7 @@ public class DoctorRepository {
                         .firstName("Test")
                         .lastName("Doctor")
                         .specialization("Kardiolog")
-                        .pesel(11122233311L)
+                        .pesel("11122233311")
                         .age(20) // Wiek poniżej wymaganego minimum 25 lat
                         .availableDays(List.of(Day.MONDAY))
                         .build();
@@ -165,7 +165,7 @@ public class DoctorRepository {
                         .firstName("Test")
                         .lastName("Doctor")
                         .specialization("Kardiolog")
-                        .pesel(-1) // Nieprawidłowy PESEL
+                        .pesel("-1") // Nieprawidłowy PESEL
                         .age(30)
                         .availableDays(List.of(Day.MONDAY))
                         .build();
@@ -181,7 +181,7 @@ public class DoctorRepository {
                         .firstName(null)
                         .lastName("Doctor")
                         .specialization("Kardiolog")
-                        .pesel(11122233311L)
+                        .pesel("11122233311")
                         .age(30)
                         .availableDays(List.of(Day.MONDAY))
                         .build();

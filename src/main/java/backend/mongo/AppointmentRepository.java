@@ -160,7 +160,7 @@ public class AppointmentRepository {
             Patient testPatient = new Patient.Builder()
                     .firstName("Testowy")
                     .lastName("Pacjent")
-                    .pesel(11122233311L)
+                    .pesel("11122233311")
                     .birthDate(LocalDate.now())
                     .address("ul. Przykładowa 10, Kraków")
                     .age(25)
@@ -171,7 +171,7 @@ public class AppointmentRepository {
                     .firstName("Testowy")
                     .lastName("Lekarz")
                     .specialization("Kardiolog")
-                    .pesel(11122233311L)
+                    .pesel("11122233311")
                     .age(45)
                     .availableDays(List.of(Day.MONDAY, Day.WEDNESDAY, Day.FRIDAY))
                     .build();
