@@ -44,71 +44,92 @@ public class PatientRepository {
             throw new IllegalArgumentException("Patient cannot be null");
         }
 
-        // Parametry pacjenta
-        String firstName = patient.getFirstName();
-        String lastName = patient.getLastName();
-        long pesel = patient.getPesel();
-        String birthDate = patient.getBirthDate().toString();  // Zmieniamy na String
-        String address = patient.getAddress();
-        int age = patient.getAge();
+        // Przygotowanie dokumentu wejściowego na podstawie obiektu patient
+        Document patientInput = new Document("firstName", patient.getFirstName())
+                .append("lastName", patient.getLastName())
+                .append("pesel", String.valueOf(patient.getPesel())) // <- PESEL jako String!
+                .append("birthDate", patient.getBirthDate().toString())
+                .append("address", patient.getAddress())
+                .append("age", patient.getAge());
 
-        // Przygotowanie zapytania do wywołania funkcji JavaScript w MongoDB
-        String jsFunctionCall = "function addPatient(firstName, lastName, pesel, birthDate, address, age) {" +
-                "if (!firstName || firstName.trim().length === 0) throw new Error('Imię nie może być puste.');" +
-                "if (!lastName || lastName.trim().length === 0) throw new Error('Nazwisko nie może być puste.');" +
-                "if (age <= 0) throw new Error('Wiek pacjenta musi być większy niż 0.');" +
-                "if (pesel.toString().length !== 11) throw new Error('Pesel musi mieć dokładnie 11 cyfr.');" +
-                "const patient = {" +
-                "    firstName: firstName," +
-                "    lastName: lastName," +
-                "    pesel: pesel," +
-                "    birthDate: birthDate," +
-                "    address: address," +
-                "    age: age," +
-                "    id: new ObjectId()" +
-                "};" +
-                "db.patients.insertOne(patient);" +
-                "return patient;" +
-                "};" +
-                "addPatient('" + firstName + "', '" + lastName + "', " + pesel + ", '" + birthDate + "', '" + address + "', " + age + ");";
+
+        // Definicja funkcji JS, która przetworzy dane pacjenta (walidacja, dodanie ID)
+        String functionBody = "function(firstName, lastName, pesel, birthDate, address, age) {" +
+                "   if (!firstName || firstName.trim().length === 0) {" +
+                "       throw new Error('Imię nie może być puste.');" +
+                "   }" +
+                "   if (!lastName || lastName.trim().length === 0) {" +
+                "       throw new Error('Nazwisko nie może być puste.');" +
+                "   }" +
+                "   if (age <= 0) {" +
+                "       throw new Error('Wiek pacjenta musi być większy niż 0.');" +
+                "   }" +
+                "   if (pesel.length != 11) {" +
+                "       throw new Error('Pesel musi mieć dokładnie 11 cyfr.');" +
+                "   }" +
+                "   return {" +
+                "       firstName: firstName," +
+                "       lastName: lastName," +
+                "       pesel: pesel," +
+                "       birthDate: birthDate," +
+                "       address: address," +
+                "       age: age," +
+                "       id: new ObjectId()" +
+                "   };" +
+                "}";
+
+
+        // Nazwa tymczasowej kolekcji – użyjemy jej tylko do przetworzenia dokumentu
+        String tempCollectionName = "tempPatients";
 
         try {
-            // Wykonaj zapytanie do MongoDB, wywołując funkcję z kolekcji 'orderFunctions'
-            Document result = database.runCommand(new Document("aggregate", "patients")
-                    .append("pipeline", Arrays.asList(
-                            new Document("$addFields", new Document("patientInfo",
-                                    new Document("$function", new Document()
-                                            .append("body", jsFunctionCall)
-                                            .append("args", Arrays.asList())
-                                            .append("lang", "js")
-                                    )
-                            ))
-                    ))
-                    .append("cursor", new Document()));
+            // Wstaw dokument wejściowy do kolekcji tymczasowej
+            MongoCollection<Document> tempColl = database.getCollection(tempCollectionName, Document.class);
+            tempColl.insertOne(patientInput);
 
-            // Przekształcamy wynik w obiekt pacjenta (zwrócony dokument z MongoDB)
-            Document patientDoc = (Document) result.get("cursor");
-            List<Document> firstBatch = patientDoc.getList("firstBatch", Document.class);
-            if (firstBatch != null && !firstBatch.isEmpty()) {
-                Document firstBatchDoc = firstBatch.get(0);
-                Patient createdPatient = new Patient(
-                        firstBatchDoc.getString("firstName"),
-                        firstBatchDoc.getString("lastName"),
-                        firstBatchDoc.getLong("pesel"),
-                        LocalDate.parse(firstBatchDoc.getString("birthDate")),
-                        firstBatchDoc.getString("address")
-                );
-                createdPatient.setId(firstBatchDoc.getObjectId("_id"));
-                return true;
-            } else {
-                return false;
+            // Budujemy potok agregacyjny na kolekcji tymczasowej
+            List<Document> pipeline = Arrays.asList(
+                    new Document("$addFields", new Document("computedPatient",
+                            new Document("$function", new Document()
+                                    .append("body", functionBody)
+                                    // Przekazujemy argumenty z dokumentu wejściowego – używamy ścieżek do pól
+                                    .append("args", Arrays.asList("$firstName", "$lastName", "$pesel", "$birthDate", "$address", "$age"))
+                                    .append("lang", "js")
+                            )
+                    )),
+                    new Document("$replaceRoot", new Document("newRoot", "$computedPatient"))
+            );
+
+            // Wykonujemy agregację na kolekcji tymczasowej
+            Document computedDoc = tempColl.aggregate(pipeline).first();
+            if (computedDoc == null) {
+                throw new RuntimeException("Agregacja nie zwróciła rezultatu.");
             }
+
+            // Usuwamy dokument z kolekcji tymczasowej (opcjonalnie)
+            tempColl.deleteOne(eq("firstName", patient.getFirstName()));
+
+            // Wstawiamy obliczony dokument do głównej kolekcji "patients"
+            MongoCollection<Document> patientsColl = database.getCollection("patients", Document.class);
+            patientsColl.insertOne(computedDoc);
+
+            // Mapujemy wynikowy dokument na obiekt Patient – możesz tu użyć własnego mapera
+            Patient createdPatient = new Patient.Builder()
+                    .firstName(computedDoc.getString("firstName"))
+                    .lastName(computedDoc.getString("lastName"))
+                    .pesel(computedDoc.getString("pesel"))
+                    .birthDate(LocalDate.parse(computedDoc.getString("birthDate")))
+                    .address(computedDoc.getString("address"))
+                    .age(computedDoc.getInteger("age"))
+                    .build();
+            createdPatient.setId(computedDoc.getObjectId("_id"));
+
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
-
 
     /**
      * Znajduje pacjenta po jego ID.
@@ -262,7 +283,7 @@ public class PatientRepository {
             Patient testPatient = new Patient.Builder()
                     .firstName("Testowy")
                     .lastName("Pacjent")
-                    .pesel(11122233311L) // Valid PESEL
+                    .pesel("11122233311") // Valid PESEL
                     .birthDate(LocalDate.now())
                     .address("ul. Przykładowa 10, Kraków")
                     .age(25)
@@ -277,7 +298,7 @@ public class PatientRepository {
                 Patient youngPatient = new Patient.Builder()
                         .firstName("Test")
                         .lastName("Patient")
-                        .pesel(11122233311L)
+                        .pesel("11122233311")
                         .birthDate(LocalDate.now())
                         .address("Test Address")
                         .age(0) // Nieprawidłowy wiek
@@ -293,7 +314,7 @@ public class PatientRepository {
                 Patient invalidPeselPatient = new Patient.Builder()
                         .firstName("Test")
                         .lastName("Patient")
-                        .pesel(-1) // Nieprawidłowy PESEL
+                        .pesel("-1") // Nieprawidłowy PESEL
                         .birthDate(LocalDate.now())
                         .address("Test Address")
                         .age(25)
@@ -309,7 +330,7 @@ public class PatientRepository {
                 Patient nullNamePatient = new Patient.Builder()
                         .firstName(null)
                         .lastName("Patient")
-                        .pesel(11122233311L)
+                        .pesel("11122233311")
                         .birthDate(LocalDate.now())
                         .address("Test Address")
                         .age(25)
@@ -325,7 +346,7 @@ public class PatientRepository {
                 Patient invalidPatient = new Patient.Builder()
                         .firstName("Test")
                         .lastName("Błąd")
-                        .pesel(11111111110L)// Nieprawidłowy PESEL
+                        .pesel("11111111110")// Nieprawidłowy PESEL
                         .birthDate(LocalDate.of(2020, 1, 1))
                         .address("Test")
                         .age(10)
@@ -401,7 +422,7 @@ public class PatientRepository {
                 new ValidationCase("Brak imienia (firstName = null)", new Patient.Builder()
                         .skipValidation(true)
                         .lastName("BezImienia")
-                        .pesel(11122233311L)
+                        .pesel("11122233311")
                         .birthDate(LocalDate.now())
                         .address("ul. Błędna 1")
                         .age(30)
@@ -410,7 +431,7 @@ public class PatientRepository {
                         .skipValidation(true)
                         .firstName("Jan")
                         .lastName("ZłyPesel")
-                        .pesel(123456789L)
+                        .pesel("123456789")
                         .birthDate(LocalDate.now())
                         .address("ul. Niepoprawna")
                         .age(40)
@@ -419,7 +440,7 @@ public class PatientRepository {
                         .skipValidation(true)
                         .firstName("Anna")
                         .lastName("BrakDaty")
-                        .pesel(11122233344L)
+                        .pesel("11122233344")
                         .address("ul. Brakowa 1")
                         .age(28)
                 )

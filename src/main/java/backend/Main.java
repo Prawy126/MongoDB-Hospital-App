@@ -23,6 +23,7 @@ public class Main {
         PatientRepository patientRepository = new PatientRepository(database);
 
         // Tworzymy pacjenta używając wzorca Builder
+
         Patient patient = new Patient.Builder()
                 .firstName("Jan")
                 .lastName("Kowalski")
@@ -34,7 +35,7 @@ public class Main {
         patientRepository.createPatient(patient);
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
-        /*
+    /*
         if (database != null) {
             String firstName = "Jan";
             String lastName = "Kowalski";

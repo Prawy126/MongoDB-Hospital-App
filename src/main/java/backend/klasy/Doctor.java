@@ -36,7 +36,7 @@ public class Doctor extends Person {
     public String getRoom() { return room; }
     public String getContactInformation() { return contactInformation; }
     public int getAge() { return super.getAge(); }
-    public long getPesel() { return super.getPesel(); }
+    public String getPesel() { return super.getPesel(); }
 
     public void setId(ObjectId id) { this.id = id; }
     public void setFirstName(String firstName) throws NullNameException{ super.setFirstName(firstName); }
@@ -46,7 +46,7 @@ public class Doctor extends Person {
     public void setRoom(String room) { this.room = room; }
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
     public void setAge(int age)throws AgeException { if(age >= 25)super.setAge(age);else throw new AgeException("Wiek lekarza nie może być mniejszy niż 25"); }
-    public void setPesel(long pesel) throws PeselException { super.setPesel(pesel); }
+    public void setPesel(String pesel) throws PeselException { super.setPesel(pesel); }
 
     public static class Builder {
         private ObjectId id;
@@ -56,7 +56,7 @@ public class Doctor extends Person {
         private List<Day> availableDays;
         private String room;
         private int age;
-        private long pesel;
+        private String pesel;
         private String contactInformation;
 
         public Builder() {}
@@ -99,7 +99,7 @@ public class Doctor extends Person {
             this.age = age;
             return this;
         }
-        public Builder pesel(long pesel) {
+        public Builder pesel(String pesel) {
             this.pesel = pesel;
             return this;
         }
@@ -114,7 +114,7 @@ public class Doctor extends Person {
             if (age < 25) {
                 throw new AgeException("Wiek lekarza musi być co najmniej 25 lat.");
             }
-            if (pesel < 10000000000L || pesel > 99999999999L) {
+            if (pesel.length() != 11) {
                 throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
             }
 

@@ -19,7 +19,7 @@ public class Nurse extends Person {
 
     public Nurse() {}
 
-    private Nurse(String firstName, String lastName, long pesel, int age, String specialization, List<Assignment> assignments) throws PeselException, NullNameException, AgeException {
+    private Nurse(String firstName, String lastName, String pesel, int age, String specialization, List<Assignment> assignments) throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age);
         this.specialization = specialization;
         this.assignments = assignments != null ? assignments : new ArrayList<>();
@@ -33,7 +33,7 @@ public class Nurse extends Person {
 
     public int getAge() { return super.getAge(); }
 
-    public long getPesel() { return super.getPesel(); }
+    public String getPesel() { return super.getPesel(); }
 
     public String getSpecialization() { return specialization; }
 
@@ -57,7 +57,7 @@ public class Nurse extends Person {
         private ObjectId id;
         private String firstName;
         private String lastName;
-        private long pesel;
+        private String pesel;
         private int age;
         private String specialization;
         private List<Assignment> assignments = new ArrayList<>();
@@ -79,7 +79,7 @@ public class Nurse extends Person {
             return this;
         }
 
-        public Builder pesel(long pesel) {
+        public Builder pesel(String pesel) {
             this.pesel = pesel;
             return this;
         }
@@ -109,7 +109,7 @@ public class Nurse extends Person {
             if (age < 20) {
                 throw new AgeException("Wiek pielęgniarki musi wynosić co najmniej 20 lat.");
             }
-            if (pesel < 10000000000L || pesel > 99999999999L) {
+            if (pesel.length() != 11) {
                 throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
             }
 
