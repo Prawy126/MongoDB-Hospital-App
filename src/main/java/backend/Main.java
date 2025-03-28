@@ -24,15 +24,14 @@ public class Main {
 
         // Tworzymy pacjenta używając wzorca Builder
 
-        Patient patient = new Patient.Builder()
-                .firstName("Jan")
-                .lastName("Kowalski")
-                .pesel("12345678901")
-                .birthDate(LocalDate.of(1990, 1, 1))
-                .address("ul. Testowa 123, Warszawa")
-                .age(30)
-                .build();
-        patientRepository.createPatient(patient);
+
+       List <Patient>test = patientRepository.findAll();
+       if(!test.isEmpty()){
+           for (Patient patient : test) {
+               System.out.println(patient.getFirstName());
+           }
+       }
+
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
     /*

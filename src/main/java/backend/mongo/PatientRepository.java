@@ -16,6 +16,7 @@ import org.bson.types.ObjectId;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -121,13 +122,78 @@ public class PatientRepository {
     }
 
     /**
-     * Znajduje wszystkich pacjentów w bazie danych.
+     * Znajduje wszystkich pacjentów w bazie danych. wykorzystuje agregację
      *
      * @return lista wszystkich pacjentów
      */
     public List<Patient> findAll() {
-        return collection.find().into(new ArrayList<>());
+        // Definicja funkcji JS, która po prostu zwróci dane pacjenta
+        String functionBody = "function() { return this; }"; // Funkcja tożsamościowa, zwraca same dane
+
+        List<Document> pipeline = Arrays.asList(
+                new Document("$addFields", new Document("processedPatient",
+                        new Document("$function", new Document()
+                                .append("body", functionBody) // Funkcja tożsamościowa
+                                .append("args", Arrays.asList()) // Brak argumentów
+                                .append("lang", "js")
+                        )
+                )),
+                new Document("$replaceRoot", new Document("newRoot", "$processedPatient")) // Zamiana na główny dokument
+        );
+
+        try {
+            // Wykonaj agregację na głównej kolekcji "patients"
+            List<Document> results = collection.withDocumentClass(Document.class).aggregate(pipeline).into(new ArrayList<>());
+
+            // Sprawdzenie, czy wyniki są puste
+            if (results.isEmpty()) {
+                System.err.println("Brak pacjentów w bazie danych.");
+                return Collections.emptyList(); // Zwrócenie pustej listy, jeśli brak wyników
+            }
+
+            // Mapowanie wyników na obiekty Patient
+            return results.stream()
+                    .map(doc -> {
+                        try {
+                            // Pobieramy dane z dokumentu
+                            String firstName = doc.getString("firstName");
+                            String lastName = doc.getString("lastName");
+                            String pesel = doc.getString("pesel"); // Upewniamy się, że PESEL jest Stringiem
+                            String birthDateStr = doc.getString("birthDate");
+                            LocalDate birthDate = (birthDateStr != null) ? LocalDate.parse(birthDateStr) : null; // Mapujemy datę
+                            String address = doc.getString("address");
+                            Integer age = doc.getInteger("age"); // Wiek może być null, dlatego używamy Integer
+
+                            // Sprawdzamy, czy wszystkie wymagane dane są dostępne
+                            if (birthDateStr == null) {
+                                System.err.println("Brak wymaganych danych dla pacjenta: " + doc);
+                                return null; // Pomiń dokumenty z brakującymi danymi
+                            }
+
+                            // Tworzymy obiekt Patient na podstawie danych
+                            return new Patient.Builder()
+                                    .firstName(firstName)
+                                    .lastName(lastName)
+                                    .pesel(pesel) // Przechowujemy PESEL jako String
+                                    .birthDate(birthDate)
+                                    .address(address)
+                                    .age(age)
+                                    .build();
+                        } catch (Exception e) {
+                            System.err.println("Błąd przy mapowaniu dokumentu: " + doc);
+                            e.printStackTrace();
+                            return null; // Pomiń dokumenty, które spowodowały wyjątek
+                        }
+                    })
+                    .filter(Objects::nonNull) // Usuń null z wyniku
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList(); // Zwracamy pustą listę w przypadku błędu
+        }
     }
+
+
 
     /**
      * Znajduje pacjentów po ich imieniu.
