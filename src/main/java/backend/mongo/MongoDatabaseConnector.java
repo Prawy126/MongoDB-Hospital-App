@@ -14,7 +14,7 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
  * Klasa MongoDatabaseConnector służy do zarządzania połączeniem z bazą danych MongoDB.
  */
 public class MongoDatabaseConnector {
-    private static final String DB_IP = "192.168.154.191";
+    private static final String DB_IP = "192.168.0.105";
 
     private static final int DB_PORT = 27017;
     private static final String DB_NAME = "hospitalDB";
