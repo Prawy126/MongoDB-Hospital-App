@@ -1,20 +1,18 @@
 package backend;
 
 import backend.klasy.Patient;
+import backend.mongo.LocalDateCodec;
 import backend.mongo.MongoDatabaseConnector;
 import backend.mongo.PatientRepository;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
 
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.mongodb.client.model.Filters.eq;
 
 public class Main {
     public static void main(String[] args) throws NullNameException, AgeException, PeselException {
@@ -22,17 +20,15 @@ public class Main {
 
         PatientRepository patientRepository = new PatientRepository(database);
 
-        // Tworzymy pacjenta używając wzorca Builder
 
-       List <Patient>test = patientRepository.findAll();
-       test.get(0).setAge(20);
-       patientRepository.updatePatient(test.get(0));
-       if(!test.isEmpty()){
-           for (Patient patient : test) {
-               System.out.println(patient.toString());
-           }
-       }
+// Wyszukiwanie pacjentów urodzonych w tym dniu
+        List<Patient> lista = patientRepository.findPatientByBirthDate("2020-01-01");
 
+        if (lista.isEmpty()) {
+            System.out.println("Nie znaleziono pacjentów urodzonych w tym dniu");
+        } else {
+            System.out.println("Znaleziono pacjentów: " + lista.size());
+        }
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
     /*

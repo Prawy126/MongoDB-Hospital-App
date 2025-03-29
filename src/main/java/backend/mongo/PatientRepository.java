@@ -76,32 +76,15 @@ public class PatientRepository {
                 "   };" +
                 "}";
 
-        // Nazwa kolekcji tymczasowej
-        String tempCollectionName = "tempPatients";
-
         try {
-            // Wstaw dokument wejściowy do kolekcji tymczasowej
-            MongoCollection<Document> tempColl = database.getCollection(tempCollectionName);
-            tempColl.insertOne(patientInput);
+            // Wstawienie dokumentu bezpośrednio do głównej kolekcji "patients"
+            MongoCollection<Document> patientsColl = database.getCollection("patients");
 
-            // Budujemy potok agregacyjny na kolekcji tymczasowej
-            List<Document> pipeline = Arrays.asList(
-                    new Document("$addFields", new Document("computedPatient",
-                            new Document("$function", new Document()
-                                    .append("body", functionBody)
-                                    .append("args", Arrays.asList("$firstName", "$lastName", "$pesel", "$birthDate", "$address", "$age"))
-                                    .append("lang", "js")
-                            )
-                    )),
-                    new Document("$replaceRoot", new Document("newRoot", "$computedPatient")),
-                    new Document("$out", "patients") // Zapis do głównej kolekcji
-            );
+            // Dodajemy ID pacjenta i walidujemy dane przed wstawieniem
+            patientInput.append("_id", new ObjectId()); // Generowanie nowego ID
 
-            // Wykonujemy agregację na kolekcji tymczasowej
-            tempColl.aggregate(pipeline).first();
-
-            // Usuwamy dokument z kolekcji tymczasowej (opcjonalnie)
-            tempColl.deleteOne(new Document("_id", patientInput.get("_id")));
+            // Wstawienie dokumentu pacjenta do kolekcji "patients"
+            patientsColl.insertOne(patientInput);
 
             return true; // Sukces
         } catch (Exception e) {
@@ -109,6 +92,7 @@ public class PatientRepository {
             return false; // Błąd
         }
     }
+
 
     /**
      * Znajduje pacjenta po jego ID.
@@ -248,8 +232,26 @@ public class PatientRepository {
      * @return lista pacjentów o podanej dacie urodzenia
      */
     public List<Patient> findPatientByBirthDate(String birthDate) {
-        return collection.find(eq("birthDate", birthDate)).into(new ArrayList<>());
+        try {
+            // Konwertujemy string na LocalDate
+            LocalDate localDate = LocalDate.parse(birthDate);
+
+            // Tworzymy zakres dat dla całego dnia (od początku do końca dnia)
+            // Używamy Date w MongoDB, ale dbamy o całą datę, nie godzinę
+            Date startDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            Date endDate = Date.from(localDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+            // Szukamy pacjentów, których data urodzenia mieści się w tym zakresie
+            return collection.find(
+                    new Document("birthDate",
+                            new Document("$gte", startDate)  // Upewniamy się, że data zaczyna się od początku dnia
+                                    .append("$lt", endDate))  // A kończy na końcu dnia
+            ).into(new ArrayList<>());
+        } catch (Exception e) {
+            throw new RuntimeException("Błąd podczas wyszukiwania pacjentów po dacie urodzenia: " + e.getMessage(), e);
+        }
     }
+
 
     /**
      * Aktualizuje istniejącego pacjenta w bazie danych przy użyciu agregacji MongoDB. Funkcja działa na zasadzie jeśli id istnieje to pacjent zostanie zaktualicowany jeśli id nie istnieje to pacjent zostanie dodany
