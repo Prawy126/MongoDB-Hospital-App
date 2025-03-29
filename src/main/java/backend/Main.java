@@ -24,8 +24,9 @@ public class Main {
 
         // Tworzymy pacjenta używając wzorca Builder
 
-
        List <Patient>test = patientRepository.findAll();
+       test.get(0).setAge(20);
+       patientRepository.updatePatient(test.get(0));
        if(!test.isEmpty()){
            for (Patient patient : test) {
                System.out.println(patient.toString());
