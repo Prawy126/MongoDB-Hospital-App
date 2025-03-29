@@ -12,8 +12,6 @@ import com.mongodb.client.model.Field;
 import com.mongodb.client.model.Projections;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
-
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -143,18 +141,43 @@ public class PatientRepository {
             return results.stream()
                     .map(doc -> {
                         try {
-                            String firstName = doc.getString("firstName");
-                            String lastName = doc.getString("lastName");
-                            String pesel = doc.getString("pesel");
-                            Date birthDate = doc.getDate("birthDate");
-                            LocalDate birthDateLocal = (birthDate != null) ? birthDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
-                            String address = doc.getString("address");
-                            Integer age = doc.getInteger("age");
+                            // Extract the nested patientData document if it exists
+                            Document patientDoc = doc.containsKey("patientData") ?
+                                    doc.get("patientData", Document.class) :
+                                    doc;
 
-                            if (birthDateLocal == null) {
-                                System.err.println("Brak wymaganych danych dla pacjenta: " + doc);
+                            String firstName = patientDoc.getString("firstName");
+                            String lastName = patientDoc.getString("lastName");
+                            String pesel = patientDoc.getString("pesel");
+
+                            // Handle different date formats that might be in the database
+                            LocalDate birthDateLocal = null;
+                            Object birthDateObj = patientDoc.get("birthDate");
+                            if (birthDateObj instanceof Date) {
+                                birthDateLocal = ((Date) birthDateObj).toInstant()
+                                        .atZone(ZoneId.systemDefault()).toLocalDate();
+                            } else if (birthDateObj instanceof String) {
+                                birthDateLocal = LocalDate.parse((String) birthDateObj);
+                            }
+
+                            String address = patientDoc.getString("address");
+
+                            // Handle potential numeric type differences for age
+                            Integer age = null;
+                            Object ageObj = patientDoc.get("age");
+                            if (ageObj instanceof Integer) {
+                                age = (Integer) ageObj;
+                            } else if (ageObj instanceof Double) {
+                                age = ((Double) ageObj).intValue();
+                            }
+
+                            if (firstName == null || lastName == null || pesel == null ||
+                                    birthDateLocal == null || address == null || age == null) {
+                                System.err.println("Brak wymaganych danych dla pacjenta: " + patientDoc);
                                 return null;
                             }
+
+                            ObjectId id = patientDoc.getObjectId("_id");
 
                             return new Patient.Builder()
                                     .firstName(firstName)
@@ -163,6 +186,7 @@ public class PatientRepository {
                                     .birthDate(birthDateLocal)
                                     .address(address)
                                     .age(age)
+                                    .withId(id) // Make sure the ID is correctly set
                                     .build();
                         } catch (Exception e) {
                             System.err.println("Błąd przy mapowaniu dokumentu: " + doc);

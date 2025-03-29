@@ -28,7 +28,7 @@ public class Main {
        List <Patient>test = patientRepository.findAll();
        if(!test.isEmpty()){
            for (Patient patient : test) {
-               System.out.println(patient.getFirstName());
+               System.out.println(patient.toString());
            }
        }
 

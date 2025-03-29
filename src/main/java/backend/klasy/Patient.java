@@ -3,6 +3,7 @@ package backend.klasy;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
+import dev.morphia.annotations.Id;
 import org.bson.types.ObjectId;
 import java.time.LocalDate;
 
@@ -185,5 +186,7 @@ public class Patient extends Person {
         public int hashCode() {
             return id != null ? id.hashCode() : 0;
         }
+
+
     }
 }
