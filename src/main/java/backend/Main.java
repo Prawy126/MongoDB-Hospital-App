@@ -7,10 +7,13 @@ import backend.mongo.PatientRepository;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -19,15 +22,8 @@ public class Main {
         MongoDatabase database = MongoDatabaseConnector.connectToDatabase();
 
         PatientRepository patientRepository = new PatientRepository(database);
-
-
-// Wyszukiwanie pacjentów urodzonych w tym dniu
-        List<Patient> lista = patientRepository.findAll();
-        patientRepository.deletePatient(lista.get(0).getId());
-
-
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
-    /*
+
         if (database != null) {
             String firstName = "Jan";
             String lastName = "Kowalski";
@@ -38,6 +34,8 @@ public class Main {
 
             try {
                 // Upewnij się, że kolekcja "orders" nie jest pusta.
+
+                patientRepository.createPatient(new Patient(firstName, lastName, String.valueOf(pesel), birthDate, address, age));
                 MongoCollection<Document> ordersCollection = database.getCollection("orders");
                 long count = ordersCollection.countDocuments();
                 if (count == 0) {
@@ -51,38 +49,46 @@ public class Main {
                         .append("pipeline", Arrays.asList(
                                 new Document("$addFields", new Document("patientInfo",
                                         new Document("$function", new Document()
-                                                .append("body", "function() {" +
-                                                        "  function Patient(firstName, lastName, pesel, birthDate, address, age) {" +
-                                                        "      if (!firstName || firstName.trim().length === 0) {" +
-                                                        "          throw new Error('Imię nie może być puste.');" +
-                                                        "      }" +
-                                                        "      if (!lastName || lastName.trim().length === 0) {" +
-                                                        "          throw new Error('Nazwisko nie może być puste.');" +
-                                                        "      }" +
-                                                        "      if (age <= 0) {" +
-                                                        "          throw new Error('Wiek pacjenta musi być większy niż 0.');" +
-                                                        "      }" +
-                                                        "      if (pesel < 10000000000 || pesel > 99999999999) {" +
-                                                        "          throw new Error('Pesel musi mieć dokładnie 11 cyfr.');" +
-                                                        "      }" +
-                                                        "      return {" +
-                                                        "          firstName: firstName," +
-                                                        "          lastName: lastName," +
-                                                        "          pesel: pesel," +
-                                                        "          birthDate: birthDate," +
-                                                        "          address: address," +
-                                                        "          age: age," +
-                                                        "          getFirstName: function() { return this.firstName; }," +
-                                                        "          getLastName: function() {return this.lastName; }," +
-                                                        "          getPesel: function() {return this.pesel; }," +
-                                                        "          getBirthDate: function() {return this.birthDate;}" +
-                                                        "          getAddress: function() {return this.address; }," +
-                                                        "          getAge: function() {return this.age}" +
-                                                        "      };" +
-                                                        "  }" +
-                                                        "  var patient = Patient('" + firstName + "', '" + lastName + "', " + pesel + ", '" + birthDate + "', '" + address + "', " + age + ");" +
-                                                        "  return { firstName: patient.getFirstName(), lastName: patient.getLastName(), pesel: patient.getPesel(), birthDate: patient.getBirthDate(), address: patient.getAddress(), age: patient.getAge()};" +
-                                                        "}")
+                                                .append("body",
+                                                        "function() {" +
+                                                                "  function Patient(firstName, lastName, pesel, birthDate, address, age) {" +
+                                                                "    if (!firstName || firstName.trim().length === 0) {" +
+                                                                "      throw new Error('Imię nie może być puste.');" +
+                                                                "    }" +
+                                                                "    if (!lastName || lastName.trim().length === 0) {" +
+                                                                "      throw new Error('Nazwisko nie może być puste.');" +
+                                                                "    }" +
+                                                                "    if (age <= 0) {" +
+                                                                "      throw new Error('Wiek pacjenta musi być większy niż 0.');" +
+                                                                "    }" +
+                                                                "    if (!/^[0-9]{11}$/.test(pesel)) {" +
+                                                                "      throw new Error('Pesel musi mieć dokładnie 11 cyfr.');" +
+                                                                "    }" +
+                                                                "    return {" +
+                                                                "      firstName: firstName," +
+                                                                "      lastName: lastName," +
+                                                                "      pesel: pesel," +
+                                                                "      birthDate: new Date(birthDate)," +
+                                                                "      address: address," +
+                                                                "      age: age," +
+                                                                "      getFirstName: function() { return this.firstName; }," +
+                                                                "      getLastName: function() { return this.lastName; }," +
+                                                                "      getPesel: function() { return this.pesel; }," +
+                                                                "      getBirthDate: function() { return this.birthDate; }," +
+                                                                "      getAddress: function() { return this.address; }," +
+                                                                "      getAge: function() { return this.age; }" +
+                                                                "    };" +
+                                                                "  }" +
+                                                                "  var patient = Patient(\"Jan\", \"Kowalski\", \"12345678901\", \"1990-01-01\", \"ul. Testowa 123, Warszawa\", 30);" +
+                                                                "  return {" +
+                                                                "    firstName: patient.getFirstName()," +
+                                                                "    lastName: patient.getLastName()," +
+                                                                "    pesel: patient.getPesel()," +
+                                                                "    birthDate: patient.getBirthDate()," +
+                                                                "    address: patient.getAddress()," +
+                                                                "    age: patient.getAge()" +
+                                                                "  };" +
+                                                                "}")
                                                 .append("args", Arrays.asList())
                                                 .append("lang", "js")
                                         )
@@ -102,7 +108,7 @@ public class Main {
                         System.out.println("Wynik:");
                         System.out.println("Imię: " + patientInfo.getString("firstName"));
                         System.out.println("Nazwisko: " + patientInfo.getString("lastName"));
-                        System.out.println("Pesel: " + patientInfo.getDouble("pesel"));
+                        System.out.println("Pesel: " + patientInfo.getString("pesel"));
                         System.out.println("Data urodzenia: " + patientInfo.getDate("birthDate"));
                         System.out.println("Adres: " + patientInfo.getString("address"));
                         System.out.println("Wiek: " + patientInfo.getDouble("age"));
@@ -112,6 +118,22 @@ public class Main {
                 } else {
                     System.out.println("Brak wyników w pierwszym batch'u.");
                 }
+
+                List<Patient> lista = patientRepository.findPatientByBirthDate("1990-01-01");
+                if (!lista.isEmpty()) {
+                    System.out.println("Lista pacjentów znalezionych po dacie:");
+                    for (Patient patient : lista) {
+                        System.out.println("Imię: " + patient.getFirstName());
+                        System.out.println("Nazwisko: " + patient.getLastName());
+                        System.out.println("Pesel: " + patient.getPesel());
+                        System.out.println("Data urodzenia: " + patient.getBirthDate());
+                        System.out.println("Adres: " + patient.getAddress());
+                        System.out.println("Wiek: " + patient.getAge());
+                    }
+                } else {
+                    System.out.println("Brak wyników");
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -119,6 +141,6 @@ public class Main {
             }
         } else {
             System.err.println("[ERROR] Połączenie z bazą danych nie powiodło się.");
-        }*/
+        }
     }
 }
