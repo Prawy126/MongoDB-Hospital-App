@@ -26,21 +26,20 @@ public class Main {
         PatientRepository patientRepository = new PatientRepository(database);
 
 // Wyszukiwanie pacjentów urodzonych w tym dniu
-        List<Patient> lista2 = patientRepository.findAll();
-        Patient patient = new Patient.Builder()
-                .firstName("Ja2n")
-                .lastName("Kowalski")
+        Patient patient2 = new Patient.Builder()
+                .firstName("Piotr")
+                .lastName("Nowak")
                 .pesel("12345678901")
-                .birthDate("1990-01-01")
+                .birthDate("2010-02-12")
                 .address("ul. Testowa 123")
                 .age(33)
-                .withId(lista2.get(0).getId())
+                .withId(new ObjectId())
                 .build();
-        patientRepository.updatePatient(patient);
-        List<Patient> test = patientRepository.findPatientByPesel(lista2.get(0).getPesel());
-        System.out.println(test.get(0).toString());
-
-
+        if(patientRepository.createPatient(patient2)){
+            System.out.println("Pacjent dodany");
+        }else {
+            System.out.println("Pacjent nie został dodany");
+        }
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
         /*

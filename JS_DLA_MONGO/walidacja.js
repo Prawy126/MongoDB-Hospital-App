@@ -8,12 +8,11 @@ db.createCollection("patients", {
         firstName: { bsonType: "string" },
         lastName: { bsonType: "string" },
         pesel: {
-          bsonType: "long",
-          minimum: 10000000000, // PESEL musi mieć 11 cyfr
-          maximum: 99999999999
+          bsonType: "string",
+          pattern: "^[0-9]{11}$" // PESEL jako string musi mieć dokładnie 11 cyfr
         },
         birthDate: {
-          bsonType: "date",
+          bsonType: "string",
           pattern: "^\\d{4}-\\d{2}-\\d{2}$" // Format daty ISO (np. "2024-01-01")
         },
         address: { bsonType: "string" },
@@ -29,7 +28,24 @@ db.createCollection("patients", {
 db.runCommand({
   collMod: "patients",
   validator: {
-    $jsonSchema: { /* ... */ } // Ta sama definicja co wyżej
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["firstName", "lastName", "pesel", "birthDate"],
+      properties: {
+        firstName: { bsonType: "string" },
+        lastName: { bsonType: "string" },
+        pesel: {
+          bsonType: "string",
+          pattern: "^[0-9]{11}$"
+        },
+        birthDate: {
+          bsonType: "string",
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        address: { bsonType: "string" },
+        age: { bsonType: "int", minimum: 0 }
+      }
+    }
   }
 });
 
@@ -69,7 +85,31 @@ db.createCollection("doctors", {
 db.runCommand({
   collMod: "doctors",
   validator: {
-    $jsonSchema: { /* ta sama definicja co wyżej */ }
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["firstName", "lastName", "specialization", "licenseNumber"],
+      properties: {
+        firstName: { bsonType: "string" },
+        lastName: { bsonType: "string" },
+        specialization: {
+          bsonType: "string",
+          enum: ["PEDIATRA", "KARDIOLOG", "NEUROLOG", "CHIRURG", "OKULISTA", "DERMATOLOG"]
+        },
+        licenseNumber: {
+          bsonType: "int",
+          minimum: 1000000,
+          maximum: 9999999
+        },
+        email: {
+          bsonType: "string",
+          pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+        },
+        phoneNumber: {
+          bsonType: "string",
+          pattern: "^\\+?[0-9]{9,12}$"
+        }
+      }
+    }
   }
 });
 
@@ -108,7 +148,29 @@ db.createCollection("nurses", {
 db.runCommand({
   collMod: "nurses",
   validator: {
-    $jsonSchema: { /* ta sama definicja co wyżej */ }
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["firstName", "lastName", "nurseID", "qualification"],
+      properties: {
+        firstName: { bsonType: "string" },
+        lastName: { bsonType: "string" },
+        nurseID: {
+          bsonType: "int",
+          minimum: 100000,
+          maximum: 999999
+        },
+        qualification: { bsonType: "string" },
+        education: { bsonType: "string" },
+        department: { bsonType: "string" },
+        email: {
+          bsonType: "string",
+          pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+        },
+        phoneNumber: {
+          bsonType: "string",
+          pattern: "^\\+?[0-9]{9,12}$"
+        }
+      }
+    }
   }
 });
-

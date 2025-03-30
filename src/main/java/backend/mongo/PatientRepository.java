@@ -1,5 +1,6 @@
 package backend.mongo;
 
+import com.mongodb.MongoCommandException;
 import com.mongodb.client.model.*;
 import org.bson.Document;
 import backend.klasy.Patient;
@@ -36,60 +37,84 @@ public class PatientRepository {
      */
     //pytanie dlaczego wiek pacjenta jest zerem taki aktualnie jest błąd
     public boolean createPatient(Patient patient) {
-        // Walidacja wejścia
         if (patient == null) {
             throw new IllegalArgumentException("Patient cannot be null");
         }
 
-        // Przygotowanie dokumentu wejściowego na podstawie obiektu patient
-        Document patientInput = new Document("firstName", patient.getFirstName())
-                .append("lastName", patient.getLastName())
-                .append("pesel", String.valueOf(patient.getPesel())) // PESEL jako String
-                .append("birthDate", patient.getBirthDate())
-                .append("address", patient.getAddress())
-                .append("age", patient.getAge());
+        // Walidacja po stronie Java przed wysłaniem do MongoDB
+        String firstName = patient.getFirstName();
+        if (firstName == null || !firstName.matches("^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż\\s]+$")) {
+            System.err.println("Błąd walidacji: Nieprawidłowe imię");
+            return false;
+        }
 
-        // Definicja funkcji JS, która przetworzy dane pacjenta (walidacja, dodanie ID)
-        String functionBody = "function(firstName, lastName, pesel, birthDate, address, age) {" +
-                "   if (!firstName || firstName.trim().length === 0) {" +
-                "       throw new Error('Imię nie może być puste.');" +
-                "   }" +
-                "   if (!lastName || lastName.trim().length === 0) {" +
-                "       throw new Error('Nazwisko nie może być puste.');" +
-                "   }" +
-                "   if (age <= 0) {" +
-                "       throw new Error('Wiek pacjenta musi być większy niż 0.');" +
-                "   }" +
-                "   if (pesel.length != 11) {" +
-                "       throw new Error('Pesel musi mieć dokładnie 11 cyfr.');" +
-                "   }" +
-                "   return {" +
-                "       firstName: firstName," +
-                "       lastName: lastName," +
-                "       pesel: pesel," +
-                "       birthDate: birthDate," +
-                "       address: address," +
-                "       age: age," +
-                "       id: new ObjectId()" + // Generujemy unikalne ID
-                "   };" +
-                "}";
-
+        MongoCollection<Document> tempColl = database.getCollection("tempPatients");
         try {
-            // Wstawienie dokumentu bezpośrednio do głównej kolekcji "patients"
-            MongoCollection<Document> patientsColl = database.getCollection("patients");
+            tempColl.drop();
 
-            // Dodajemy ID pacjenta i walidujemy dane przed wstawieniem
-            patientInput.append("_id", new ObjectId()); // Generowanie nowego ID
+            Document rawPatient = new Document()
+                    .append("firstName", patient.getFirstName())
+                    .append("lastName", patient.getLastName())
+                    .append("pesel", patient.getPesel())
+                    .append("birthDate", patient.getBirthDate())
+                    .append("address", patient.getAddress())
+                    .append("age", patient.getAge());
 
-            // Wstawienie dokumentu pacjenta do kolekcji "patients"
-            patientsColl.insertOne(patientInput);
+            tempColl.insertOne(rawPatient);
 
-            return true; // Sukces
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false; // Błąd
+            // Poprawione wyrażenie regularne - MongoDB używa silnika JavaScript, który może nie obsługiwać \p{L}
+            String functionBody = "function() {" +
+                    "   const nameRegex = /^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż\\s]+$/;" + // Jawne znaki zamiast \p{L}
+                    "   const peselRegex = /^[0-9]{11}$/;" +
+                    "   if (!this.firstName || !nameRegex.test(this.firstName.trim())) {" +
+                    "       throw new Error('Nieprawidłowe imię');" +
+                    "   }" +
+                    "   if (!this.lastName || !nameRegex.test(this.lastName.trim())) {" +
+                    "       throw new Error('Nieprawidłowe nazwisko');" +
+                    "   }" +
+                    "   if (this.age <= 0) {" +
+                    "       throw new Error('Wiek musi być większy od zera');" +
+                    "   }" +
+                    "   if (!this.pesel || !peselRegex.test(this.pesel)) {" +
+                    "       throw new Error('PESEL musi zawierać dokładnie 11 cyfr');" +
+                    "   }" +
+                    "   this._id = new ObjectId();" +
+                    "   return this;" +
+                    "}";
+
+            List<Bson> pipeline = Arrays.asList(
+                    Aggregates.addFields(new Field<>("validatedPatient",
+                            new Document("$function",
+                                    new Document()
+                                            .append("body", functionBody)
+                                            .append("args", Arrays.asList())
+                                            .append("lang", "js")
+                            )
+                    )),
+                    Aggregates.replaceRoot("$validatedPatient"),
+                    Aggregates.merge("patients",
+                            new MergeOptions()
+                                    .uniqueIdentifier("_id")
+                                    .whenMatched(MergeOptions.WhenMatched.FAIL)
+                                    .whenNotMatched(MergeOptions.WhenNotMatched.INSERT)
+                    )
+            );
+
+            tempColl.aggregate(pipeline).toCollection();
+            return true;
+        }catch (MongoCommandException e) {
+        System.err.println("Błąd walidacji: " + e.getMessage());
+        System.err.println("Kod błędu: " + e.getErrorCode());
+        System.err.println("Odpowiedź: " + e.getResponse().toJson());
+        return false;
+    }catch (Exception e) {
+            System.err.println("Błąd walidacji: " + e.getMessage());
+            return false;
+        } finally {
+            tempColl.drop();
         }
     }
+
 
     /**
      * Znajduje pacjenta po jego ID. Funckja korzysta z agregacji
