@@ -1,6 +1,6 @@
 package backend.mongo;
 
-import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.*;
 import org.bson.Document;
 import backend.klasy.Patient;
 import backend.wyjatki.AgeException;
@@ -8,9 +8,6 @@ import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Field;
-import com.mongodb.client.model.Projections;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import java.time.LocalDate;
@@ -262,94 +259,69 @@ public class PatientRepository {
      * //@return zaktualizowany pacjent
      */
 
-   /* public Patient updatePatient(Patient patient) {
+    public Patient updatePatient(Patient patient) {
         if (patient == null || patient.getId() == null) {
             throw new IllegalArgumentException("Pacjent lub ID nie mogą być puste");
         }
 
+        List<Bson> pipeline = Arrays.asList(
+                // 1. Dopasowanie dokumentu po ID
+                Aggregates.match(eq("_id", patient.getId())),
+
+                // 2. Walidacja i aktualizacja
+                Aggregates.addFields(
+                        new Field<>("validated",
+                                new Document()
+                                        .append("firstName", patient.getFirstName())
+                                        .append("lastName", patient.getLastName())
+                                        .append("pesel", patient.getPesel())
+                                        .append("birthDate", patient.getBirthDate())
+                                        .append("address", patient.getAddress())
+                                        .append("age", patient.getAge())
+                        )
+                ),
+
+                // 3. Sprawdzenie warunków
+                Aggregates.match(
+                        new Document("$expr",
+                                new Document("$and", Arrays.asList(
+                                        new Document("$ne", Arrays.asList("$validated.firstName", "")),
+                                        new Document("$eq", Arrays.asList(
+                                                new Document("$strLenCP", "$validated.pesel"), 11
+                                        )),
+                                        new Document("$gt", Arrays.asList("$validated.age", 0))
+                                ))
+                        )
+                ),
+
+                // 4. Przygotowanie końcowego dokumentu
+                Aggregates.replaceWith(
+                        new Document("$mergeObjects", Arrays.asList(
+                                "$$ROOT",
+                                "$validated"
+                        ))
+                )
+        );
+
         try {
-            // Przygotowanie dokumentu z danymi pacjenta
-            // Store birthDate as a proper Date object, not a string
-            Document patientDoc = new Document()
-                    .append("firstName", patient.getFirstName())
-                    .append("lastName", patient.getLastName())
-                    .append("pesel", patient.getPesel())
-                    .append("birthDate", patient.getBirthDate())
-                    .append("address", patient.getAddress())
-                    .append("age", patient.getAge());
+            // Wykonaj agregację
+            Patient updatedPatient = collection.aggregate(pipeline).first();
 
-            // Tworzenie kolekcji tymczasowej dla operacji agregacji
-            String tempCollectionName = "tempUpdatePatients";
-            MongoCollection<Document> tempColl = database.getCollection(tempCollectionName);
-
-            // Dodanie dokumentu pacjenta do kolekcji tymczasowej
-            patientDoc.append("_id", new ObjectId()); // Tymczasowe ID dla dokumentu
-            tempColl.insertOne(patientDoc);
-
-            // Funkcja JS do walidacji i aktualizacji danych pacjenta
-            String functionBody = "function(firstName, lastName, pesel, birthDate, address, age, patientId) {" +
-                    "   if (!firstName || firstName.trim().length === 0) {" +
-                    "       throw new Error('Imię nie może być puste.');" +
-                    "   }" +
-                    "   if (!lastName || lastName.trim().length === 0) {" +
-                    "       throw new Error('Nazwisko nie może być puste.');" +
-                    "   }" +
-                    "   if (age <= 0) {" +
-                    "       throw new Error('Wiek pacjenta musi być większy niż 0.');" +
-                    "   }" +
-                    "   if (pesel.length != 11) {" +
-                    "       throw new Error('Pesel musi mieć dokładnie 11 cyfr.');" +
-                    "   }" +
-                    "   return {" +
-                    "       firstName: firstName," +
-                    "       lastName: lastName," +
-                    "       pesel: pesel," +
-                    "       birthDate: birthDate," +
-                    "       address: address," +
-                    "       age: age," +
-                    "       _id: ObjectId(patientId)" +
-                    "   };" +
-                    "}";
-
-            // Potok agregacji do przetworzenia i aktualizacji danych
-            List<Document> updatePipeline = Arrays.asList(
-                    new Document("$addFields", new Document("updatedPatient",
-                            new Document("$function", new Document()
-                                    .append("body", functionBody)
-                                    .append("args", Arrays.asList(
-                                            "$firstName", "$lastName", "$pesel", "$birthDate",
-                                            "$address", "$age", patient.getId().toString()))
-                                    .append("lang", "js")
-                            )
-                    )),
-                    new Document("$replaceRoot", new Document("newRoot", "$updatedPatient")),
-                    new Document("$merge", new Document()
-                            .append("into", "patients")
-                            .append("on", "_id")
-                            .append("whenMatched", "replace")
-                            .append("whenNotMatched", "fail"))
-            );
-
-            // Wykonanie agregacji
-            tempColl.aggregate(updatePipeline).toCollection();
-
-            // Sprawdzenie, czy aktualizacja się powiodła
-            Patient result = collection.find(eq("_id", patient.getId())).first();
-            if (result == null) {
-                throw new IllegalStateException("Pacjent o ID " + patient.getId() + " nie istnieje w bazie.");
+            if (updatedPatient == null) {
+                throw new RuntimeException("Walidacja nie powiodła się");
             }
 
-            // Czyszczenie kolekcji tymczasowej
-            tempColl.deleteOne(eq("_id", patientDoc.getObjectId("_id")));
+            // Aktualizuj dokument w bazie
+            collection.replaceOne(
+                    eq("_id", patient.getId()),
+                    updatedPatient
+            );
 
-            return patient;
-        } catch (IllegalStateException e) {
-            throw e;
+            return updatedPatient;
         } catch (Exception e) {
             throw new RuntimeException("Błąd podczas aktualizacji pacjenta: " + e.getMessage(), e);
         }
     }
-
     public void deletePatient(ObjectId id) {
         // Krok 1: Użyj agregacji do sprawdzenia, czy pacjent istnieje
         Patient patient = collection.aggregate(Arrays.asList(

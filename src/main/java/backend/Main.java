@@ -10,6 +10,7 @@ import backend.wyjatki.PeselException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,13 +27,23 @@ public class Main {
 
 // Wyszukiwanie pacjentów urodzonych w tym dniu
         List<Patient> lista2 = patientRepository.findAll();
+        Patient patient = new Patient.Builder()
+                .firstName("Ja2n")
+                .lastName("Kowalski")
+                .pesel("12345678901")
+                .birthDate("1990-01-01")
+                .address("ul. Testowa 123")
+                .age(33)
+                .withId(lista2.get(0).getId())
+                .build();
+        patientRepository.updatePatient(patient);
         List<Patient> test = patientRepository.findPatientByPesel(lista2.get(0).getPesel());
         System.out.println(test.get(0).toString());
 
 
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
-
+        /*
         if (database != null) {
             String firstName = "Jan";
             String lastName = "Kowalski";
@@ -150,6 +161,6 @@ public class Main {
             }
         } else {
             System.err.println("[ERROR] Połączenie z bazą danych nie powiodło się.");
-        }
+        }*/
     }
 }
