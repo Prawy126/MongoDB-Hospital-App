@@ -12,6 +12,7 @@ import com.mongodb.client.MongoDatabase;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 
 public class Main {
@@ -23,7 +24,8 @@ public class Main {
 
 // Wyszukiwanie pacjentów urodzonych w tym dniu
         List<Patient> lista = patientRepository.findAll();
-        patientRepository.deletePatient(lista.get(0).getId());
+        List<Patient> test = patientRepository.findPatientByPesel(lista.get(0).getPesel());
+        System.out.println(test.get(0).toString());
 
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy

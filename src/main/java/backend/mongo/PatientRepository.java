@@ -95,13 +95,23 @@ public class PatientRepository {
     }
 
     /**
-     * Znajduje pacjenta po jego ID.
+     * Znajduje pacjenta po jego ID. Funckja korzysta z agregacji
      *
      * @param id ID pacjenta
      * @return Optional zawierający znalezionego pacjenta lub pusty, jeśli pacjent nie został znaleziony
      */
     public Optional<Patient> findPatientById(ObjectId id) {
-        return Optional.ofNullable(collection.find(eq("_id", id)).first());
+        // Tworzymy potok agregacji z jednym etapem $match
+        List<Bson> pipeline = Collections.singletonList(
+                Aggregates.match(Filters.eq("_id", id))
+        );
+
+        // Wykonujemy agregację i pobieramy pierwszy wynik
+        Patient patient = collection.aggregate(pipeline)
+                .first();
+
+        // Zwracamy wynik opakowany w Optional
+        return Optional.ofNullable(patient);
     }
 
     /**
@@ -211,8 +221,13 @@ public class PatientRepository {
      * @param pesel numer PESEL pacjentów
      * @return lista pacjentów o podanym numerze PESEL
      */
-    public List<Patient> findPatientByPesel(long pesel) {
-        return collection.find(eq("pesel", pesel)).into(new ArrayList<>());
+    public List<Patient> findPatientByPesel(String pesel) {
+        List<Bson> pipeline = Collections.singletonList(
+                Aggregates.match(Filters.eq("pesel", pesel))
+        );
+
+        return collection.aggregate(pipeline)
+                .into(new ArrayList<>());
     }
 
     /**
@@ -222,7 +237,12 @@ public class PatientRepository {
      * @return lista pacjentów o podanym adresie
      */
     public List<Patient> findPatientByAddress(String address) {
-        return collection.find(eq("address", address)).into(new ArrayList<>());
+        List<Bson> pipeline = Collections.singletonList(
+                Aggregates.match(Filters.eq("address", address))
+        );
+
+        return collection.aggregate(pipeline)
+                .into(new ArrayList<>());
     }
 
     /**
@@ -261,10 +281,11 @@ public class PatientRepository {
     /**
      * Aktualizuje istniejącego pacjenta w bazie danych przy użyciu agregacji MongoDB. Funkcja działa na zasadzie jeśli id istnieje to pacjent zostanie zaktualicowany jeśli id nie istnieje to pacjent zostanie dodany
      *
-     * @param patient pacjent do zaktualizowania
-     * @return zaktualizowany pacjent
+     * //@param patient pacjent do zaktualizowania
+     * //@return zaktualizowany pacjent
      */
-    public Patient updatePatient(Patient patient) {
+
+   /* public Patient updatePatient(Patient patient) {
         if (patient == null || patient.getId() == null) {
             throw new IllegalArgumentException("Pacjent lub ID nie mogą być puste");
         }
@@ -421,204 +442,6 @@ public class PatientRepository {
 
             return result.getBoolean("peselValid", false);
         }
-   // Tutaj są przeprowadzane testy
-    public void testPatient() {
-        System.out.println("\n=== Rozpoczynam testowanie PatientRepository ===");
-
-        try {
-            // Tworzenie pacjenta
-            Patient testPatient = new Patient.Builder()
-                    .firstName("Testowy")
-                    .lastName("Pacjent")
-                    .pesel("11122233311") // Valid PESEL
-                    .birthDate(String.valueOf(LocalDate.now()))
-                    .address("ul. Przykładowa 10, Kraków")
-                    .age(25)
-                    .build();
-
-            if(createPatient(testPatient)){
-                System.out.println("Pacjent został dodany do bazy");
-            }
-            System.out.println("[OK] Utworzono pacjenta: " + testPatient);
-
-            try {
-                Patient youngPatient = new Patient.Builder()
-                        .firstName("Test")
-                        .lastName("Patient")
-                        .pesel("11122233311")
-                        .birthDate(String.valueOf(LocalDate.now()))
-                        .address("Test Address")
-                        .age(0) // Nieprawidłowy wiek
-                        .build();
-                createPatient(youngPatient);
-                System.err.println("[FAIL] Powinien wystąpić AgeException dla wieku = 0");
-            } catch (AgeException e) {
-                System.out.println("[OK] Poprawnie przechwycono AgeException: " + e.getMessage());
-            }
-
-            // Test walidacji PESEL
-            try {
-                Patient invalidPeselPatient = new Patient.Builder()
-                        .firstName("Test")
-                        .lastName("Patient")
-                        .pesel("-1") // Nieprawidłowy PESEL
-                        .birthDate(String.valueOf(LocalDate.now()))
-                        .address("Test Address")
-                        .age(25)
-                        .build();
-                createPatient(invalidPeselPatient);
-                System.err.println("[FAIL] Powinien wystąpić PeselException dla nieprawidłowego PESEL");
-            } catch (PeselException e) {
-                System.out.println("[OK] Poprawnie przechwycono PeselException: " + e.getMessage());
-            }
-
-            // Test pustego imienia
-            try {
-                Patient nullNamePatient = new Patient.Builder()
-                        .firstName(null)
-                        .lastName("Patient")
-                        .pesel("11122233311")
-                        .birthDate(String.valueOf(LocalDate.now()))
-                        .address("Test Address")
-                        .age(25)
-                        .build();
-                createPatient(nullNamePatient);
-                System.err.println("[FAIL] Powinien wystąpić NullNameException dla pustego imienia");
-            } catch (NullNameException e) {
-                System.out.println("[OK] Poprawnie przechwycono NullNameException: " + e.getMessage());
-            }
-
-            try {
-                System.out.println("Test dla nieprawidłowego MongoDB");
-                Patient invalidPatient = new Patient.Builder()
-                        .firstName("Test")
-                        .lastName("Błąd")
-                        .pesel("11111111110")// Nieprawidłowy PESEL
-                        .birthDate(String.valueOf(LocalDate.of(2020, 1, 1)))
-                        .address("Test")
-                        .age(10)
-                        .build();
-                createPatient(invalidPatient);
-                System.err.println("Czy pesel poprawny"+isPeselValid(invalidPatient.getId()));
-            } catch (Exception e) {
-                System.out.println("Błąd: " + e.getMessage()); // Powinien zostać rzucony wyjątek
-            }
-
-            // Wyszukiwanie po ID
-            Optional<Patient> foundById = findPatientById(testPatient.getId());
-            if (foundById.isPresent()) {
-                System.out.println("[OK] Wyszukano pacjenta po ID: " + foundById.get());
-            } else {
-                System.err.println("[ERROR] Nie znaleziono pacjenta o ID: " + testPatient.getId());
-            }
-
-            // Wyszukiwanie po imieniu
-            List<Patient> patientsByFirstName = findPatientByFirstName("Testowy");
-            System.out.println("[OK] Wyszukano pacjentów po imieniu 'Testowy': " + patientsByFirstName.size());
-
-            // Wyszukiwanie po nazwisku
-            List<Patient> patientsByLastName = findPatientByLastName("Pacjent");
-            System.out.println("[OK] Wyszukano pacjentów po nazwisku 'Pacjent': " + patientsByLastName.size());
-
-            // Wyszukiwanie po PESEL
-            List<Patient> patientsByPesel = findPatientByPesel(11122233311L);
-            System.out.println("[OK] Wyszukano pacjentów po PESEL '11122233311': " + patientsByPesel.size());
-
-            // Wyszukiwanie po adresie
-            List<Patient> patientsByAddress = findPatientByAddress("ul. Przykładowa 10, Kraków");
-            System.out.println("[OK] Wyszukano pacjentów po adresie 'ul. Przykładowa 10, Kraków': " + patientsByAddress.size());
-
-            // Wyszukiwanie po dacie urodzenia
-            List<Patient> patientsByBirthDate = findPatientByBirthDate(LocalDate.now().toString());
-            System.out.println("[OK] Wyszukano pacjentów urodzonych dziś: " + patientsByBirthDate.size());
-
-            // Pobranie wszystkich pacjentów
-            List<Patient> allPatients = findAll();
-            System.out.println("[OK] Liczba wszystkich pacjentów w bazie: " + allPatients.size());
-
-            // Aktualizacja pacjenta
-            try {
-                testPatient.setAddress("ul. Zmieniona 20, Kraków");
-                Patient updatedPatient = updatePatient(testPatient);
-                System.out.println("[OK] Zaktualizowano adres pacjenta: " + updatedPatient.getAddress());
-            } catch (Exception e) {
-                System.err.println("[ERROR] Nie udało się zaktualizować pacjenta: " + e.getMessage());
-            }
-
-
-            // Usuwanie pacjenta
-            deletePatient(testPatient.getId());
-            System.out.println("[OK] Usunięto pacjenta o ID: " + testPatient.getId());
-
-            System.out.println("[SUCCESS] Wszystkie testy aplikacyjne zakończone.");
-
-        } catch (Exception e) {
-            System.err.println("[ERROR] Wystąpił błąd podczas testowania PatientRepository: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        testMongoValidation();
-
-    }
-
-    private void testMongoValidation() {
-        System.out.println("\n=== [TEST] Walidacja po stronie MongoDB ===");
-
-        // Przykłady testów: każdy case ma opis i dane, które łamią reguły walidacji
-        List<ValidationCase> testCases = List.of(
-                new ValidationCase("Brak imienia (firstName = null)", new Patient.Builder()
-                        .skipValidation(true)
-                        .lastName("BezImienia")
-                        .pesel("11122233311")
-                        .birthDate(String.valueOf(LocalDate.now()))
-                        .address("ul. Błędna 1")
-                        .age(30)
-                ),
-                new ValidationCase("Nieprawidłowy PESEL (za krótki)", new Patient.Builder()
-                        .skipValidation(true)
-                        .firstName("Jan")
-                        .lastName("ZłyPesel")
-                        .pesel("123456789")
-                        .birthDate(String.valueOf(LocalDate.now()))
-                        .address("ul. Niepoprawna")
-                        .age(40)
-                ),
-                new ValidationCase("Brak daty urodzenia", new Patient.Builder()
-                        .skipValidation(true)
-                        .firstName("Anna")
-                        .lastName("BrakDaty")
-                        .pesel("11122233344")
-                        .address("ul. Brakowa 1")
-                        .age(28)
-                )
-        );
-
-        for (ValidationCase test : testCases) {
-            runMongoValidationTest(test.description, test.builder);
-        }
-    }
-
-    private void runMongoValidationTest(String description, Patient.Builder builder) {
-        try {
-            System.out.println("\n[TEST CASE] " + description);
-            Patient p = builder.build(); // budujemy pacjenta bez walidacji aplikacyjnej (bo wyjątki zakomentowane)
-            createPatient(p);
-            System.err.println("[FAIL] Dokument powinien zostać odrzucony przez MongoDB, ale został zapisany.");
-        } catch (Exception e) {
-            System.out.println("[OK] MongoDB prawidłowo odrzucił dokument: " + e.getMessage());
-        }
-    }
-
-    private static class ValidationCase {
-        String description;
-        Patient.Builder builder;
-
-        public ValidationCase(String description, Patient.Builder builder) {
-            this.description = description;
-            this.builder = builder;
-        }
-    }
-
 
 
 }
