@@ -22,8 +22,8 @@ public class Main {
 
 
 // Wyszukiwanie pacjentów urodzonych w tym dniu
-        List<Patient> lista = patientRepository.findPatientByBirthDate("1990-01-01");
-        System.out.println("Znaleziono pacjentów: " + lista.size());
+        List<Patient> lista = patientRepository.findAll();
+        patientRepository.deletePatient(lista.get(0).getId());
 
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
