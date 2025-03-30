@@ -41,57 +41,66 @@ public class PatientRepository {
             throw new IllegalArgumentException("Patient cannot be null");
         }
 
-        // Walidacja po stronie Java przed wysłaniem do MongoDB
-        String firstName = patient.getFirstName();
-        if (firstName == null || !firstName.matches("^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż\\s]+$")) {
-            System.err.println("Błąd walidacji: Nieprawidłowe imię");
-            return false;
-        }
-
         MongoCollection<Document> tempColl = database.getCollection("tempPatients");
         try {
-            tempColl.drop();
+            tempColl.drop(); // Czyszczenie kolekcji tymczasowej
 
+            // Tworzenie dokumentu pacjenta
             Document rawPatient = new Document()
                     .append("firstName", patient.getFirstName())
                     .append("lastName", patient.getLastName())
                     .append("pesel", patient.getPesel())
-                    .append("birthDate", patient.getBirthDate())
+                    .append("birthDate", patient.getBirthDate().toString())
                     .append("address", patient.getAddress())
                     .append("age", patient.getAge());
-
             tempColl.insertOne(rawPatient);
+            System.out.println("Dokument wstawiony do tempPatients");
 
-            // Poprawione wyrażenie regularne - MongoDB używa silnika JavaScript, który może nie obsługiwać \p{L}
-            String functionBody = "function() {" +
-                    "   const nameRegex = /^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż\\s]+$/;" + // Jawne znaki zamiast \p{L}
-                    "   const peselRegex = /^[0-9]{11}$/;" +
-                    "   if (!this.firstName || !nameRegex.test(this.firstName.trim())) {" +
-                    "       throw new Error('Nieprawidłowe imię');" +
-                    "   }" +
-                    "   if (!this.lastName || !nameRegex.test(this.lastName.trim())) {" +
-                    "       throw new Error('Nieprawidłowe nazwisko');" +
-                    "   }" +
-                    "   if (this.age <= 0) {" +
-                    "       throw new Error('Wiek musi być większy od zera');" +
-                    "   }" +
-                    "   if (!this.pesel || !peselRegex.test(this.pesel)) {" +
-                    "       throw new Error('PESEL musi zawierać dokładnie 11 cyfr');" +
-                    "   }" +
-                    "   this._id = new ObjectId();" +
-                    "   return this;" +
+            // Funkcja walidacyjna z debugowaniem
+            String validationFunction = "function(doc) {" +
+                    "  print('Dokument:', JSON.stringify(doc));" +
+                    "  return doc.firstName && doc.lastName && " +
+                    "         typeof doc.pesel === 'string' && doc.pesel.length === 11 && " +
+                    "         doc.age > 0;" +
                     "}";
 
-            List<Bson> pipeline = Arrays.asList(
-                    Aggregates.addFields(new Field<>("validatedPatient",
-                            new Document("$function",
-                                    new Document()
-                                            .append("body", functionBody)
-                                            .append("args", Arrays.asList())
+            // Pipeline 1: Walidacja i zapis do validationResults
+            List<Bson> validationPipeline = Arrays.asList(
+                    Aggregates.addFields(
+                            new Field<>("doc", "$$ROOT"), // Zachowujemy oryginalny dokument w polu doc
+                            new Field<>("isValid", new Document("$function",
+                                    new Document("body", validationFunction)
+                                            .append("args", Arrays.asList("$$ROOT"))
                                             .append("lang", "js")
-                            )
-                    )),
-                    Aggregates.replaceRoot("$validatedPatient"),
+                            ))
+                    ),
+                    Aggregates.out("validationResults")
+            );
+
+            // Wykonaj pipeline walidacyjny
+            tempColl.aggregate(validationPipeline).toCollection();
+            System.out.println("Wyniki walidacji zapisane do validationResults");
+
+            // Sprawdź wynik walidacji
+            MongoCollection<Document> validationColl = database.getCollection("validationResults");
+            Document validationResult = validationColl.find().first();
+            if (validationResult != null) {
+                boolean isValid = validationResult.getBoolean("isValid", false);
+                System.out.println("Wynik walidacji: " + isValid);
+                if (!isValid) {
+                    System.out.println("Pacjent nie przeszedł walidacji");
+                    return false;
+                }
+            } else {
+                System.out.println("Brak wyników walidacji");
+                return false;
+            }
+
+            // Pipeline 2: Przeniesienie zwalidowanych dokumentów do patients
+            List<Bson> mergePipeline = Arrays.asList(
+                    Aggregates.match(Filters.eq("isValid", true)),
+                    Aggregates.replaceRoot("$doc"), // Przywracamy oryginalny dokument
+                    Aggregates.addFields(new Field<>("_id", new ObjectId())),
                     Aggregates.merge("patients",
                             new MergeOptions()
                                     .uniqueIdentifier("_id")
@@ -100,21 +109,28 @@ public class PatientRepository {
                     )
             );
 
-            tempColl.aggregate(pipeline).toCollection();
-            return true;
-        }catch (MongoCommandException e) {
-        System.err.println("Błąd walidacji: " + e.getMessage());
-        System.err.println("Kod błędu: " + e.getErrorCode());
-        System.err.println("Odpowiedź: " + e.getResponse().toJson());
-        return false;
-    }catch (Exception e) {
-            System.err.println("Błąd walidacji: " + e.getMessage());
+            // Wykonaj pipeline przenoszący
+            validationColl.aggregate(mergePipeline).toCollection();
+            System.out.println("Pipeline przenoszący wykonany");
+
+            // Sprawdzenie zapisu
+            MongoCollection<Document> patientsColl = database.getCollection("patients");
+            long count = patientsColl.countDocuments(Filters.eq("pesel", patient.getPesel()));
+            if (count > 0) {
+                System.out.println("Pacjent dodany do kolekcji patients");
+                return true;
+            } else {
+                System.out.println("Pacjent nie został dodany");
+                return false;
+            }
+
+        } catch (Exception e) {
+            System.err.println("Błąd: " + e.getMessage());
             return false;
         } finally {
-            tempColl.drop();
+            tempColl.drop(); // Czyszczenie kolekcji tymczasowej
         }
     }
-
 
     /**
      * Znajduje pacjenta po jego ID. Funckja korzysta z agregacji
