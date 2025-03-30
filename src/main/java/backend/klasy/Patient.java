@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class Patient extends Person {
     private ObjectId id;
-    private LocalDate birthDate;
+    private String birthDate;
     private String address;
 
     public ObjectId getId() {
@@ -28,7 +28,7 @@ public class Patient extends Person {
         return super.getLastName();
     }
 
-    public LocalDate getBirthDate() {
+    public String getBirthDate() {
         return birthDate;
     }
 
@@ -60,7 +60,7 @@ public class Patient extends Person {
         super.setPesel(pesel);
     }
 
-    public void setBirthDate(LocalDate birthDate) {
+    public void setBirthDate(String birthDate) {
         this.birthDate = birthDate;
     }
 
@@ -69,7 +69,7 @@ public class Patient extends Person {
     }
 
     // Konstruktor z parametrami
-    public Patient(String firstName, String lastName, String pesel, LocalDate birthDate, String address, int age) throws PeselException, NullNameException, AgeException {
+    public Patient(String firstName, String lastName, String pesel, String birthDate, String address, int age) throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age);
         this.birthDate = birthDate;
         this.address = address;
@@ -93,7 +93,7 @@ public class Patient extends Person {
         private String firstName;
         private String lastName;
         private String pesel;
-        private LocalDate birthDate;
+        private String birthDate;
         private int age;
         private String address;
 
@@ -121,7 +121,7 @@ public class Patient extends Person {
             return this;
         }
 
-        public Builder birthDate(LocalDate birthDate) {
+        public Builder birthDate(String birthDate) {
             this.birthDate = birthDate;
             return this;
         }

@@ -168,7 +168,7 @@ public class PatientRepository {
                                     .firstName(firstName)
                                     .lastName(lastName)
                                     .pesel(pesel)
-                                    .birthDate(birthDateLocal)
+                                    .birthDate(String.valueOf(birthDateLocal))
                                     .address(address)
                                     .age(age)
                                     .withId(id) // Make sure the ID is correctly set
@@ -419,7 +419,7 @@ public class PatientRepository {
                     .firstName("Testowy")
                     .lastName("Pacjent")
                     .pesel("11122233311") // Valid PESEL
-                    .birthDate(LocalDate.now())
+                    .birthDate(String.valueOf(LocalDate.now()))
                     .address("ul. Przykładowa 10, Kraków")
                     .age(25)
                     .build();
@@ -434,7 +434,7 @@ public class PatientRepository {
                         .firstName("Test")
                         .lastName("Patient")
                         .pesel("11122233311")
-                        .birthDate(LocalDate.now())
+                        .birthDate(String.valueOf(LocalDate.now()))
                         .address("Test Address")
                         .age(0) // Nieprawidłowy wiek
                         .build();
@@ -450,7 +450,7 @@ public class PatientRepository {
                         .firstName("Test")
                         .lastName("Patient")
                         .pesel("-1") // Nieprawidłowy PESEL
-                        .birthDate(LocalDate.now())
+                        .birthDate(String.valueOf(LocalDate.now()))
                         .address("Test Address")
                         .age(25)
                         .build();
@@ -466,7 +466,7 @@ public class PatientRepository {
                         .firstName(null)
                         .lastName("Patient")
                         .pesel("11122233311")
-                        .birthDate(LocalDate.now())
+                        .birthDate(String.valueOf(LocalDate.now()))
                         .address("Test Address")
                         .age(25)
                         .build();
@@ -482,7 +482,7 @@ public class PatientRepository {
                         .firstName("Test")
                         .lastName("Błąd")
                         .pesel("11111111110")// Nieprawidłowy PESEL
-                        .birthDate(LocalDate.of(2020, 1, 1))
+                        .birthDate(String.valueOf(LocalDate.of(2020, 1, 1)))
                         .address("Test")
                         .age(10)
                         .build();
@@ -558,7 +558,7 @@ public class PatientRepository {
                         .skipValidation(true)
                         .lastName("BezImienia")
                         .pesel("11122233311")
-                        .birthDate(LocalDate.now())
+                        .birthDate(String.valueOf(LocalDate.now()))
                         .address("ul. Błędna 1")
                         .age(30)
                 ),
@@ -567,7 +567,7 @@ public class PatientRepository {
                         .firstName("Jan")
                         .lastName("ZłyPesel")
                         .pesel("123456789")
-                        .birthDate(LocalDate.now())
+                        .birthDate(String.valueOf(LocalDate.now()))
                         .address("ul. Niepoprawna")
                         .age(40)
                 ),

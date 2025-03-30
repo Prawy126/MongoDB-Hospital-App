@@ -161,7 +161,7 @@ public class AppointmentRepository {
                     .firstName("Testowy")
                     .lastName("Pacjent")
                     .pesel("11122233311")
-                    .birthDate(LocalDate.now())
+                    .birthDate(String.valueOf(LocalDate.now()))
                     .address("ul. Przykładowa 10, Kraków")
                     .age(25)
                     .build();
