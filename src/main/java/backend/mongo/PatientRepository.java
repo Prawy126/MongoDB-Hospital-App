@@ -1,5 +1,6 @@
 package backend.mongo;
 
+import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import backend.klasy.Patient;
 import backend.wyjatki.AgeException;
@@ -233,24 +234,29 @@ public class PatientRepository {
      */
     public List<Patient> findPatientByBirthDate(String birthDate) {
         try {
-            // Konwertujemy string na LocalDate
+            // Sprawdź format daty wejściowej
+            if (!birthDate.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                throw new IllegalArgumentException("Niepoprawny format daty. Oczekiwany format: yyyy-MM-dd");
+            }
+
+            // Konwertuj string na LocalDate
             LocalDate localDate = LocalDate.parse(birthDate);
 
-            // Tworzymy zakres dat dla całego dnia (od początku do końca dnia)
-            // Używamy Date w MongoDB, ale dbamy o całą datę, nie godzinę
+            // Ustal zakres dat: od początku dnia do początku następnego dnia
             Date startDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
             Date endDate = Date.from(localDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-            // Szukamy pacjentów, których data urodzenia mieści się w tym zakresie
+            // Szukaj pacjentów, których birthDate mieści się w tym zakresie
             return collection.find(
                     new Document("birthDate",
-                            new Document("$gte", startDate)  // Upewniamy się, że data zaczyna się od początku dnia
-                                    .append("$lt", endDate))  // A kończy na końcu dnia
+                            new Document("$gte", startDate)
+                                    .append("$lt", endDate))
             ).into(new ArrayList<>());
         } catch (Exception e) {
             throw new RuntimeException("Błąd podczas wyszukiwania pacjentów po dacie urodzenia: " + e.getMessage(), e);
         }
     }
+
 
 
     /**

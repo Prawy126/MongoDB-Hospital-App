@@ -22,13 +22,9 @@ public class Main {
 
 
 // Wyszukiwanie pacjentów urodzonych w tym dniu
-        List<Patient> lista = patientRepository.findPatientByBirthDate("2020-01-01");
+        List<Patient> lista = patientRepository.findPatientByBirthDate("1990-01-01");
+        System.out.println("Znaleziono pacjentów: " + lista.size());
 
-        if (lista.isEmpty()) {
-            System.out.println("Nie znaleziono pacjentów urodzonych w tym dniu");
-        } else {
-            System.out.println("Znaleziono pacjentów: " + lista.size());
-        }
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
     /*

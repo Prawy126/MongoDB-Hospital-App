@@ -1,36 +1,23 @@
 package backend.mongo;
-
+import org.bson.*;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
-import org.bson.BsonReader;
-import org.bson.BsonType;
-import org.bson.BsonWriter;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
-/**
- * Klasa LocalDateCodec implementuje Codec dla typu LocalDate.
- * Umożliwia kodowanie i dekodowanie obiektów LocalDate do formatu BSON.
- */
 public class LocalDateCodec implements Codec<LocalDate> {
+    private final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
+
     @Override
     public void encode(BsonWriter writer, LocalDate value, EncoderContext encoderContext) {
-        writer.writeDateTime(value.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        writer.writeString(value.format(formatter)); // LocalDate → String
     }
 
     @Override
     public LocalDate decode(BsonReader reader, DecoderContext decoderContext) {
-        if (reader.getCurrentBsonType() == BsonType.STRING) {
-            String dateString = reader.readString();
-            return LocalDate.parse(dateString);
-        } else {
-            long dateTime = reader.readDateTime();
-            return Instant.ofEpochMilli(dateTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
-        }
+        String dateString = reader.readString();
+        return LocalDate.parse(dateString, formatter); // String → LocalDate
     }
 
     @Override

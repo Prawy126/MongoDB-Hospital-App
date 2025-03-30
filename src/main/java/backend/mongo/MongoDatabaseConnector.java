@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.MongoException;
+import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
@@ -14,12 +15,16 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
  * Klasa MongoDatabaseConnector służy do zarządzania połączeniem z bazą danych MongoDB.
  */
 public class MongoDatabaseConnector {
-    private static final String DB_IP = "192.168.0.105";
+    private static final String DB_IP = "192.168.0.50";
 
     private static final int DB_PORT = 27017;
     private static final String DB_NAME = "hospitalDB";
 
     private static MongoClient mongoClient;
+    CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
+            MongoClientSettings.getDefaultCodecRegistry(),
+            CodecRegistries.fromCodecs(new LocalDateCodec()) // Rejestracja naszego Codec
+    );
 
     /**
      * Nawiązuje połączenie z bazą danych MongoDB.
