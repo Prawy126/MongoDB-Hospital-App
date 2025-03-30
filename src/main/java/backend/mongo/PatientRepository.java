@@ -94,7 +94,6 @@ public class PatientRepository {
         }
     }
 
-
     /**
      * Znajduje pacjenta po jego ID.
      *
@@ -352,8 +351,21 @@ public class PatientRepository {
             throw new RuntimeException("Błąd podczas aktualizacji pacjenta: " + e.getMessage(), e);
         }
     }
+
     public void deletePatient(ObjectId id) {
-        collection.deleteOne(eq("_id", id));
+        // Krok 1: Użyj agregacji do sprawdzenia, czy pacjent istnieje
+        Patient patient = collection.aggregate(Arrays.asList(
+                Aggregates.match(eq("_id", id)),
+                Aggregates.project(Projections.include("_id")) // Opcjonalne: wybierz tylko potrzebne pola
+        )).first();
+
+        if (patient != null) {
+            // Krok 2: Jeśli dokument istnieje, usuń go
+            collection.deleteOne(Filters.eq("_id", id));
+            System.out.println("Pacjent o ID " + id + " został usunięty.");
+        } else {
+            System.out.println("Pacjent o ID " + id + " nie istnieje.");
+        }
     }
     /**
      * Sprawdza poprawność PESEL pacjenta na podstawie daty urodzenia.
