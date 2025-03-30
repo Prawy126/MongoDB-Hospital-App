@@ -48,7 +48,7 @@ public class PatientRepository {
         Document patientInput = new Document("firstName", patient.getFirstName())
                 .append("lastName", patient.getLastName())
                 .append("pesel", String.valueOf(patient.getPesel())) // PESEL jako String
-                .append("birthDate", patient.getBirthDate().toString())
+                .append("birthDate", patient.getBirthDate())
                 .append("address", patient.getAddress())
                 .append("age", patient.getAge());
 
@@ -145,15 +145,7 @@ public class PatientRepository {
                             String pesel = patientDoc.getString("pesel");
 
                             // Handle different date formats that might be in the database
-                            LocalDate birthDateLocal = null;
-                            Object birthDateObj = patientDoc.get("birthDate");
-                            if (birthDateObj instanceof Date) {
-                                birthDateLocal = ((Date) birthDateObj).toInstant()
-                                        .atZone(ZoneId.systemDefault()).toLocalDate();
-                            } else if (birthDateObj instanceof String) {
-                                birthDateLocal = LocalDate.parse((String) birthDateObj);
-                            }
-
+                            LocalDate birthDateLocal = LocalDate.parse(patientDoc.getString("birthDate"));
                             String address = patientDoc.getString("address");
 
                             // Handle potential numeric type differences for age
@@ -253,30 +245,15 @@ public class PatientRepository {
      */
     public List<Patient> findPatientByBirthDate(String birthDate) {
         try {
-            // Sprawdź format daty wejściowej
             if (!birthDate.matches("\\d{4}-\\d{2}-\\d{2}")) {
                 throw new IllegalArgumentException("Niepoprawny format daty. Oczekiwany format: yyyy-MM-dd");
             }
-
-            // Konwertuj string na LocalDate
-            LocalDate localDate = LocalDate.parse(birthDate);
-
-            // Ustal zakres dat: od początku dnia do początku następnego dnia
-            Date startDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-            Date endDate = Date.from(localDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
-
-            // Szukaj pacjentów, których birthDate mieści się w tym zakresie
-            return collection.find(
-                    new Document("birthDate",
-                            new Document("$gte", startDate)
-                                    .append("$lt", endDate))
-            ).into(new ArrayList<>());
+            // Bezpośrednie porównanie Stringów
+            return collection.find(eq("birthDate", birthDate)).into(new ArrayList<>());
         } catch (Exception e) {
             throw new RuntimeException("Błąd podczas wyszukiwania pacjentów po dacie urodzenia: " + e.getMessage(), e);
         }
     }
-
-
 
     /**
      * Aktualizuje istniejącego pacjenta w bazie danych przy użyciu agregacji MongoDB. Funkcja działa na zasadzie jeśli id istnieje to pacjent zostanie zaktualicowany jeśli id nie istnieje to pacjent zostanie dodany
@@ -297,7 +274,7 @@ public class PatientRepository {
                     .append("firstName", patient.getFirstName())
                     .append("lastName", patient.getLastName())
                     .append("pesel", patient.getPesel())
-                    .append("birthDate", Date.from(patient.getBirthDate().atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                    .append("birthDate", patient.getBirthDate())
                     .append("address", patient.getAddress())
                     .append("age", patient.getAge());
 
