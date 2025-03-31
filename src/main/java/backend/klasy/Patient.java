@@ -54,7 +54,7 @@ public class Patient extends Person {
         super.setLastName(lastName);
     }
 
-    public void setPesel(String pesel)throws PeselException {
+    public void setPesel(long pesel)throws PeselException {
         super.setPesel(pesel);
     }
 
@@ -67,7 +67,7 @@ public class Patient extends Person {
     }
 
     // Konstruktor z parametrami
-    public Patient(String firstName, String lastName, String pesel, LocalDate birthDate, String address, int age) throws PeselException, NullNameException, AgeException {
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age) throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age);
         this.birthDate = birthDate;
         this.address = address;
@@ -80,7 +80,7 @@ public class Patient extends Person {
                 "id=" + id +
                 ", firstName='" + (getFirstName() != null ? getFirstName() : "null") + '\'' +
                 ", lastName='" + (getLastName() != null ? getLastName() : "null") + '\'' +
-                ", pesel='" + (getPesel().length() != 0 ? getPesel() : "null") + '\'' +
+                ", pesel='" + (getPesel() < 100000000000L || getPesel() > 99999999999L? getPesel() : "null") + '\'' +
                 ", birthDate=" + (birthDate != null ? birthDate : "null") +
                 ", address='" + (address != null ? address : "null") + '\'' +
                 '}';
@@ -90,7 +90,7 @@ public class Patient extends Person {
         private ObjectId id;
         private String firstName;
         private String lastName;
-        private String pesel;
+        private long pesel;
         private LocalDate birthDate;
         private int age;
         private String address;
@@ -114,7 +114,7 @@ public class Patient extends Person {
             return this;
         }
 
-        public Builder pesel(String pesel) {
+        public Builder pesel(long pesel) {
             this.pesel = pesel;
             return this;
         }
@@ -151,7 +151,7 @@ public class Patient extends Person {
                 if (age <= 0) {
                     throw new AgeException("Wiek pacjenta musi być większy niż 0.");
                 }
-                if (pesel.length() != 11) {
+                if (pesel < 10000000000L || pesel > 99999999999L) {
                     throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
                 }
             }
