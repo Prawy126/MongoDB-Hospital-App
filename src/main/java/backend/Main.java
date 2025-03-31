@@ -29,6 +29,15 @@ public class Main {
         List<Patient> patient = patientRepository.findPatientByLastName("Piotr");
         System.out.println(patient.get(0).toString());
 
+        /*Patient patient = new Patient.Builder()
+                .firstName("Jan")
+                .lastName("Kowalski")
+                .pesel("12345678901")
+                .birthDate("1990-01-01")
+                .address("ul. Testowa 123")
+                .age(33)
+                .build();
+        */
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
         /*
         if (database != null) {
