@@ -4,6 +4,8 @@ import backend.klasy.Patient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -98,7 +100,7 @@ public class PatientRepository {
      * @param birthDate data urodzenia pacjentów
      * @return lista pacjentów o podanej dacie urodzenia
      */
-    public List<Patient> findPatientByBirthDate(String birthDate) {
+    public List<Patient> findPatientByBirthDate(LocalDate birthDate) {
         return collection.find(eq("birthDate", birthDate)).into(new ArrayList<>());
     }
 
