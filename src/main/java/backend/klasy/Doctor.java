@@ -114,7 +114,7 @@ public class Doctor extends Person {
             if (age < 25) {
                 throw new AgeException("Wiek lekarza musi być co najmniej 25 lat.");
             }
-            if (pesel < 100000000000L || pesel > 99999999999L) {
+            if (pesel <= 9999999999L || pesel >= 100000000000L) {
                 throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
             }
 

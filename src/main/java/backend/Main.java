@@ -1,8 +1,11 @@
 package backend;
 
+import backend.klasy.Doctor;
 import backend.klasy.Patient;
+import backend.mongo.DoctorRepository;
 import backend.mongo.MongoDatabaseConnector;
 import backend.mongo.PatientRepository;
+import backend.status.Day;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
@@ -11,7 +14,9 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -21,18 +26,28 @@ public class Main {
         MongoDatabase database = MongoDatabaseConnector.connectToDatabase();
 
         PatientRepository patientRepository = new PatientRepository(database);
+        DoctorRepository doctorRepository = new DoctorRepository(database);
 
         // Tworzymy pacjenta używając wzorca Builder
+        List<Day> daty = new ArrayList<>() {};
+        daty.add(Day.MONDAY);
 
-        Patient patient = new Patient.Builder()
+        Doctor doctor = new Doctor.Builder()
                 .firstName("Jan")
                 .lastName("Kowalski")
-                .pesel(12345678901L)
-                .birthDate(LocalDate.of(1990, 1, 1))
-                .address("ul. Testowa 123, Warszawa")
+                .specialization("Chirurg")
+                .availableDays(daty)
+                .room("123")
                 .age(30)
+                .pesel(12345678901L)
+                .contactInformation("Info")
                 .build();
-        patientRepository.createPatient(patient);
+                //.birthDate(LocalDate.of(1990, 1, 1))
+                //.address("ul. Testowa 123, Warszawa")
+                //.age(30)
+                //.build();
+                        
+       doctorRepository.createDoctor(doctor);
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
     /*

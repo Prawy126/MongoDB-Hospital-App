@@ -26,13 +26,13 @@ public class Person {
         if(firstName.length() > 0 && lastName.length() > 0){
             this.firstName = firstName;
             this.lastName = lastName;}else throw new NullNameException("Imię i nazwisko nie mogą być puste");
-        if(pesel < 100000000000L || pesel > 99999999999L){this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
+        if (pesel > 9999999999L || pesel < 100000000000L) {this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
     }
 
     public Person(String firstName, String lastName, long pesel, int age)throws  PeselException, NullNameException, AgeException {
         if(firstName.length() > 0 && lastName.length() > 0) {this.firstName = firstName;
         this.lastName = lastName;}else throw new NullNameException("Imię i nazwisko nie mogą być puste");
-        if(pesel < 100000000000L || pesel > 99999999999L){this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
+        if(pesel > 9999999999L || pesel < 100000000000L) {this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
         if(age >= 0)this.age = age;
         else throw new AgeException("Wiek nie może być ujemny");
     }
@@ -76,7 +76,7 @@ public class Person {
 
     public void setPesel(long pesel) throws PeselException {
         String peselStr = String.valueOf(pesel);
-        if (pesel < 100000000000L || pesel > 99999999999L) {
+        if (pesel <= 9999999999L || pesel > 100000000000L) {
             throw new PeselException("Pesel musi składać się dokładnie z 11 cyfr.");
         }
         this.pesel = pesel;
