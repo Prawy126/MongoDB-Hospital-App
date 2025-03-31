@@ -30,12 +30,11 @@ public class PatientRepository {
     }
 
     /**
-     * Tworzy nowego pacjenta w bazie danych.
+     * Tworzy nowego pacjenta w bazie danych. Wykorzystuje agregacje
      *
      * @param patient pacjent do utworzenia
      * @return true jeśli pacjent został dodany, false w przeciwnym razie
      */
-    //pytanie dlaczego wiek pacjenta jest zerem taki aktualnie jest błąd
     public boolean createPatient(Patient patient) {
         if (patient == null) {
             throw new IllegalArgumentException("Patient cannot be null");
@@ -227,15 +226,19 @@ public class PatientRepository {
     }
 
     /**
-     * Znajduje pacjentów po ich imieniu.
+     * Znajduje pacjentów po ich imieniu. Wykorzystuje agregacje
      *
      * @param firstName imię pacjentów
      * @return lista pacjentów o podanym imieniu
      */
     public List<Patient> findPatientByFirstName(String firstName) {
-        return collection.find(eq("firstName", firstName)).into(new ArrayList<>());
-    }
+        List<Bson> pipeline = Collections.singletonList(
+                Aggregates.match(Filters.eq("firstName", firstName))
+        );
 
+        return collection.aggregate(pipeline)
+                .into(new ArrayList<>());
+    }
     /**
      * Znajduje pacjentów po ich nazwisku.
      *
@@ -243,7 +246,12 @@ public class PatientRepository {
      * @return lista pacjentów o podanym nazwisku
      */
     public List<Patient> findPatientByLastName(String lastName) {
-        return collection.find(eq("lastName", lastName)).into(new ArrayList<>());
+        List<Bson> pipeline = Collections.singletonList(
+                Aggregates.match(Filters.eq("lastName", lastName))
+        );
+
+        return collection.aggregate(pipeline)
+                .into(new ArrayList<>());
     }
     /**
      * Znajduje pacjentów po ich numerze PESEL.

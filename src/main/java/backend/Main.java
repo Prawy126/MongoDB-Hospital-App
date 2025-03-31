@@ -26,20 +26,8 @@ public class Main {
         PatientRepository patientRepository = new PatientRepository(database);
 
 // Wyszukiwanie pacjentów urodzonych w tym dniu
-        Patient patient2 = new Patient.Builder()
-                .firstName("Piotr")
-                .lastName("Nowak")
-                .pesel("12345678901")
-                .birthDate("2010-02-12")
-                .address("ul. Testowa 123")
-                .age(33)
-                .withId(new ObjectId())
-                .build();
-        if(patientRepository.createPatient(patient2)){
-            System.out.println("Pacjent dodany");
-        }else {
-            System.out.println("Pacjent nie został dodany");
-        }
+        List<Patient> patient = patientRepository.findPatientByLastName("Piotr");
+        System.out.println(patient.get(0).toString());
 
         //aktualnie zakomentowuję dla testów dodawania pacjenta do bazy
         /*
