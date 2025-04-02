@@ -12,6 +12,8 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.and;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
@@ -20,6 +22,7 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 public class RoomRepository {
     private final MongoCollection<Room> collection;
     private final CodecRegistry codecRegistry;
+    private List<Room> rooms;
 
     public RoomRepository(MongoClient mongoClient, String databaseName) {
         this.codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(),
@@ -94,5 +97,29 @@ public class RoomRepository {
         } catch (Exception e) {
             throw new RuntimeException("Błąd podczas pobierania sal: " + e.getMessage(), e);
         }
+    }
+
+    public RoomRepository(MongoCollection<Room> collection, CodecRegistry codecRegistry, List<Room> rooms) {
+        this.collection = collection;
+        this.codecRegistry = codecRegistry;
+        this.rooms = rooms;
+    }
+
+    /**
+     * Funkcja ta sprawdza czy dany pokój nie jest pełny
+     * @param room konkretny pokój
+     * @return zwraca treu jeśli pokój jest pełny lub false jeśli w pokoju są jeszcze miejsca*/
+    public boolean isRoomNotFull(Room room) {
+        return room.getCurrentPatients() < room.getMaxPatients();
+    }
+
+    /**
+     * Funkcja ta zwraca listę pokoi które nie są pełne
+     * @return zwraca listę pokoi które nie są pełne *
+     * */
+    public List<Room> findNotFullRooms() {
+        return rooms.stream()
+                .filter(this::isRoomNotFull)
+                .collect(Collectors.toList());
     }
 }
