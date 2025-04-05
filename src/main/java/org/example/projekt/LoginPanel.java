@@ -1,40 +1,40 @@
 package org.example.projekt;
 
 import javafx.animation.FadeTransition;
-import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class LoginPanel extends Application {
     private Button loginBtn;
-    String login = "admin";
-    String password = "admin";
+
+    // Sztywne dane logowania
+    private final String ADMIN_LOGIN = "admin";
+    private final String ADMIN_PASSWORD = "admin";
+
+    private final String DOCTOR_LOGIN = "doktor";
+    private final String DOCTOR_PASSWORD = "doktor";
+
+    private final String PATIENT_LOGIN = "pacjent";
+    private final String PATIENT_PASSWORD = "pacjent";
 
     @Override
     public void start(Stage primaryStage) {
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(20));
-        grid.setVgap(15); // Zwiększony ogólny odstęp między rzędami
+        grid.setVgap(15);
         grid.setHgap(10);
-        grid.setStyle("-fx-background-color: lightblue;"); // Ustawienie tła na jasnoniebieski, jak w panelu admina
+        grid.setStyle("-fx-background-color: lightblue;");
 
-        // Nagłówek
         Label headerLabel = new Label("Szpital");
         headerLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
         GridPane.setConstraints(headerLabel, 0, 0, 3, 1);
         GridPane.setMargin(headerLabel, new Insets(0, 0, 20, 0));
 
-        // Pola logowania
         Label userLabel = new Label("Użytkownik:");
         GridPane.setConstraints(userLabel, 0, 1);
 
@@ -47,59 +47,58 @@ public class LoginPanel extends Application {
         PasswordField passField = new PasswordField();
         GridPane.setConstraints(passField, 1, 2, 2, 1);
 
-        // Dodanie pustego rzędu dla większego odstępu
         Label spacer = new Label();
         GridPane.setConstraints(spacer, 0, 3);
-        GridPane.setMargin(spacer, new Insets(20, 0, 0, 0)); // Dodatkowy margines
+        GridPane.setMargin(spacer, new Insets(20, 0, 0, 0));
 
-        // Przyciski
         loginBtn = new Button("Zaloguj się");
         loginBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
         loginBtn.setPrefWidth(150);
-        GridPane.setConstraints(loginBtn, 0, 4); // Przesunięcie do nowego rzędu
+        GridPane.setConstraints(loginBtn, 0, 4);
 
         Button exitBtn = new Button("Wyjście");
         exitBtn.setStyle("-fx-background-color: #FF5733; -fx-text-fill: white;");
         exitBtn.setPrefWidth(150);
-        GridPane.setConstraints(exitBtn, 0, 5); // Pod przyciskiem Zaloguj się
+        GridPane.setConstraints(exitBtn, 0, 5);
 
         Button registerBtn = new Button("Zarejestruj się");
         registerBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
         registerBtn.setPrefWidth(150);
-        GridPane.setConstraints(registerBtn, 1, 4); // Obok Zaloguj się
+        GridPane.setConstraints(registerBtn, 1, 4);
 
         grid.getChildren().addAll(
                 headerLabel,
                 userLabel, userField,
                 passLabel, passField,
-                spacer, // Dodany element spacer
+                spacer,
                 loginBtn, exitBtn, registerBtn
         );
 
-        // Animacja fade-in dla całego formularza
         animateFadeIn(grid, 1000);
 
-        // Obsługa zdarzeń
         loginBtn.setOnAction(e -> {
-            String user = userField.getText();
-            String pass = passField.getText();
+            String user = userField.getText().trim();
+            String pass = passField.getText().trim();
 
-            // Sztywne dane logowania
-            if (login.equals(user) && password.equals(pass)) {
-                // Logowanie pomyślne – otwieramy AdminPanel
+            if (ADMIN_LOGIN.equals(user) && ADMIN_PASSWORD.equals(pass)) {
                 openAdminPanel();
+            } else if (DOCTOR_LOGIN.equals(user) && DOCTOR_PASSWORD.equals(pass)) {
+                openDoctorPanel();
+            } else if (PATIENT_LOGIN.equals(user) && PATIENT_PASSWORD.equals(pass)) {
+                openPatientPanel();
             } else {
-                showAlert(Alert.AlertType.ERROR, "Błąd", "Nieprawidłowe dane!");
+                showAlert(Alert.AlertType.ERROR, "Błąd logowania", "Nieprawidłowy login lub hasło!");
             }
         });
 
         exitBtn.setOnAction(e -> System.exit(0));
 
         registerBtn.setOnAction(e -> {
-            showAlert(Alert.AlertType.INFORMATION, "Rejestracja", "Przejdź do formularza rejestracji");
+            Stage registerStage = new Stage();
+            new RegisterPanel().start(registerStage);
         });
 
-        Scene scene = new Scene(grid, 500, 350); // Zwiększona wysokość okna
+        Scene scene = new Scene(grid, 500, 350);
         primaryStage.setTitle("Panel Logowania");
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(500);
@@ -107,15 +106,29 @@ public class LoginPanel extends Application {
         primaryStage.show();
     }
 
-    // Funkcja do otwierania panelu administratora
     private void openAdminPanel() {
         Stage adminStage = new Stage();
-        new AdminPanel(adminStage);  // Tworzymy obiekt AdminPanel, który otworzy okno administracyjne
-        Stage currentStage = (Stage) loginBtn.getScene().getWindow();
-        currentStage.close(); // Zamykamy okno logowania
+        new AdminPanel(adminStage);
+        closeLoginWindow();
     }
 
-    // Funkcja animacji fade-in
+    private void openDoctorPanel() {
+        Stage doctorStage = new Stage();
+        new DoctorPanel(doctorStage);
+        closeLoginWindow();
+    }
+
+    private void openPatientPanel() {
+        Stage patientStage = new Stage();
+        new PatientPanel(patientStage);
+        closeLoginWindow();
+    }
+
+    private void closeLoginWindow() {
+        Stage currentStage = (Stage) loginBtn.getScene().getWindow();
+        currentStage.close();
+    }
+
     private void animateFadeIn(GridPane element, int duration) {
         FadeTransition fade = new FadeTransition(Duration.millis(duration), element);
         fade.setFromValue(0);
