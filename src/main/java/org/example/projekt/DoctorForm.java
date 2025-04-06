@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+//TODO: Poprawić edycje lekarza, bo w selectach resetują się watości
+
 public class DoctorForm {
 
     public static void showForm(Doctor doctorToEdit, Consumer<Doctor> onSave) {

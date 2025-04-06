@@ -72,6 +72,17 @@ public class AppointmentForm {
         saveButton.setOnAction(e -> {
             LocalDate date = datePicker.getValue();
             LocalTime time = LocalTime.parse(timeField.getText());
+            if (doctorBox.getValue() == null || patientBox.getValue() == null ||
+                    roomBox.getValue() == null || datePicker.getValue() == null ||
+                    timeField.getText().isEmpty() || statusBox.getValue() == null) {
+
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Błąd");
+                alert.setHeaderText("Wszystkie pola muszą być wypełnione");
+                alert.showAndWait();
+                return;
+            }
+
 
             Appointment.Builder builder = existingAppointment != null
                     ? new Appointment.Builder().withId(existingAppointment.getId())
@@ -80,7 +91,7 @@ public class AppointmentForm {
             Appointment appointment = builder
                     .doctorId(doctorBox.getValue())
                     .patientId(patientBox.getValue())
-                    .room(roomBox.getValue().getAdress() + " - " + roomBox.getValue().getNumber())
+                    .room(roomBox.getValue().getAddress() + " - " + roomBox.getValue().getNumber())
                     .date(LocalDateTime.of(date, time))
                     .description(descriptionField.getText())
                     .status(statusBox.getValue())
