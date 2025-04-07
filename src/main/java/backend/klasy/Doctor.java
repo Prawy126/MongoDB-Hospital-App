@@ -28,6 +28,14 @@ public class Doctor extends Person {
         this.contactInformation = contactInformation;
     }
 
+    public Doctor(String firstName, String lastName, String specialization, List<Day> availableDays, String room, String contactInformation, String password)throws NullNameException {
+        super(firstName, lastName, password);
+        this.specialization = specialization;
+        this.availableDays = availableDays;
+        this.room = room;
+        this.contactInformation = contactInformation;
+    }
+
     public ObjectId getId() { return id; }
     public String getFirstName() { return super.getFirstName(); }
     public String getLastName() { return super.getLastName(); }
@@ -47,6 +55,7 @@ public class Doctor extends Person {
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
     public void setAge(int age)throws AgeException { if(age >= 25)super.setAge(age);else throw new AgeException("Wiek lekarza nie może być mniejszy niż 25"); }
     public void setPesel(long pesel) throws PeselException { super.setPesel(pesel); }
+    public void setPassword(String password) { super.setPassword(password); }
 
     public static class Builder {
         private ObjectId id;
@@ -58,6 +67,7 @@ public class Doctor extends Person {
         private int age;
         private long pesel;
         private String contactInformation;
+        private String password;
 
         public Builder() {}
 
@@ -104,6 +114,11 @@ public class Doctor extends Person {
             return this;
         }
 
+        public Builder password(String password) {
+            this.password = password;
+            return this;
+        }
+
         public Doctor build() throws PeselException, NullNameException, AgeException {
             if (firstName == null || firstName.isEmpty()) {
                 throw new NullNameException("Imię nie może być puste.");
@@ -126,6 +141,7 @@ public class Doctor extends Person {
             doctor.setRoom(room);
             doctor.setPesel(pesel);
             doctor.setAge(age);
+            doctor.setPassword(password);
             doctor.setContactInformation(contactInformation);
 
             if (id == null) {

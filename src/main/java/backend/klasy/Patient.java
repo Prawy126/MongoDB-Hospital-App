@@ -74,6 +74,12 @@ public class Patient extends Person {
         this.address = address;
 
     }
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age, String password) throws PeselException, NullNameException, AgeException {
+        super(firstName, lastName, pesel, age, password);
+        this.birthDate = birthDate;
+        this.address = address;
+
+    }
 
     @Override
     public String toString() {
@@ -95,7 +101,9 @@ public class Patient extends Person {
         private LocalDate birthDate;
         private int age;
         private String address;
+        private String password;
 
+        //Czym jest skipValidation?!
         private boolean skipValidation = false;
 
         public Builder() {}
@@ -135,11 +143,16 @@ public class Patient extends Person {
             return this;
         }
 
+        // Według Intellij IDEA, nie używamy tego w kodzie
         public Builder skipValidation(boolean skipValidation) {
             this.skipValidation = skipValidation;
             return this;
         }
 
+        public Builder password(String password) {
+            this.password = password;
+            return this;
+        }
 
         public Patient build() throws PeselException, NullNameException, AgeException {
             if (!skipValidation) {
@@ -158,7 +171,7 @@ public class Patient extends Person {
             }
 
             try {
-                Patient patient = new Patient(firstName, lastName, pesel, birthDate, address, age);
+                Patient patient = new Patient(firstName, lastName, pesel, birthDate, address, age, password);
                 if (id == null) {
                     patient.setId(new ObjectId());
                 } else {
