@@ -5,8 +5,18 @@ package backend.status;
  * Statusy: SCHEDULED, COMPLETED, CANCELED, RESCHEDULED
  */
 public enum AppointmentStatus {
-    SCHEDULED,
-    COMPLETED,
-    CANCELED,
-    RESCHEDULED
+    SCHEDULED("Zaplanowany"),
+    COMPLETED("Zrealizowany"),
+    CANCELED("Odwołany"),
+    RESCHEDULED("Przełożony");
+
+    private final String describtion;
+
+    AppointmentStatus(String description) {
+        this.describtion = description;
+    }
+
+    public String getDescribtion(){
+        return describtion;
+    }
 }

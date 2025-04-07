@@ -1,5 +1,7 @@
 package backend.klasy;
 
+import backend.mongo.TypeOfRoom;
+
 import java.util.ArrayList;
 
 public class Room {
@@ -9,6 +11,7 @@ public class Room {
     int maxPatients;
     int currentPatients;
     ArrayList<Patient> patients = null;
+    TypeOfRoom type;
 
     public Room(String adress, int floor, int number, int maxPatients, int currentPatients){
         this.adress = adress;
@@ -74,5 +77,12 @@ public class Room {
         this.patients = patients;
     }
 
+    public TypeOfRoom getType() {
+        return type;
+    }
+
+    public void setType(TypeOfRoom type) {
+        this.type = type;
+    }
 
 }

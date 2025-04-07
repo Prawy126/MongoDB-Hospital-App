@@ -12,7 +12,7 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class MongoDatabaseConnector {
 
-    private static final String DB_IP = "192.168.0.105";
+    private static final String DB_IP = "192.168.0.106";
 
     private static final int DB_PORT = 27017;
     private static final String DB_NAME = "hospitalDB";

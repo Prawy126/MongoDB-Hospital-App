@@ -1,5 +1,6 @@
 package backend.klasy;
 
+import backend.mongo.TypeOfRoom;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
@@ -168,7 +169,6 @@ public class Patient extends Person {
                 throw e;
             }
         }
-
 
 
 
