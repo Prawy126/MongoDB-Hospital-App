@@ -1,6 +1,6 @@
 package backend.klasy;
 
-import backend.mongo.TypeOfRoom;
+import backend.status.TypeOfRoom;
 
 import java.util.ArrayList;
 

@@ -1,6 +1,6 @@
 package backend.klasy;
 
-import backend.mongo.TypeOfRoom;
+import backend.status.Diagnosis;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
@@ -14,6 +14,7 @@ public class Patient extends Person {
     private ObjectId id;
     private LocalDate birthDate;
     private String address;
+    private Diagnosis diagnosis;
 
     public ObjectId getId() {
         return id;
@@ -40,7 +41,7 @@ public class Patient extends Person {
     }
 
     public Patient() {
-        // Public no-argument constructor
+        // Publiczny pusty konstruktor może się przyda nie wiem
     }
 
     public void setId(ObjectId id) {
@@ -81,6 +82,14 @@ public class Patient extends Person {
 
     }
 
+    //Aktualnie pełny konstruktor
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age, String password, Diagnosis diagnosis) throws PeselException, NullNameException, AgeException {
+        super(firstName, lastName, pesel, age, password);
+        this.birthDate = birthDate;
+        this.address = address;
+        this.diagnosis = diagnosis;
+    }
+
     @Override
     public String toString() {
         return "Patient{" +
@@ -91,6 +100,10 @@ public class Patient extends Person {
                 ", birthDate=" + (birthDate != null ? birthDate : "null") +
                 ", address='" + (address != null ? address : "null") + '\'' +
                 '}';
+    }
+
+    public Diagnosis getDiagnosis() {
+        return diagnosis;
     }
 
     public static class Builder {
@@ -182,8 +195,6 @@ public class Patient extends Person {
                 throw e;
             }
         }
-
-
 
         @Override
         public boolean equals(Object o) {

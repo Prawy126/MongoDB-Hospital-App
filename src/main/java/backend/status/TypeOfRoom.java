@@ -1,7 +1,16 @@
-package backend.mongo;
+package backend.status;
 
 import backend.klasy.Patient;
 
+/**
+ * Enum dla rodzaju sal/odziałów w szpitalu
+ * <p>Posiada aktualnie 6 możliwych wartości</p>
+ * <p>PEDIATRIC</p>
+ * <p>MATERNITY</p>
+ * <p>INTERNAL</p>
+ * <p>SURGICAL</p>
+ * <p>NEUROLOGY</p>
+ * <p>CARDIOLOGY</p>*/
 public enum TypeOfRoom {
     PEDIATRIC("Dziecięcy"),
     MATERNITY("Położniczy"),
@@ -23,11 +32,11 @@ public enum TypeOfRoom {
     // Metoda do automatycznego wyznaczania oddziału na podstawie danych pacjenta
     public static TypeOfRoom determineDepartment(Patient patient) {
         if (patient.getAge() < 18) {
-            return PEDIATRIC;
+            return TypeOfRoom.PEDIATRIC;
         }
-
-        //Musimy się zastanowić jak zarządzać podziałem reszty pacjentów
-
-        return INTERNAL;
+        if (patient.getDiagnosis() != null) {
+            return patient.getDiagnosis().getDepartment();
+        }
+        return TypeOfRoom.INTERNAL; // Domyślny oddział
     }
 }
