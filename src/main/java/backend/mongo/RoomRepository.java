@@ -59,7 +59,7 @@ public class RoomRepository {
 
         try {
             Bson filter = and(
-                    eq("address", room.getAdress()),
+                    eq("address", room.getAddress()),
                     eq("floor", room.getFloor()),
                     eq("number", room.getNumber())
             );

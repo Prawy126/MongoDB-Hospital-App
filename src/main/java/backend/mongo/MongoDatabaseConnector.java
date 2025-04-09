@@ -10,22 +10,13 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
-/**
- * Klasa MongoDatabaseConnector służy do zarządzania połączeniem z bazą danych MongoDB.
- */
 public class MongoDatabaseConnector {
     private static final String DB_IP = "192.168.21.191";
 
     private static final int DB_PORT = 27017;
     private static final String DB_NAME = "hospitalDB";
-
     private static MongoClient mongoClient;
 
-    /**
-     * Nawiązuje połączenie z bazą danych MongoDB.
-     *
-     * @return obiekt MongoDatabase reprezentujący połączenie z bazą danych
-     */
     public static MongoDatabase connectToDatabase() {
         try {
             CodecRegistry pojoCodecRegistry = fromRegistries(
@@ -40,18 +31,21 @@ public class MongoDatabaseConnector {
 
             mongoClient = MongoClients.create(settings);
             MongoDatabase database = mongoClient.getDatabase(DB_NAME);
-            System.out.println("[SUCESS] Połączono z bazą danych: " + DB_NAME);
-            //PatientCollectionInitializer.ensurePatientCollectionWithValidation(database);
+            System.out.println("[SUCCESS] Połączono z bazą danych: " + DB_NAME);
             return database;
         } catch (MongoException e) {
-            System.err.println("[SUCESS] Błąd połączenia: " + e.getMessage());
+            System.err.println("[ERROR] Błąd połączenia: " + e.getMessage());
             return null;
         }
     }
 
-    /**
-     * Zamyka połączenie z bazą danych MongoDB.
-     */
+    public static MongoClient getClient() {
+        if (mongoClient == null) {
+            connectToDatabase();
+        }
+        return mongoClient;
+    }
+
     public static void close() {
         if (mongoClient != null) {
             try {

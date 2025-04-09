@@ -1,25 +1,30 @@
 package backend.klasy;
 
+import backend.mongo.TypeOfRoom;
+
 import java.util.ArrayList;
 
 public class Room {
-    String adress;
+    String address;
     int floor;
     int number;
     int maxPatients;
     int currentPatients;
     ArrayList<Patient> patients = null;
+    TypeOfRoom type;
 
     public Room(String adress, int floor, int number, int maxPatients, int currentPatients){
-        this.adress = adress;
+        this.address = adress;
         this.floor = floor;
         this.number = number;
         this.maxPatients = maxPatients;
         this.currentPatients = currentPatients;
     }
 
-    public String getAdress(){
-        return adress;
+    public Room() {}
+
+    public String getAddress(){
+        return address;
     }
 
     public int getFloor(){
@@ -38,8 +43,8 @@ public class Room {
         return currentPatients;
     }
 
-    public void setAdress(String adress){
-        this.adress = adress;
+    public void setAddress(String address){
+        this.address = address;
     }
 
     public void setFloor(int floor){
@@ -74,5 +79,12 @@ public class Room {
         this.patients = patients;
     }
 
+    public TypeOfRoom getType() {
+        return type;
+    }
+
+    public void setType(TypeOfRoom type) {
+        this.type = type;
+    }
 
 }

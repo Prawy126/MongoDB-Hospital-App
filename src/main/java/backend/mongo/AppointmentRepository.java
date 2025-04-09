@@ -143,7 +143,7 @@ public class AppointmentRepository {
                 Aggregates.count("count")
         );
 
-        Document result = collection.aggregate(pipeline).first();
+        Appointment result = collection.aggregate(pipeline).first();
         return result == null || result.getInteger("count", 0) == 0;
     }*/
 

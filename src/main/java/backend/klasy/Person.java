@@ -11,6 +11,9 @@ public class Person {
     private String lastName;
     private int age;
     private long pesel;
+    private String password;
+    private String salt;
+
     Person(){
 
     };
@@ -19,6 +22,15 @@ public class Person {
             this.firstName = firstName;
             this.lastName= lastName;
         }else throw new NullNameException("Imię i nazwisko nie mogą być puste");
+    }
+    public Person(String firstName, String lastName, String password)throws NullNameException {
+        if(firstName.length() > 0 && lastName.length() > 0){
+            this.firstName = firstName;
+            this.lastName= lastName;
+        }else throw new NullNameException("Imię i nazwisko nie mogą być puste");
+        Password password1 = new Password(password);
+        this.password = password1.getHashedPassword();
+        this.salt = password1.getSalt();
     }
     public Person(String firstName, String lastName, long pesel) throws PeselException, NullNameException {
         this.firstName = firstName;
@@ -37,6 +49,16 @@ public class Person {
         else throw new AgeException("Wiek nie może być ujemny");
     }
 
+    public Person(String firstName, String lastName, long pesel, int age, String password)throws  PeselException, NullNameException, AgeException {
+        if(firstName.length() > 0 && lastName.length() > 0) {this.firstName = firstName;
+            this.lastName = lastName;}else throw new NullNameException("Imię i nazwisko nie mogą być puste");
+        if(pesel > 9999999999L || pesel < 100000000000L) {this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
+        if(age >= 0)this.age = age;
+        else throw new AgeException("Wiek nie może być ujemny");
+        Password password1 = new Password(password);
+        this.password = password1.getHashedPassword();
+        this.salt = password1.getSalt();
+    }
     public String getFirstName() {
         return firstName;
     }
@@ -47,6 +69,12 @@ public class Person {
 
     public String getLastName() {
         return lastName;
+    }
+
+    // Nie wiem czy ta funkcja ma sens
+    // Do przemyślenia
+    public String getPassword() {
+        return password;
     }
 
     public long getPesel() {
@@ -80,5 +108,11 @@ public class Person {
             throw new PeselException("Pesel musi składać się dokładnie z 11 cyfr.");
         }
         this.pesel = pesel;
+    }
+
+    public void setPassword(String password) {
+        Password password1 = new Password(password);
+        this.password = password1.getHashedPassword();
+        this.salt = password1.getSalt();
     }
 }

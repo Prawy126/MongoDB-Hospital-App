@@ -1,6 +1,7 @@
 package backend;
 
 import backend.klasy.Doctor;
+import backend.klasy.Password;
 import backend.klasy.Patient;
 import backend.mongo.DoctorRepository;
 import backend.mongo.MongoDatabaseConnector;
@@ -12,6 +13,7 @@ import backend.wyjatki.PeselException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,13 +27,7 @@ public class Main {
     public static void main(String[] args) throws NullNameException, AgeException, PeselException {
         MongoDatabase database = MongoDatabaseConnector.connectToDatabase();
 
-        PatientRepository patientRepository = new PatientRepository(database);
-        DoctorRepository doctorRepository = new DoctorRepository(database);
-
-        List<Patient> patients = patientRepository.findPatientByBirthDate(LocalDate.of(1990, 1, 1));
-        for(Patient patient : patients) {
-            System.out.println(patient.getFirstName() + " " + patient.getLastName());
-        }
-
+        Password password = new Password("No9lhtUt/hnXZOGU7XhABQ==", "1QCfaMmedBVJKhgf0dMETAaa/YhI+pp/uZZ/NmWCg3I=");
+        System.out.println("Password: " + password.verify("admin"));
     }
 }
