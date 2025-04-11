@@ -4,6 +4,7 @@ import backend.klasy.Doctor;
 import backend.klasy.Patient;
 import backend.klasy.Room;
 import backend.mongo.*;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -16,6 +17,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
+import org.bson.types.ObjectId;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -204,7 +206,26 @@ public class AdminPanelController {
         TableColumn<Appointment, String> descCol = new TableColumn<>("Opis");
         descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
 
-        tableView.getColumns().addAll(dateCol, roomCol, descCol);
+        TableColumn<Appointment, String> doctorCol = new TableColumn<>("Lekarz");
+        doctorCol.setCellValueFactory(cellData -> {
+            ObjectId docId = cellData.getValue().getDoctorId();
+            Doctor doc = doctorRepo.findDoctorById(docId).orElse(new Doctor());
+            return new ReadOnlyStringWrapper(doc.getFirstName() + " " + doc.getLastName());
+        });
+
+        TableColumn<Appointment, String> patientCol = new TableColumn<>("Pacjent");
+        patientCol.setCellValueFactory(cellData -> {
+            ObjectId patId = cellData.getValue().getPatientId();
+            Patient pat = new PatientRepository(MongoDatabaseConnector.connectToDatabase())
+                    .findPatientById(patId).orElse(new Patient());
+            return new ReadOnlyStringWrapper(pat.getFirstName() + " " + pat.getLastName());
+        });
+
+        TableColumn<Appointment, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(cellData.getValue().getStatus().toString()));
+
+
+        tableView.getColumns().addAll(dateCol, roomCol, descCol, doctorCol, patientCol, statusCol);
         tableView.setItems(appointmentData);
 
         HBox buttonBox = new HBox(10);

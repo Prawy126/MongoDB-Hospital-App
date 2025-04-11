@@ -65,8 +65,26 @@ public class AppointmentForm {
             timeField.setText(existingAppointment.getDate().toLocalTime().toString());
             descriptionField.setText(existingAppointment.getDescription());
             statusBox.setValue(existingAppointment.getStatus());
-            // lekarza/pacjenta/sali nie ustawiamy (zależnie od tego, czy kolekcje są zmapowane)
+
+            // Ustawienie wybranego lekarza
+            doctors.stream()
+                    .filter(doc -> doc.getId().equals(existingAppointment.getDoctorId()))
+                    .findFirst()
+                    .ifPresent(doctorBox::setValue);
+
+            // Ustawienie wybranego pacjenta
+            patients.stream()
+                    .filter(p -> p.getId().equals(existingAppointment.getPatientId()))
+                    .findFirst()
+                    .ifPresent(patientBox::setValue);
+
+            // Ustawienie wybranej sali
+            rooms.stream()
+                    .filter(r -> (r.getAddress() + " - " + r.getNumber()).equals(existingAppointment.getRoom()))
+                    .findFirst()
+                    .ifPresent(roomBox::setValue);
         }
+
 
         Button saveButton = new Button("Zapisz");
         saveButton.setOnAction(e -> {

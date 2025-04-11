@@ -87,4 +87,10 @@ public class Room {
         this.type = type;
     }
 
+    @Override
+    public String toString() {
+        return number + " - " + address;
+    }
+
+
 }

@@ -92,15 +92,9 @@ public class Patient extends Person {
 
     @Override
     public String toString() {
-        return "Patient{" +
-                "id=" + id +
-                ", firstName='" + (getFirstName() != null ? getFirstName() : "null") + '\'' +
-                ", lastName='" + (getLastName() != null ? getLastName() : "null") + '\'' +
-                ", pesel='" + (getPesel() < 100000000000L || getPesel() > 99999999999L? getPesel() : "null") + '\'' +
-                ", birthDate=" + (birthDate != null ? birthDate : "null") +
-                ", address='" + (address != null ? address : "null") + '\'' +
-                '}';
+        return getFirstName() + " " + getLastName() + " (" + getPesel() + ")";
     }
+
 
     public Diagnosis getDiagnosis() {
         return diagnosis;

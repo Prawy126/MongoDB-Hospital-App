@@ -14,6 +14,8 @@ public class Person {
     private String password;
     private String salt;
 
+    //TODO: Zastanawić się czy przy tworzeniu pacjenta będzie odrazu zakładane mu konto
+
     Person(){
 
     };
