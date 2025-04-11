@@ -7,17 +7,26 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+/**
+ * Kontroler panelu pacjenta. Obsługuje dashboard i historię leczenia.
+ */
 public class PatientPanelController {
 
     private final PatientPanel patientPanel;
     private final Stage primaryStage;
 
+    /**
+     * Konstruktor kontrolera.
+     * @param patientPanel panel pacjenta, do którego przypisany jest kontroler
+     */
     public PatientPanelController(PatientPanel patientPanel) {
         this.patientPanel = patientPanel;
         this.primaryStage = patientPanel.getPrimaryStage();
     }
 
-    // Dashboard pacjenta – najbliższy zabieg
+    /**
+     * Wyświetla dashboard pacjenta z najbliższym zabiegiem.
+     */
     public VBox showDashboard() {
         VBox layout = new VBox(20);
         layout.setPadding(new Insets(20));
@@ -34,7 +43,9 @@ public class PatientPanelController {
         return layout;
     }
 
-    // Historia leczenia w tabeli
+    /**
+     * Wyświetla historię leczenia pacjenta w tabeli.
+     */
     public VBox showTreatmentHistory() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
@@ -49,10 +60,16 @@ public class PatientPanelController {
         return layout;
     }
 
+    /**
+     * Tworzy pustą tabelę historii leczenia (do uzupełnienia).
+     */
     private TableView<?> createHistoryTable() {
-        return new TableView<>(); // Możesz uzupełnić o kolumny np. nazwa zabiegu, data, lekarz
+        return new TableView<>();
     }
 
+    /**
+     * Wylogowuje pacjenta i otwiera ekran logowania.
+     */
     public void logout() {
         primaryStage.close();
         Stage loginStage = new Stage();

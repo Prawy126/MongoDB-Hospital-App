@@ -10,13 +10,20 @@ import org.bson.codecs.pojo.PojoCodecProvider;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
+/**
+ * Klasa narzędziowa do obsługi połączenia z bazą danych MongoDB.
+ */
 public class MongoDatabaseConnector {
-    private static final String DB_IP = "192.168.8.105";
 
+    private static final String DB_IP = "192.168.8.105";
     private static final int DB_PORT = 27017;
     private static final String DB_NAME = "hospitalDB";
     private static MongoClient mongoClient;
 
+    /**
+     * Nawiązuje połączenie z bazą danych MongoDB i konfiguruje rejestr kodowania POJO.
+     * @return instancja MongoDatabase lub null w przypadku błędu
+     */
     public static MongoDatabase connectToDatabase() {
         try {
             CodecRegistry pojoCodecRegistry = fromRegistries(
@@ -39,6 +46,9 @@ public class MongoDatabaseConnector {
         }
     }
 
+    /**
+     * Zwraca klienta MongoDB. Jeśli nie istnieje, zostaje utworzony.
+     */
     public static MongoClient getClient() {
         if (mongoClient == null) {
             connectToDatabase();
@@ -46,6 +56,9 @@ public class MongoDatabaseConnector {
         return mongoClient;
     }
 
+    /**
+     * Zamyka aktywne połączenie z bazą danych.
+     */
     public static void close() {
         if (mongoClient != null) {
             try {

@@ -9,10 +9,13 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+/**
+ * Panel logowania dla użytkowników: administratora, lekarza i pacjenta.
+ */
 public class LoginPanel extends Application {
+
     private Button loginBtn;
 
-    // Sztywne dane logowania
     private final String ADMIN_LOGIN = "admin";
     private final String ADMIN_PASSWORD = "admin";
 

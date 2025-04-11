@@ -9,17 +9,26 @@ import javafx.scene.layout.HBox;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 
+/**
+ * Kontroler panelu lekarza. Obsługuje widoki dashboardu i harmonogramu zabiegów.
+ */
 public class DoctorPanelController {
 
     private final DoctorPanel doctorPanel;
     private final Stage primaryStage;
 
+    /**
+     * Konstruktor kontrolera.
+     * @param doctorPanel powiązany panel graficzny
+     */
     public DoctorPanelController(DoctorPanel doctorPanel) {
         this.doctorPanel = doctorPanel;
         this.primaryStage = doctorPanel.getPrimaryStage();
     }
 
-    // Dashboard z informacjami
+    /**
+     * Wyświetla dashboard z informacjami ogólnymi.
+     */
     public VBox showDashboard() {
         VBox layout = new VBox(20);
         layout.setPadding(new Insets(20));
@@ -36,7 +45,9 @@ public class DoctorPanelController {
         return layout;
     }
 
-    // Lista zaplanowanych zabiegów
+    /**
+     * Wyświetla harmonogram zabiegów lekarza.
+     */
     public VBox showProcedureSchedule() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
@@ -56,10 +67,16 @@ public class DoctorPanelController {
         return layout;
     }
 
+    /**
+     * Tworzy pustą tabelę zabiegów (do uzupełnienia).
+     */
     private TableView<?> createProcedureTable() {
         return new TableView<>();
     }
 
+    /**
+     * Wylogowuje użytkownika i otwiera panel logowania.
+     */
     public void logout() {
         primaryStage.close();
         Stage loginStage = new Stage();
@@ -70,4 +87,3 @@ public class DoctorPanelController {
         }
     }
 }
-

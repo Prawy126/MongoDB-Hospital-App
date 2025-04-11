@@ -19,6 +19,8 @@ class Assignment {
         this.time = time;
     }
 
+    //FIXME: Nie spójne tłumaczenia
+
     public ObjectId getPatientId() {
         return patientId;
     }

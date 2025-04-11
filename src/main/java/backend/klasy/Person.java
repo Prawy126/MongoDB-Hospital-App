@@ -5,8 +5,10 @@ import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
 
 /**
- * Klasa ta jest klasą nadrzędną po której dziedziczą inne klasy*/
+ * Klasa reprezentująca osobę. Jest klasą bazową dla innych klas.
+ */
 public class Person {
+
     private String firstName;
     private String lastName;
     private int age;
@@ -14,73 +16,117 @@ public class Person {
     private String password;
     private String salt;
 
-    //TODO: Zastanawić się czy przy tworzeniu pacjenta będzie odrazu zakładane mu konto
-
-    Person(){
-
-    };
-    public Person(String firstName, String lastName)throws NullNameException {
-        if(firstName.length() > 0 && lastName.length() > 0){
-            this.firstName = firstName;
-            this.lastName= lastName;
-        }else throw new NullNameException("Imię i nazwisko nie mogą być puste");
+    /**
+     * Domyślny konstruktor.
+     */
+    Person() {
     }
-    public Person(String firstName, String lastName, String password)throws NullNameException {
-        if(firstName.length() > 0 && lastName.length() > 0){
-            this.firstName = firstName;
-            this.lastName= lastName;
-        }else throw new NullNameException("Imię i nazwisko nie mogą być puste");
-        Password password1 = new Password(password);
-        this.password = password1.getHashedPassword();
-        this.salt = password1.getSalt();
-    }
-    public Person(String firstName, String lastName, long pesel) throws PeselException, NullNameException {
+
+    /**
+     * Konstruktor z imieniem i nazwiskiem.
+     *
+     * @param firstName Imię
+     * @param lastName  Nazwisko
+     * @throws NullNameException jeśli imię lub nazwisko są puste
+     */
+    public Person(String firstName, String lastName) throws NullNameException {
+        validateName(firstName, lastName);
         this.firstName = firstName;
         this.lastName = lastName;
-        if(firstName.length() > 0 && lastName.length() > 0){
-            this.firstName = firstName;
-            this.lastName = lastName;}else throw new NullNameException("Imię i nazwisko nie mogą być puste");
-        if (pesel > 9999999999L || pesel < 100000000000L) {this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
     }
 
-    public Person(String firstName, String lastName, long pesel, int age)throws  PeselException, NullNameException, AgeException {
-        if(firstName.length() > 0 && lastName.length() > 0) {this.firstName = firstName;
-        this.lastName = lastName;}else throw new NullNameException("Imię i nazwisko nie mogą być puste");
-        if(pesel > 9999999999L || pesel < 100000000000L) {this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
-        if(age >= 0)this.age = age;
-        else throw new AgeException("Wiek nie może być ujemny");
+    /**
+     * Konstruktor z imieniem, nazwiskiem i hasłem.
+     *
+     * @param firstName Imię
+     * @param lastName  Nazwisko
+     * @param password  Hasło
+     * @throws NullNameException jeśli imię lub nazwisko są puste
+     */
+    public Person(String firstName, String lastName, String password) throws NullNameException {
+        validateName(firstName, lastName);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setPassword(password);
     }
 
-    public Person(String firstName, String lastName, long pesel, int age, String password)throws  PeselException, NullNameException, AgeException {
-        if(firstName.length() > 0 && lastName.length() > 0) {this.firstName = firstName;
-            this.lastName = lastName;}else throw new NullNameException("Imię i nazwisko nie mogą być puste");
-        if(pesel > 9999999999L || pesel < 100000000000L) {this.pesel = pesel;}else throw new PeselException("Pesel musi mieć 11 cyfr");
-        if(age >= 0)this.age = age;
-        else throw new AgeException("Wiek nie może być ujemny");
-        Password password1 = new Password(password);
-        this.password = password1.getHashedPassword();
-        this.salt = password1.getSalt();
+    /**
+     * Konstruktor z imieniem, nazwiskiem i peselem.
+     *
+     * @param firstName Imię
+     * @param lastName  Nazwisko
+     * @param pesel     Numer PESEL
+     * @throws PeselException    jeśli pesel nie ma 11 cyfr
+     * @throws NullNameException jeśli imię lub nazwisko są puste
+     */
+    public Person(String firstName, String lastName, long pesel) throws PeselException, NullNameException {
+        validateName(firstName, lastName);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setPesel(pesel);
     }
+
+    /**
+     * Konstruktor z imieniem, nazwiskiem, peselem i wiekiem.
+     *
+     * @param firstName Imię
+     * @param lastName  Nazwisko
+     * @param pesel     Numer PESEL
+     * @param age       Wiek
+     * @throws PeselException    jeśli pesel nie ma 11 cyfr
+     * @throws NullNameException jeśli imię lub nazwisko są puste
+     * @throws AgeException      jeśli wiek jest ujemny
+     */
+    public Person(String firstName, String lastName, long pesel, int age) throws PeselException, NullNameException, AgeException {
+        validateName(firstName, lastName);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setPesel(pesel);
+        setAge(age);
+    }
+
+    /**
+     * Konstruktor z imieniem, nazwiskiem, peselem, wiekiem i hasłem.
+     *
+     * @param firstName Imię
+     * @param lastName  Nazwisko
+     * @param pesel     Numer PESEL
+     * @param age       Wiek
+     * @param password  Hasło
+     * @throws PeselException    jeśli pesel nie ma 11 cyfr
+     * @throws NullNameException jeśli imię lub nazwisko są puste
+     * @throws AgeException      jeśli wiek jest ujemny
+     */
+    public Person(String firstName, String lastName, long pesel, int age, String password) throws PeselException, NullNameException, AgeException {
+        validateName(firstName, lastName);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setPesel(pesel);
+        setAge(age);
+        setPassword(password);
+    }
+
     public String getFirstName() {
         return firstName;
-    }
-
-    public int getAge() {
-        return age;
     }
 
     public String getLastName() {
         return lastName;
     }
 
-    // Nie wiem czy ta funkcja ma sens
-    // Do przemyślenia
-    public String getPassword() {
-        return password;
+    public int getAge() {
+        return age;
     }
 
     public long getPesel() {
         return pesel;
+    }
+
+    /**
+     * Zwraca hasło (zahashowane). Można rozważyć usunięcie tej metody ze względów bezpieczeństwa.
+     */
+    public String getPassword() {
+        return password;
     }
 
     public void setFirstName(String firstName) throws NullNameException {
@@ -105,16 +151,28 @@ public class Person {
     }
 
     public void setPesel(long pesel) throws PeselException {
-        String peselStr = String.valueOf(pesel);
-        if (pesel <= 9999999999L || pesel > 100000000000L) {
+        if (pesel < 10000000000L || pesel > 99999999999L) {
             throw new PeselException("Pesel musi składać się dokładnie z 11 cyfr.");
         }
         this.pesel = pesel;
     }
 
     public void setPassword(String password) {
-        Password password1 = new Password(password);
-        this.password = password1.getHashedPassword();
-        this.salt = password1.getSalt();
+        Password passwordObj = new Password(password);
+        this.password = passwordObj.getHashedPassword();
+        this.salt = passwordObj.getSalt();
+    }
+
+    /**
+     * Waliduje imię i nazwisko.
+     *
+     * @param firstName Imię
+     * @param lastName  Nazwisko
+     * @throws NullNameException jeśli imię lub nazwisko są puste
+     */
+    private void validateName(String firstName, String lastName) throws NullNameException {
+        if (firstName == null || firstName.trim().isEmpty() || lastName == null || lastName.trim().isEmpty()) {
+            throw new NullNameException("Imię i nazwisko nie mogą być puste");
+        }
     }
 }

@@ -2,13 +2,14 @@ package backend.klasy;
 
 import backend.status.AppointmentStatus;
 import org.bson.types.ObjectId;
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 
 /**
  * Klasa Appointment reprezentuje wizytę pacjenta u lekarza.
  */
 public class Appointment {
+
     private ObjectId id;
     private ObjectId patientId;
     private ObjectId doctorId;
@@ -17,8 +18,15 @@ public class Appointment {
     private String description;
     private AppointmentStatus status;
 
-    public Appointment() {}
+    /**
+     * Domyślny konstruktor.
+     */
+    public Appointment() {
+    }
 
+    /**
+     * Konstruktor tworzący pełną wizytę.
+     */
     public Appointment(ObjectId patientId, ObjectId doctorId, LocalDateTime date,
                        String room, String description, AppointmentStatus status) {
         this.patientId = patientId;
@@ -29,22 +37,65 @@ public class Appointment {
         this.status = status;
     }
 
-    public ObjectId getId() { return id; }
-    public ObjectId getPatientId() { return patientId; }
-    public ObjectId getDoctorId() { return doctorId; }
-    public LocalDateTime getDate() { return date; }
-    public String getRoom() { return room; }
-    public String getDescription() { return description; }
-    public AppointmentStatus getStatus() { return status; }
+    public ObjectId getId() {
+        return id;
+    }
 
-    public void setId(ObjectId id) { this.id = id; }
-    public void setPatientId(ObjectId patientId) { this.patientId = patientId; }
-    public void setDoctorId(ObjectId doctorId) { this.doctorId = doctorId; }
-    public void setDate(LocalDateTime date) { this.date = date; }
-    public void setRoom(String room) { this.room = room; }
-    public void setDescription(String description) { this.description = description; }
-    public void setStatus(AppointmentStatus status) { this.status = status; }
+    public void setId(ObjectId id) {
+        this.id = id;
+    }
 
+    public ObjectId getPatientId() {
+        return patientId;
+    }
+
+    public void setPatientId(ObjectId patientId) {
+        this.patientId = patientId;
+    }
+
+    public ObjectId getDoctorId() {
+        return doctorId;
+    }
+
+    public void setDoctorId(ObjectId doctorId) {
+        this.doctorId = doctorId;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public AppointmentStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AppointmentStatus status) {
+        this.status = status;
+    }
+
+    /**
+     * Klasa pomocnicza do budowania obiektów typu Appointment.
+     */
     public static class Builder {
         private ObjectId id;
         private ObjectId patientId;
@@ -54,20 +105,21 @@ public class Appointment {
         private String description;
         private AppointmentStatus status;
 
-        public Builder() {}
+        public Builder() {
+        }
 
         public Builder withId(ObjectId id) {
             this.id = id;
             return this;
         }
 
-        public Builder patientId(Patient patientId) {
-            this.patientId = patientId.getId();
+        public Builder patientId(Patient patient) {
+            this.patientId = patient.getId();
             return this;
         }
 
-        public Builder doctorId(Doctor doctorId) {
-            this.doctorId = doctorId.getId();
+        public Builder doctorId(Doctor doctor) {
+            this.doctorId = doctor.getId();
             return this;
         }
 
@@ -91,6 +143,9 @@ public class Appointment {
             return this;
         }
 
+        /**
+         * Tworzy instancję klasy Appointment.
+         */
         public Appointment build() {
             Appointment appointment = new Appointment();
             appointment.setId(id);
@@ -130,4 +185,3 @@ public class Appointment {
                 '}';
     }
 }
-

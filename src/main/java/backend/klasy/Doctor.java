@@ -5,22 +5,30 @@ import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
 import org.bson.types.ObjectId;
+
 import java.util.List;
 
 /**
  * Klasa Doctor reprezentuje lekarza w systemie.
  */
 public class Doctor extends Person {
+
     private ObjectId id;
     private String specialization;
     private List<Day> availableDays;
     private String room;
     private String contactInformation;
 
+    /**
+     * Domyślny konstruktor.
+     */
     public Doctor() {}
 
+    /**
+     * Konstruktor bez hasła.
+     */
     public Doctor(String firstName, String lastName, String specialization,
-                  List<Day> availableDays, String room, String contactInformation)throws NullNameException {
+                  List<Day> availableDays, String room, String contactInformation) throws NullNameException {
         super(firstName, lastName);
         this.specialization = specialization;
         this.availableDays = availableDays;
@@ -28,7 +36,11 @@ public class Doctor extends Person {
         this.contactInformation = contactInformation;
     }
 
-    public Doctor(String firstName, String lastName, String specialization, List<Day> availableDays, String room, String contactInformation, String password)throws NullNameException {
+    /**
+     * Konstruktor z hasłem.
+     */
+    public Doctor(String firstName, String lastName, String specialization,
+                  List<Day> availableDays, String room, String contactInformation, String password) throws NullNameException {
         super(firstName, lastName, password);
         this.specialization = specialization;
         this.availableDays = availableDays;
@@ -47,16 +59,30 @@ public class Doctor extends Person {
     public long getPesel() { return super.getPesel(); }
 
     public void setId(ObjectId id) { this.id = id; }
-    public void setFirstName(String firstName) throws NullNameException{ super.setFirstName(firstName); }
-    public void setLastName(String lastName) throws NullNameException{ super.setLastName(lastName); }
+    public void setFirstName(String firstName) throws NullNameException { super.setFirstName(firstName); }
+    public void setLastName(String lastName) throws NullNameException { super.setLastName(lastName); }
     public void setSpecialization(String specialization) { this.specialization = specialization; }
     public void setAvailableDays(List<Day> availableDays) { this.availableDays = availableDays; }
     public void setRoom(String room) { this.room = room; }
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
-    public void setAge(int age)throws AgeException { if(age >= 25)super.setAge(age);else throw new AgeException("Wiek lekarza nie może być mniejszy niż 25"); }
+
+    /**
+     * Ustawia wiek, który musi być większy lub równy 25.
+     */
+    public void setAge(int age) throws AgeException {
+        if (age >= 25) {
+            super.setAge(age);
+        } else {
+            throw new AgeException("Wiek lekarza nie może być mniejszy niż 25");
+        }
+    }
+
     public void setPesel(long pesel) throws PeselException { super.setPesel(pesel); }
     public void setPassword(String password) { super.setPassword(password); }
 
+    /**
+     * Budowniczy obiektu Doctor.
+     */
     public static class Builder {
         private ObjectId id;
         private String firstName;
@@ -105,10 +131,12 @@ public class Doctor extends Person {
             this.contactInformation = contactInformation;
             return this;
         }
+
         public Builder age(int age) {
             this.age = age;
             return this;
         }
+
         public Builder pesel(long pesel) {
             this.pesel = pesel;
             return this;
@@ -120,10 +148,10 @@ public class Doctor extends Person {
         }
 
         public Doctor build() throws PeselException, NullNameException, AgeException {
-            if (firstName == null || firstName.isEmpty()) {
+            if (firstName == null || firstName.trim().isEmpty()) {
                 throw new NullNameException("Imię nie może być puste.");
             }
-            if (lastName == null || lastName.isEmpty()) {
+            if (lastName == null || lastName.trim().isEmpty()) {
                 throw new NullNameException("Nazwisko nie może być puste.");
             }
             if (age < 25) {
@@ -145,14 +173,13 @@ public class Doctor extends Person {
             doctor.setContactInformation(contactInformation);
 
             if (id == null) {
-                doctor.setId(new ObjectId());  // Generowanie nowego ID
+                doctor.setId(new ObjectId());
             } else {
                 doctor.setId(id);
             }
 
             return doctor;
         }
-
     }
 
     @Override
@@ -172,5 +199,4 @@ public class Doctor extends Person {
     public String toString() {
         return getFirstName() + " " + getLastName() + " (" + specialization + ")";
     }
-
 }

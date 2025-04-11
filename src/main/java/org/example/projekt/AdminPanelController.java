@@ -1,47 +1,47 @@
 package org.example.projekt;
 
-import backend.klasy.Doctor;
-import backend.klasy.Patient;
-import backend.klasy.Room;
+import backend.klasy.*;
 import backend.mongo.*;
+import backend.status.AppointmentStatus;
+import com.mongodb.client.MongoDatabase;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import backend.klasy.Appointment;
-import com.mongodb.client.MongoDatabase;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.cell.PropertyValueFactory;
 import org.bson.types.ObjectId;
 
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Kontroler panelu administratora. Odpowiada za wyświetlanie i obsługę zarządzania pacjentami, lekarzami, zabiegami i salami.
+ */
 public class AdminPanelController {
 
     private final AdminPanel adminPanel;
     private final Stage primaryStage;
 
-    private AppointmentRepository appointmentRepo;
-    private ObservableList<Appointment> appointmentData = FXCollections.observableArrayList();
-
-    private ObservableList<Doctor> doctorData = FXCollections.observableArrayList();
-    private DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
-
+    private final AppointmentRepository appointmentRepo;
+    private final ObservableList<Appointment> appointmentData = FXCollections.observableArrayList();
+    private final ObservableList<Doctor> doctorData = FXCollections.observableArrayList();
+    private final DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
 
     public AdminPanelController(AdminPanel adminPanel) {
         this.adminPanel = adminPanel;
         this.primaryStage = adminPanel.getPrimaryStage();
         MongoDatabase db = MongoDatabaseConnector.connectToDatabase();
         this.appointmentRepo = new AppointmentRepository(db);
-
     }
 
+    /**
+     * Wyświetla panel zarządzania pacjentami.
+     */
     public VBox showUserManagement() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
@@ -54,7 +54,6 @@ public class AdminPanelController {
         ObservableList<Patient> patientData = FXCollections.observableArrayList();
         PatientRepository patientRepo = new PatientRepository(MongoDatabaseConnector.connectToDatabase());
 
-        // Kolumny
         TableColumn<Patient, String> firstNameCol = new TableColumn<>("Imię");
         firstNameCol.setCellValueFactory(new PropertyValueFactory<>("firstName"));
 
@@ -69,20 +68,14 @@ public class AdminPanelController {
 
         tableView.getColumns().addAll(firstNameCol, lastNameCol, addressCol, birthDateCol);
         tableView.setItems(patientData);
-
-        // Załaduj dane
         patientData.setAll(patientRepo.findAll());
 
-        // Dodaj pacjenta
         Button addBtn = new Button("Dodaj pacjenta");
-        addBtn.setOnAction(e -> {
-            PatientForm.showForm(null, patient -> {
-                patientRepo.createPatient(patient);
-                patientData.setAll(patientRepo.findAll());
-            });
-        });
+        addBtn.setOnAction(e -> PatientForm.showForm(null, patient -> {
+            patientRepo.createPatient(patient);
+            patientData.setAll(patientRepo.findAll());
+        }));
 
-        // Edytuj pacjenta
         Button editBtn = new Button("Edytuj pacjenta");
         editBtn.setOnAction(e -> {
             Patient selected = tableView.getSelectionModel().getSelectedItem();
@@ -94,7 +87,6 @@ public class AdminPanelController {
             }
         });
 
-        // Usuń pacjenta
         Button deleteBtn = new Button("Usuń pacjenta");
         deleteBtn.setOnAction(e -> {
             Patient selected = tableView.getSelectionModel().getSelectedItem();
@@ -112,7 +104,9 @@ public class AdminPanelController {
         return layout;
     }
 
-    // Przeglądanie lekarzy
+    /**
+     * Wyświetla panel zarządzania lekarzami.
+     */
     public VBox showConfigPanel() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
@@ -125,7 +119,6 @@ public class AdminPanelController {
         ObservableList<Doctor> doctorData = FXCollections.observableArrayList();
         DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
 
-        // Kolumny
         TableColumn<Doctor, String> nameCol = new TableColumn<>("Imię");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("firstName"));
 
@@ -140,20 +133,14 @@ public class AdminPanelController {
 
         tableView.getColumns().addAll(nameCol, lastNameCol, specializationCol, roomCol);
         tableView.setItems(doctorData);
-
-        // Załaduj dane
         doctorData.setAll(doctorRepo.findAll());
 
-        // Przycisk dodawania
         Button addBtn = new Button("Dodaj lekarza");
-        addBtn.setOnAction(e -> {
-            DoctorForm.showForm(null, doctor -> {
-                doctorRepo.createDoctor(doctor);
-                doctorData.setAll(doctorRepo.findAll());
-            });
-        });
+        addBtn.setOnAction(e -> DoctorForm.showForm(null, doctor -> {
+            doctorRepo.createDoctor(doctor);
+            doctorData.setAll(doctorRepo.findAll());
+        }));
 
-        // Przycisk edycji
         Button editBtn = new Button("Edytuj lekarza");
         editBtn.setOnAction(e -> {
             Doctor selected = tableView.getSelectionModel().getSelectedItem();
@@ -165,7 +152,6 @@ public class AdminPanelController {
             }
         });
 
-        // Przycisk usuwania
         Button deleteBtn = new Button("Usuń lekarza");
         deleteBtn.setOnAction(e -> {
             Doctor selected = tableView.getSelectionModel().getSelectedItem();
@@ -183,9 +169,9 @@ public class AdminPanelController {
         return layout;
     }
 
-
-
-    // Przeglądanie zabiegów
+    /**
+     * Wyświetla panel harmonogramu zabiegów.
+     */
     public VBox showReportsPanel() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
@@ -196,7 +182,6 @@ public class AdminPanelController {
         TableView<Appointment> tableView = new TableView<>();
         refreshAppointments(tableView);
 
-        // Kolumny
         TableColumn<Appointment, String> dateCol = new TableColumn<>("Data");
         dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
 
@@ -224,46 +209,42 @@ public class AdminPanelController {
         TableColumn<Appointment, String> statusCol = new TableColumn<>("Status");
         statusCol.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(cellData.getValue().getStatus().toString()));
 
-
         tableView.getColumns().addAll(dateCol, roomCol, descCol, doctorCol, patientCol, statusCol);
         tableView.setItems(appointmentData);
 
         HBox buttonBox = new HBox(10);
         buttonBox.setAlignment(Pos.CENTER);
+
         Button scheduleProcedure = new Button("Dodaj zabieg");
+        Button editProcedure = new Button("Edytuj zaznaczony");
         Button cancelProcedure = new Button("Usuń zaznaczony");
 
         scheduleProcedure.setOnAction(e -> {
-            List<Doctor> doctors = new DoctorRepository(MongoDatabaseConnector.connectToDatabase()).findAll();
-            List<Patient> patients = new PatientRepository(MongoDatabaseConnector.connectToDatabase()).findAll();
-            RoomRepository roomRepo = new RoomRepository(MongoDatabaseConnector.getClient(), "hospitalDB");
-            List<Room> rooms = roomRepo.getAllRooms();
-
-            AppointmentForm form = new AppointmentForm(doctors, patients, rooms);
+            AppointmentForm form = new AppointmentForm(
+                    doctorRepo.findAll(),
+                    new PatientRepository(MongoDatabaseConnector.connectToDatabase()).findAll(),
+                    new RoomRepository(MongoDatabaseConnector.getClient(), "hospitalDB").getAllRooms()
+            );
             form.showForm(null, appointment -> {
                 appointmentRepo.createAppointment(appointment);
                 refreshAppointments(tableView);
             });
         });
 
-        Button editProcedure = new Button("Edytuj zaznaczony");
         editProcedure.setOnAction(e -> {
             Appointment selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                List<Doctor> doctors = new DoctorRepository(MongoDatabaseConnector.connectToDatabase()).findAll();
-                List<Patient> patients = new PatientRepository(MongoDatabaseConnector.connectToDatabase()).findAll();
-                RoomRepository roomRepo = new RoomRepository(MongoDatabaseConnector.getClient(), "hospitalDB");
-                List<Room> rooms = roomRepo.getAllRooms();
-
-                AppointmentForm form = new AppointmentForm(doctors, patients, rooms);
+                AppointmentForm form = new AppointmentForm(
+                        doctorRepo.findAll(),
+                        new PatientRepository(MongoDatabaseConnector.connectToDatabase()).findAll(),
+                        new RoomRepository(MongoDatabaseConnector.getClient(), "hospitalDB").getAllRooms()
+                );
                 form.showForm(selected, appointment -> {
                     appointmentRepo.updateAppointment(appointment);
                     refreshAppointments(tableView);
                 });
             }
         });
-
-
 
         cancelProcedure.setOnAction(e -> {
             Appointment selected = tableView.getSelectionModel().getSelectedItem();
@@ -281,22 +262,13 @@ public class AdminPanelController {
     }
 
     private void refreshAppointments(TableView<Appointment> tableView) {
-        List<Appointment> appointments = appointmentRepo.findAll();
-        appointmentData.setAll(appointments);
+        appointmentData.setAll(appointmentRepo.findAll());
         tableView.refresh();
     }
 
-
-    private void refreshDoctors(TableView<Doctor> tableView) {
-        List<Doctor> doctors = doctorRepo.findAll();
-        doctorData.setAll(doctors);
-        tableView.refresh();
-    }
-
-
-
-
-    // Przeglądanie sal
+    /**
+     * Wyświetla panel zarządzania salami.
+     */
     public VBox showIssuesPanel() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
@@ -361,17 +333,14 @@ public class AdminPanelController {
         return layout;
     }
 
-    // Metoda pomocnicza do tworzenia tabeli
-    private TableView<?> createTableView() {
-        return new TableView<>();
-    }
-
-    // Wylogowanie
+    /**
+     * Wylogowuje użytkownika i otwiera panel logowania.
+     */
     public void logout() {
         primaryStage.close();
         Stage loginStage = new Stage();
         try {
-            new LoginPanel().start(loginStage); // Uruchamiamy okno logowania
+            new LoginPanel().start(loginStage);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -12,12 +12,20 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+/**
+ * Klasa odpowiedzialna za graficzny panel lekarza.
+ * Zawiera menu nawigacyjne oraz dynamiczne przełączanie widoków.
+ */
 public class DoctorPanel {
 
     private BorderPane root;
     private Stage primaryStage;
     private DoctorPanelController controller;
 
+    /**
+     * Konstruktor inicjalizujący panel lekarza.
+     * @param stage główne okno aplikacji
+     */
     public DoctorPanel(Stage stage) {
         this.primaryStage = stage;
         this.controller = new DoctorPanelController(this);
@@ -41,6 +49,10 @@ public class DoctorPanel {
         primaryStage.show();
     }
 
+    /**
+     * Tworzy menu nawigacyjne z przyciskami.
+     * @return VBox zawierający menu
+     */
     private VBox createMenu() {
         VBox menu = new VBox(10);
         menu.setPadding(new Insets(10));
@@ -65,10 +77,16 @@ public class DoctorPanel {
         return menu;
     }
 
+    /**
+     * Tworzy przycisk z domyślnym kolorem.
+     */
     private Button createStyledButton(String text) {
         return createStyledButton(text, "#3498DB");
     }
 
+    /**
+     * Tworzy stylizowany przycisk z animacjami.
+     */
     private Button createStyledButton(String text, String color) {
         Button button = new Button(text);
         button.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -90,6 +108,9 @@ public class DoctorPanel {
         return button;
     }
 
+    /**
+     * Animacja pojawienia się (fade-in).
+     */
     private void animateFadeIn(VBox element, int duration) {
         FadeTransition fade = new FadeTransition(Duration.millis(duration), element);
         fade.setFromValue(0);
@@ -97,6 +118,9 @@ public class DoctorPanel {
         fade.play();
     }
 
+    /**
+     * Animacja zsunięcia elementu z góry (slide down).
+     */
     private void animateSlideDown(VBox element, int duration) {
         TranslateTransition slide = new TranslateTransition(Duration.millis(duration), element);
         slide.setFromY(-50);
@@ -105,10 +129,16 @@ public class DoctorPanel {
         slide.play();
     }
 
+    /**
+     * Ustawia panel centralny na podany komponent.
+     */
     public void setCenterPane(Pane pane) {
         root.setCenter(pane);
     }
 
+    /**
+     * Zwraca główny stage aplikacji.
+     */
     public Stage getPrimaryStage() {
         return primaryStage;
     }

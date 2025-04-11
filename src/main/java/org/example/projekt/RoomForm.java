@@ -10,7 +10,16 @@ import javafx.stage.Stage;
 
 import java.util.function.Consumer;
 
+/**
+ * Formularz do tworzenia i edycji danych sali szpitalnej.
+ */
 public class RoomForm {
+
+    /**
+     * Wyświetla formularz dodawania lub edycji sali.
+     * @param existingRoom istniejący obiekt sali lub null przy tworzeniu nowej
+     * @param onSave akcja wykonywana po zapisaniu formularza
+     */
     public static void showForm(Room existingRoom, Consumer<Room> onSave) {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);

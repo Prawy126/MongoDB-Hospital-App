@@ -6,8 +6,15 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
+/**
+ * Formularz rejestracji nowego użytkownika.
+ */
 public class RegisterPanel {
 
+    /**
+     * Uruchamia okno rejestracji.
+     * @param stage okno JavaFX do wyświetlenia formularza
+     */
     public void start(Stage stage) {
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(20));
@@ -20,28 +27,28 @@ public class RegisterPanel {
         GridPane.setConstraints(headerLabel, 0, 0, 2, 1);
 
         Label nameLabel = new Label("Imię:");
-        GridPane.setConstraints(nameLabel, 0, 1);
         TextField nameField = new TextField();
+        GridPane.setConstraints(nameLabel, 0, 1);
         GridPane.setConstraints(nameField, 1, 1);
 
         Label surnameLabel = new Label("Nazwisko:");
-        GridPane.setConstraints(surnameLabel, 0, 2);
         TextField surnameField = new TextField();
+        GridPane.setConstraints(surnameLabel, 0, 2);
         GridPane.setConstraints(surnameField, 1, 2);
 
         Label emailLabel = new Label("Email:");
-        GridPane.setConstraints(emailLabel, 0, 3);
         TextField emailField = new TextField();
+        GridPane.setConstraints(emailLabel, 0, 3);
         GridPane.setConstraints(emailField, 1, 3);
 
         Label userLabel = new Label("Login:");
-        GridPane.setConstraints(userLabel, 0, 4);
         TextField userField = new TextField();
+        GridPane.setConstraints(userLabel, 0, 4);
         GridPane.setConstraints(userField, 1, 4);
 
         Label passLabel = new Label("Hasło:");
-        GridPane.setConstraints(passLabel, 0, 5);
         PasswordField passField = new PasswordField();
+        GridPane.setConstraints(passLabel, 0, 5);
         GridPane.setConstraints(passField, 1, 5);
 
         Button submitBtn = new Button("Zarejestruj");

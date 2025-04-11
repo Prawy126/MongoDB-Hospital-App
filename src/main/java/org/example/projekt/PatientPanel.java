@@ -12,12 +12,20 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+/**
+ * Klasa odpowiedzialna za graficzny panel pacjenta.
+ * Zawiera menu oraz dynamiczne przełączanie widoków pacjenta.
+ */
 public class PatientPanel {
 
     private BorderPane root;
     private Stage primaryStage;
     private PatientPanelController controller;
 
+    /**
+     * Inicjalizuje panel pacjenta z menu i pierwszym widokiem.
+     * @param stage główne okno aplikacji
+     */
     public PatientPanel(Stage stage) {
         this.primaryStage = stage;
         this.controller = new PatientPanelController(this);
@@ -41,6 +49,9 @@ public class PatientPanel {
         primaryStage.show();
     }
 
+    /**
+     * Tworzy menu nawigacyjne pacjenta.
+     */
     private VBox createMenu() {
         VBox menu = new VBox(10);
         menu.setPadding(new Insets(10));
@@ -65,10 +76,16 @@ public class PatientPanel {
         return menu;
     }
 
+    /**
+     * Tworzy przycisk z domyślnym stylem.
+     */
     private Button createStyledButton(String text) {
         return createStyledButton(text, "#3498DB");
     }
 
+    /**
+     * Tworzy przycisk z podanym kolorem i efektem animacji.
+     */
     private Button createStyledButton(String text, String color) {
         Button button = new Button(text);
         button.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -90,6 +107,9 @@ public class PatientPanel {
         return button;
     }
 
+    /**
+     * Animacja pojawienia się menu.
+     */
     private void animateFadeIn(VBox element, int duration) {
         FadeTransition fade = new FadeTransition(Duration.millis(duration), element);
         fade.setFromValue(0);
@@ -97,6 +117,9 @@ public class PatientPanel {
         fade.play();
     }
 
+    /**
+     * Animacja zsuwania menu z góry.
+     */
     private void animateSlideDown(VBox element, int duration) {
         TranslateTransition slide = new TranslateTransition(Duration.millis(duration), element);
         slide.setFromY(-50);
@@ -105,10 +128,16 @@ public class PatientPanel {
         slide.play();
     }
 
+    /**
+     * Ustawia widok centralny panelu.
+     */
     public void setCenterPane(Pane pane) {
         root.setCenter(pane);
     }
 
+    /**
+     * Zwraca główne okno aplikacji.
+     */
     public Stage getPrimaryStage() {
         return primaryStage;
     }

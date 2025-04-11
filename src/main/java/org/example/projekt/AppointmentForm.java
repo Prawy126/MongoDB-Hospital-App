@@ -21,6 +21,9 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Formularz dodawania lub edycji wizyty (Appointment).
+ */
 public class AppointmentForm {
 
     private final List<Doctor> doctors;
@@ -33,6 +36,9 @@ public class AppointmentForm {
         this.rooms = rooms;
     }
 
+    /**
+     * Pokazuje formularz edycji lub dodania wizyty.
+     */
     public void showForm(Appointment existingAppointment, Consumer<Appointment> onSave) {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
@@ -66,65 +72,50 @@ public class AppointmentForm {
             descriptionField.setText(existingAppointment.getDescription());
             statusBox.setValue(existingAppointment.getStatus());
 
-            // Ustawienie wybranego lekarza
-            doctors.stream()
-                    .filter(doc -> doc.getId().equals(existingAppointment.getDoctorId()))
-                    .findFirst()
-                    .ifPresent(doctorBox::setValue);
-
-            // Ustawienie wybranego pacjenta
-            patients.stream()
-                    .filter(p -> p.getId().equals(existingAppointment.getPatientId()))
-                    .findFirst()
-                    .ifPresent(patientBox::setValue);
-
-            // Ustawienie wybranej sali
-            rooms.stream()
-                    .filter(r -> (r.getAddress() + " - " + r.getNumber()).equals(existingAppointment.getRoom()))
-                    .findFirst()
-                    .ifPresent(roomBox::setValue);
+            doctors.stream().filter(doc -> doc.getId().equals(existingAppointment.getDoctorId())).findFirst().ifPresent(doctorBox::setValue);
+            patients.stream().filter(p -> p.getId().equals(existingAppointment.getPatientId())).findFirst().ifPresent(patientBox::setValue);
+            rooms.stream().filter(r -> (r.getAddress() + " - " + r.getNumber()).equals(existingAppointment.getRoom())).findFirst().ifPresent(roomBox::setValue);
         }
-
 
         Button saveButton = new Button("Zapisz");
         saveButton.setOnAction(e -> {
-            LocalDate date = datePicker.getValue();
-            LocalTime time = LocalTime.parse(timeField.getText());
-            if (doctorBox.getValue() == null || patientBox.getValue() == null ||
-                    roomBox.getValue() == null || datePicker.getValue() == null ||
-                    timeField.getText().isEmpty() || statusBox.getValue() == null) {
+            try {
+                LocalDate date = datePicker.getValue();
+                LocalTime time = LocalTime.parse(timeField.getText());
 
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Błąd");
-                alert.setHeaderText("Wszystkie pola muszą być wypełnione");
-                alert.showAndWait();
-                return;
+                if (doctorBox.getValue() == null || patientBox.getValue() == null ||
+                        roomBox.getValue() == null || date == null ||
+                        timeField.getText().isEmpty() || statusBox.getValue() == null) {
+
+                    showAlert("Błąd", "Wszystkie pola muszą być wypełnione");
+                    return;
+                }
+
+                Appointment.Builder builder = existingAppointment != null
+                        ? new Appointment.Builder().withId(existingAppointment.getId())
+                        : new Appointment.Builder();
+
+                Appointment appointment = builder
+                        .doctorId(doctorBox.getValue())
+                        .patientId(patientBox.getValue())
+                        .room(roomBox.getValue().getAddress() + " - " + roomBox.getValue().getNumber())
+                        .date(LocalDateTime.of(date, time))
+                        .description(descriptionField.getText())
+                        .status(statusBox.getValue())
+                        .build();
+
+                onSave.accept(appointment);
+                stage.close();
+
+            } catch (Exception ex) {
+                showAlert("Błąd", "Niepoprawny format godziny. Użyj formatu hh:mm");
             }
-
-
-            Appointment.Builder builder = existingAppointment != null
-                    ? new Appointment.Builder().withId(existingAppointment.getId())
-                    : new Appointment.Builder();
-
-            Appointment appointment = builder
-                    .doctorId(doctorBox.getValue())
-                    .patientId(patientBox.getValue())
-                    .room(roomBox.getValue().getAddress() + " - " + roomBox.getValue().getNumber())
-                    .date(LocalDateTime.of(date, time))
-                    .description(descriptionField.getText())
-                    .status(statusBox.getValue())
-                    .build();
-
-            onSave.accept(appointment);
-            stage.close();
         });
 
         Button cancelButton = new Button("Anuluj");
         cancelButton.setOnAction(e -> stage.close());
 
-
-        // Układ
-        // Układ
+        // Układ formularza
         grid.add(new Label("Lekarz:"), 0, 0);
         grid.add(doctorBox, 1, 0);
 
@@ -141,7 +132,7 @@ public class AppointmentForm {
         grid.add(timeField, 3, 3);
 
         grid.add(new Label("Opis:"), 0, 4);
-        grid.add(descriptionField, 1, 4, 3, 1); // rozciągnięcie na 3 kolumny
+        grid.add(descriptionField, 1, 4, 3, 1);
 
         grid.add(new Label("Status:"), 0, 5);
         grid.add(statusBox, 1, 5);
@@ -149,20 +140,23 @@ public class AppointmentForm {
         HBox buttons = new HBox(10, saveButton, cancelButton);
         grid.add(buttons, 1, 6);
 
-        ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(25);
-        ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(25);
-        ColumnConstraints col3 = new ColumnConstraints();
-        col3.setPercentWidth(25);
-        ColumnConstraints col4 = new ColumnConstraints();
-        col4.setPercentWidth(25);
-        grid.getColumnConstraints().addAll(col1, col2, col3, col4);
-
-
+        // Rozkład kolumn
+        for (int i = 0; i < 4; i++) {
+            ColumnConstraints col = new ColumnConstraints();
+            col.setPercentWidth(25);
+            grid.getColumnConstraints().add(col);
+        }
 
         Scene scene = new Scene(grid, 600, 350);
         stage.setScene(scene);
         stage.showAndWait();
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

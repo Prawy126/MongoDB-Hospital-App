@@ -14,8 +14,16 @@ import javafx.stage.Stage;
 import java.time.LocalDate;
 import java.util.function.Consumer;
 
+/**
+ * Formularz do tworzenia i edycji danych pacjenta.
+ */
 public class PatientForm {
 
+    /**
+     * Wyświetla formularz edycji/dodawania pacjenta.
+     * @param existingPatient pacjent do edycji lub null w przypadku dodawania nowego
+     * @param onSave akcja wykonywana po kliknięciu "Zapisz"
+     */
     public static void showForm(Patient existingPatient, Consumer<Patient> onSave) {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
@@ -33,7 +41,7 @@ public class PatientForm {
         TextField ageField = new TextField();
         TextField addressField = new TextField();
 
-        // Wypełnienie danych jeśli edytujemy pacjenta
+        // Prefill danych pacjenta
         if (existingPatient != null) {
             firstNameField.setText(existingPatient.getFirstName());
             lastNameField.setText(existingPatient.getLastName());
