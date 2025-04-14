@@ -81,6 +81,10 @@ public class Patient extends Person {
         super.setLastName(lastName);
     }
 
+    public void setDiagnosis(Diagnosis diagnosis) {
+        this.diagnosis = diagnosis;
+    }
+
     public void setPesel(long pesel) throws PeselException {
         super.setPesel(pesel);
     }

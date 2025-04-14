@@ -1,6 +1,7 @@
 package backend.klasy;
 
 import backend.status.Day;
+import backend.status.Diagnosis;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
@@ -77,8 +78,23 @@ public class Doctor extends Person {
         }
     }
 
+    /**
+     * Ustawia numer PESEL, który musi mieć 11 cyfr.
+     */
     public void setPesel(long pesel) throws PeselException { super.setPesel(pesel); }
+
+    /**
+     * Ustawia hasło.
+     */
     public void setPassword(String password) { super.setPassword(password); }
+
+    /**
+     * Ustawia diagnozę pacjenta.
+     * @param diagnosis enum diagnozy
+     * @param patient pacjent
+     *
+     */
+    public void setDiagnosis(Diagnosis diagnosis, Patient patient) { patient.setDiagnosis(diagnosis); }
 
     /**
      * Budowniczy obiektu Doctor.
@@ -182,6 +198,8 @@ public class Doctor extends Person {
         }
     }
 
+
+    // w ogóle to porównanie ma sens wykorzystujemy je gdzieś?!
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -190,6 +208,7 @@ public class Doctor extends Person {
         return getId().equals(doctor.getId());
     }
 
+    // tak samo to jest gdzieś wykorzystywane lub będzie?!
     @Override
     public int hashCode() {
         return getId().hashCode();
