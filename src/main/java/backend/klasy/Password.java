@@ -92,4 +92,11 @@ public class Password {
     public String getHashedPassword() {
         return hashedPassword;
     }
+
+    public static void main(String[] args) {
+        Password password = new Password("haslo");
+        System.out.println("Hashed Password: " + password.getHashedPassword());
+        System.out.println("Salt: " + password.getSalt());
+
+    }
 }

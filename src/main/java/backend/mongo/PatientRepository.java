@@ -105,6 +105,17 @@ public class PatientRepository {
     }
 
     /**
+     * Znajduje pacjentów po ich loginie.
+     *
+     * @param login login pacjentów
+     * @return lista pacjentów o podanym loginie
+     */
+    //do przetestowania
+    public List<Patient> findPatientByLogin(String login) {
+        return collection.find(eq("login", login)).into(new ArrayList<>());
+    }
+
+    /**
      * Aktualizuje istniejącego pacjenta w bazie danych.
      *
      * @param patient pacjent do zaktualizowania

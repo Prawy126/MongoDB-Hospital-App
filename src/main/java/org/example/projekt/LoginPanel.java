@@ -24,7 +24,7 @@ public class LoginPanel extends Application {
 
     private final String PATIENT_LOGIN = "pacjent";
     private final String PATIENT_PASSWORD = "pacjent";
-
+    // TODO: Zmienić na hasła z bazy danych
     @Override
     public void start(Stage primaryStage) {
         GridPane grid = new GridPane();

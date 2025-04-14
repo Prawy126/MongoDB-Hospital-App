@@ -3,7 +3,7 @@ db.runCommand({
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["firstName", "lastName", "age", "birthDate", "pesel"],
+      required: ["firstName", "lastName", "age", "birthDate", "pesel", "password", "salt"], // Dodano 'password'
       properties: {
         firstName: {
           bsonType: "string",
@@ -34,6 +34,15 @@ db.runCommand({
         address: {
           bsonType: "string",
           description: "Adres musi być stringiem (opcjonalny)"
+        },
+        password: {
+          bsonType: "string",
+          minLength: 8, // Minimalna długość hasła
+          description: "Hasło musi być stringiem o długości min. 8 znaków"
+        },
+        salt: {
+          bsonType: "string",
+          description: "Sól musi być stringiem (opcjonalna)"
         }
       }
     }

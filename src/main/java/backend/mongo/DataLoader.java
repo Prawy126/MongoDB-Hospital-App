@@ -84,6 +84,23 @@ public class DataLoader {
         this.appointmentRepository = new AppointmentRepository(database);
     }
 
+    private String generateUniqueLogin(String firstName, String lastName) {
+        String baseLogin = firstName.toLowerCase() + "." + lastName.toLowerCase();
+        String uniqueLogin = baseLogin;
+        int counter = 1;
+
+        while (!isLoginUnique(uniqueLogin)) {
+            uniqueLogin = baseLogin + counter;
+            counter++;
+        }
+        return uniqueLogin;
+    }
+
+    private boolean isLoginUnique(String login) {
+        // Symulacja sprawdzenia unikalności w bazie danych
+        return random.nextBoolean();
+    }
+
     /**
      * Metoda do ładowania przykładowych danych do bazy danych.
      * Dodaje pacjentów, lekarzy i wizyty do bazy danych.
@@ -93,11 +110,21 @@ public class DataLoader {
         for (int i = 1; i <= 10; i++) {
             Patient patient = new Patient();
             try {
-                patient.setFirstName(getRandomFirstName());
-                patient.setLastName(getRandomLastName());
+                String firstName = getRandomFirstName();
+                String lastName = getRandomLastName();
+                String login = generateUniqueLogin(firstName, lastName);
+                String salt = "iQnPQNj6A7VvqJCn4KJNiw==";
+                String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
+
+                patient.setFirstName(firstName);
+                patient.setLastName(lastName);
                 patient.setPesel(10000000000L + i); // PESEL 11 cyfr
                 patient.setBirthDate(generateRandomBirthDate());
                 patient.setAddress(generateRandomAddress());
+                patient.setLogin(login);
+                patient.setPassword(passwordHash);
+                patient.setSalt(salt);
+
                 patientRepository.createPatient(patient);
             } catch (Exception e) {
                 System.out.println("Błąd pacjenta: " + e.getMessage());
@@ -112,8 +139,14 @@ public class DataLoader {
         for (int i = 1; i <= 10; i++) {
             Doctor doctor = new Doctor();
             try {
-                doctor.setFirstName(getRandomFirstName());
-                doctor.setLastName(getRandomLastName());
+                String firstName = getRandomFirstName();
+                String lastName = getRandomLastName();
+                String login = generateUniqueLogin(firstName, lastName);
+                String salt = "iQnPQNj6A7VvqJCn4KJNiw==";
+                String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
+
+                doctor.setFirstName(firstName);
+                doctor.setLastName(lastName);
                 doctor.setAge(25 + random.nextInt(56)); // Wiek 25-80
                 doctor.setPesel(20000000000L + i); // PESEL 11 cyfr
                 doctor.setRoom(String.format("%03d", random.nextInt(500) + 1)); // Numery 001-500
@@ -131,6 +164,10 @@ public class DataLoader {
                 );
 
                 doctor.setContactInformation(generateRandomPhoneNumber());
+                doctor.setLogin(login);
+                doctor.setPassword(passwordHash);
+                doctor.setSalt(salt);
+
                 doctorRepository.createDoctor(doctor);
             } catch (Exception e) {
                 System.out.println("Błąd lekarza: " + e.getMessage());
@@ -148,14 +185,12 @@ public class DataLoader {
                 appointment.setDoctorId(doctors.get(random.nextInt(doctors.size())).getId());
                 appointment.setPatientId(patients.get(random.nextInt(patients.size())).getId());
                 appointment.setDate(generateRandomAppointmentDateTime());
-                //appointment.setEndTime(appointment.getDate().plusMinutes(30 + random.nextInt(60)));
                 appointmentRepository.createAppointment(appointment);
             } catch (Exception e) {
                 System.out.println("Błąd wizyty: " + e.getMessage());
             }
         }
     }
-
     // Metody pomocnicze do losowania
     private String getRandomFirstName() {
         return FIRST_NAMES[random.nextInt(FIRST_NAMES.length)];
