@@ -4,15 +4,16 @@ import backend.klasy.Appointment;
 import backend.klasy.Doctor;
 import backend.klasy.Patient;
 import backend.status.Day;
+import backend.wyjatki.NullNameException;
 import com.mongodb.client.MongoDatabase;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
-
 
 /**
  * Klasa DataLoader służy do ładowania przykładowych danych do bazy MongoDB.
@@ -20,8 +21,6 @@ import java.util.stream.Collectors;
  */
 public class DataLoader {
 
-
-// Predefiniowane listy imion, nazwisk i ulic możemy jeszcze coś dopisać aktualnie są to przykładowe dane
     private static final String[] FIRST_NAMES = {"Jan", "Anna", "Piotr", "Maria", "Krzysztof",
             "Agnieszka", "Andrzej", "Małgorzata", "Grzegorz", "Ewa"};
     private static final String[] LAST_NAMES = {"Nowak", "Kowalski", "Wiśniewski", "Wójcik",
@@ -37,6 +36,105 @@ public class DataLoader {
         return STREET_NAMES[random.nextInt(STREET_NAMES.length)];
     }
 
+    /**
+     * Generuje losowy poprawny numer PESEL
+     */
+    public static long generateRandomPesel() {
+        LocalDate birthDate = generateRandomBirthDate1();
+        boolean isMale = random.nextBoolean();
+        return generatePesel(birthDate, isMale);
+    }
+
+    /**
+     * Generuje PESEL na podstawie daty urodzenia i płci
+     */
+    public static long generatePesel(LocalDate birthDate, boolean isMale) {
+        String datePart = formatDateForPesel(birthDate);
+        String sequence = generateSequenceNumber(isMale);
+        String checkDigit = calculateCheckDigit(datePart + sequence);
+
+        String fullPesel = String.format("%11s", datePart + sequence + checkDigit)
+                .replace(' ', '0');
+
+        return Long.parseLong(fullPesel);
+    }
+
+    private static String formatDateForPesel(LocalDate date) {
+        int year = date.getYear();
+        int month = date.getMonthValue();
+        int day = date.getDayOfMonth();
+
+        // Dostosowanie miesiąca w zależności od epoki
+        if (year >= 2000 && year < 2100) {
+            month += 20;
+        } else if (year >= 2100 && year < 2200) {
+            month += 40;
+        } else if (year >= 2200 && year < 2300) {
+            month += 60;
+        } else if (year < 1900) {
+            month += 80;
+        }
+
+        return String.format("%02d%02d%02d",
+                year % 100,
+                month,
+                day);
+    }
+
+    /**
+     * Poprawiona metoda generująca 4-cyfrową sekwencję.
+     * Wartość ostatniej cyfry (parzystość) wskazuje płeć: nieparzysta = mężczyzna, parzysta = kobieta.
+     */
+    private static String generateSequenceNumber(boolean isMale) {
+        int seq = random.nextInt(1000); // wartość z zakresu 0-999
+        int genderDigit = isMale ?
+                (random.nextInt(5) * 2 + 1) : // możliwe wartości: 1,3,5,7,9
+                (random.nextInt(5) * 2);      // możliwe wartości: 0,2,4,6,8
+        int sequenceNumber = seq * 10 + genderDigit; // daje zakres 0-9999
+        return String.format("%04d", sequenceNumber);
+    }
+
+    private static String calculateCheckDigit(String base) {
+        int[] weights = {1, 3, 7, 9, 1, 3, 7, 9, 1, 3};
+        int sum = 0;
+
+        for (int i = 0; i < 10; i++) {
+            sum += Character.getNumericValue(base.charAt(i)) * weights[i];
+        }
+
+        int checkDigit = (10 - (sum % 10)) % 10;
+        return String.valueOf(checkDigit);
+    }
+
+    private static LocalDate generateRandomBirthDate1() {
+        long days = ChronoUnit.DAYS.between(
+                LocalDate.of(1800, 1, 1),
+                LocalDate.of(2299, 12, 31)
+        );
+
+        return LocalDate.of(1800, 1, 1)
+                .plusDays(random.nextInt((int) days));
+    }
+
+    /**
+     * Określa płeć na podstawie ostatniej litery imienia
+     * @param firstName Imię do analizy
+     * @return true jeśli płeć żeńska, false jeśli męska
+     * @exception NullNameException jeśli imie jest puste
+     */
+    public static boolean detectGender(String firstName) throws NullNameException {
+        if (firstName == null || firstName.isEmpty()) {
+            throw new NullNameException("Nie można ustalić płci dla pustego imienia.");
+        }
+
+        char lastChar = firstName.toLowerCase().charAt(firstName.length() - 1);
+
+        return switch (lastChar) {
+            case 'a' -> true; // Końcówka na -a sugeruje kobietę
+            default -> false;  // Pozostałe przypadki traktowane jako mężczyzna
+        };
+    }
+
     private String generateRandomAddress() {
         String street = getRandomStreet();
         String buildingNumber = String.format("%d", random.nextInt(200) + 1);
@@ -46,9 +144,9 @@ public class DataLoader {
     }
 
     private LocalDate generateRandomBirthDate() {
-        int year = 1950 + random.nextInt(70); // 1950-2020
+        int year = 1950 + random.nextInt(70); // lata 1950-2020
         int month = random.nextInt(12) + 1;
-        int day = random.nextInt(28) + 1; // Bezpieczne dni
+        int day = random.nextInt(28) + 1; // dni bezpieczne
         return LocalDate.of(year, month, day);
     }
 
@@ -62,12 +160,11 @@ public class DataLoader {
     private LocalDateTime generateRandomAppointmentDateTime() {
         int year = 2025;
         int month = random.nextInt(12) + 1;
-        int day = random.nextInt(28) + 1; // Bezpieczne dni
-        int hour = 8 + random.nextInt(9); // 8:00 - 16:59
+        int day = random.nextInt(28) + 1; // dni bezpieczne
+        int hour = 8 + random.nextInt(9); // od 8:00 do 16:59
         int minute = random.nextInt(60);
         return LocalDateTime.of(year, month, day, hour, minute);
     }
-    //private static final Random random = new Random();
 
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
@@ -97,8 +194,8 @@ public class DataLoader {
     }
 
     private boolean isLoginUnique(String login) {
-        // Symulacja sprawdzenia unikalności w bazie danych
-        return random.nextBoolean();
+        return patientRepository.findPatientByLogin(login) == null
+                && doctorRepository.findDoctorByLogin(login) == null;
     }
 
     /**
@@ -115,11 +212,12 @@ public class DataLoader {
                 String login = generateUniqueLogin(firstName, lastName);
                 String salt = "iQnPQNj6A7VvqJCn4KJNiw==";
                 String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
-
+                LocalDate date = generateRandomBirthDate();
                 patient.setFirstName(firstName);
                 patient.setLastName(lastName);
-                patient.setPesel(10000000000L + i); // PESEL 11 cyfr
-                patient.setBirthDate(generateRandomBirthDate());
+                patient.setPesel(generateRandomPesel());
+                patient.setBirthDate(date);
+                patient.setAge(LocalDate.now().getYear() - date.getYear());
                 patient.setAddress(generateRandomAddress());
                 patient.setLogin(login);
                 patient.setPassword(passwordHash);
@@ -127,7 +225,8 @@ public class DataLoader {
 
                 patientRepository.createPatient(patient);
             } catch (Exception e) {
-                System.out.println("Błąd pacjenta: " + e.getMessage());
+                System.out.println("Błąd podczas tworzenia pacjenta: " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
@@ -147,9 +246,9 @@ public class DataLoader {
 
                 doctor.setFirstName(firstName);
                 doctor.setLastName(lastName);
-                doctor.setAge(25 + random.nextInt(56)); // Wiek 25-80
+                doctor.setAge(25 + random.nextInt(56)); // wiek 25-80 lat
                 doctor.setPesel(20000000000L + i); // PESEL 11 cyfr
-                doctor.setRoom(String.format("%03d", random.nextInt(500) + 1)); // Numery 001-500
+                doctor.setRoom(String.format("%03d", random.nextInt(500) + 1)); // numery pokoi 001-500
                 doctor.setSpecialization(specializations[random.nextInt(specializations.length)]);
 
                 // Losowy wybór 1-3 dni pracy
@@ -170,7 +269,7 @@ public class DataLoader {
 
                 doctorRepository.createDoctor(doctor);
             } catch (Exception e) {
-                System.out.println("Błąd lekarza: " + e.getMessage());
+                System.out.println("Błąd podczas tworzenia lekarza: " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -178,6 +277,11 @@ public class DataLoader {
         // Dodanie przykładowych wizyt
         List<Doctor> doctors = doctorRepository.findAll();
         List<Patient> patients = patientRepository.findAll();
+
+        if (doctors.isEmpty() || patients.isEmpty()) {
+            System.out.println("Brak lekarzy lub pacjentów, pomijam dodawanie wizyt.");
+            return;
+        }
 
         for (int i = 0; i < 10; i++) {
             try {
@@ -187,11 +291,13 @@ public class DataLoader {
                 appointment.setDate(generateRandomAppointmentDateTime());
                 appointmentRepository.createAppointment(appointment);
             } catch (Exception e) {
-                System.out.println("Błąd wizyty: " + e.getMessage());
+                System.out.println("Błąd podczas tworzenia wizyty: " + e.getMessage());
+                e.printStackTrace();
             }
         }
+        System.out.println("Dane załadowane pomyślnie!");
     }
-    // Metody pomocnicze do losowania
+
     private String getRandomFirstName() {
         return FIRST_NAMES[random.nextInt(FIRST_NAMES.length)];
     }
@@ -212,10 +318,8 @@ public class DataLoader {
      *
      * @param args argumenty wiersza poleceń
      */
-    //aktualnie metoda do testowania później się zobaczy czy zostanie w tym miejscu czy z innego miejsca będą generowane dane
     public static void main(String[] args) {
         MongoDatabase database = MongoDatabaseConnector.connectToDatabase();
         new DataLoader(database).loadData();
-        System.out.println("Dane załadowane pomyślnie!");
     }
 }
