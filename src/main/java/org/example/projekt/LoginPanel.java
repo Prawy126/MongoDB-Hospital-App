@@ -1,5 +1,11 @@
 package org.example.projekt;
 
+import backend.klasy.Doctor;
+import backend.klasy.Password;
+import backend.klasy.Patient;
+import backend.mongo.DoctorRepository;
+import backend.mongo.MongoDatabaseConnector;
+import backend.mongo.PatientRepository;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -9,9 +15,8 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-/**
- * Panel logowania dla użytkowników: administratora, lekarza i pacjenta.
- */
+import java.util.Optional;
+
 public class LoginPanel extends Application {
 
     private Button loginBtn;
@@ -19,12 +24,6 @@ public class LoginPanel extends Application {
     private final String ADMIN_LOGIN = "admin";
     private final String ADMIN_PASSWORD = "admin";
 
-    private final String DOCTOR_LOGIN = "doktor";
-    private final String DOCTOR_PASSWORD = "doktor";
-
-    private final String PATIENT_LOGIN = "pacjent";
-    private final String PATIENT_PASSWORD = "pacjent";
-    // TODO: Zmienić na hasła z bazy danych
     @Override
     public void start(Stage primaryStage) {
         GridPane grid = new GridPane();
@@ -38,7 +37,7 @@ public class LoginPanel extends Application {
         GridPane.setConstraints(headerLabel, 0, 0, 3, 1);
         GridPane.setMargin(headerLabel, new Insets(0, 0, 20, 0));
 
-        Label userLabel = new Label("Użytkownik:");
+        Label userLabel = new Label("PESEL:");
         GridPane.setConstraints(userLabel, 0, 1);
 
         TextField userField = new TextField();
@@ -71,26 +70,72 @@ public class LoginPanel extends Application {
 
         grid.getChildren().addAll(
                 headerLabel,
-                userLabel, userField,
-                passLabel, passField,
+                userLabel,
+                userField,
+                passLabel,
+                passField,
                 spacer,
-                loginBtn, exitBtn, registerBtn
+                loginBtn,
+                exitBtn,
+                registerBtn
         );
-
         animateFadeIn(grid, 1000);
 
         loginBtn.setOnAction(e -> {
-            String user = userField.getText().trim();
-            String pass = passField.getText().trim();
+            String login = userField.getText().trim();
+            String password = passField.getText().trim();
 
-            if (ADMIN_LOGIN.equals(user) && ADMIN_PASSWORD.equals(pass)) {
+            if (login.equals(ADMIN_LOGIN) && password.equals(ADMIN_PASSWORD)) {
                 openAdminPanel();
-            } else if (DOCTOR_LOGIN.equals(user) && DOCTOR_PASSWORD.equals(pass)) {
-                openDoctorPanel();
-            } else if (PATIENT_LOGIN.equals(user) && PATIENT_PASSWORD.equals(pass)) {
-                openPatientPanel();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Błąd logowania", "Nieprawidłowy login lub hasło!");
+                return;
+            }
+
+            try {
+                long pesel = Long.parseLong(login);
+                PatientRepository patientRepo = new PatientRepository(MongoDatabaseConnector.connectToDatabase());
+                DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
+
+                Optional<Doctor> docOpt = doctorRepo.findAll().stream()
+                        .filter(d -> d.getPesel() == pesel)
+                        .findFirst();
+
+                if (docOpt.isPresent()) {
+                    Doctor doctor = docOpt.get();
+                    doctor.reconstructPasswordObject();
+                    if (doctor.getPassword().verify(password)) {
+                        openDoctorPanel();
+                    } else {
+                        showAlert(Alert.AlertType.ERROR, "Błąd logowania", "Niepoprawne hasło dla lekarza.");
+                    }
+                    return;
+                }
+
+                Optional<Patient> patOpt = patientRepo.findAll().stream()
+                        .filter(p -> p.getPesel() == pesel)
+                        .findFirst();
+
+                if (patOpt.isPresent()) {
+                    Patient patient = patOpt.get();
+                    patient.reconstructPasswordObject();
+                    if (patient.getPassword().verify(password)) {
+                        openPatientPanel();
+                    } else {
+                        showAlert(Alert.AlertType.ERROR, "Błąd logowania", "Niepoprawne hasło dla pacjenta.");
+                    }
+                    return;
+                }
+
+                showAlert(
+                        Alert.AlertType.ERROR,
+                        "Błąd logowania",
+                        "Nie znaleziono użytkownika o podanym PESEL-u."
+                );
+
+            } catch (NumberFormatException ex) {
+                showAlert(Alert.AlertType.ERROR, "Błąd logowania", "PESEL musi być liczbą.");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                showAlert(Alert.AlertType.ERROR, "Błąd", "Wystąpił błąd podczas logowania.");
             }
         });
 
