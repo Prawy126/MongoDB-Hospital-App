@@ -40,12 +40,15 @@ public class Patient extends Person {
         this.address = address;
         this.diagnosis = diagnosis;
     }
-    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age, String login,String password, String salt, Diagnosis diagnosis) throws PeselException, NullNameException, AgeException {
-        super(firstName, lastName, pesel, age, login, password, salt);
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age, String password, String salt, Diagnosis diagnosis) throws PeselException, NullNameException, AgeException {
+        super(firstName, lastName, pesel, age, password, salt);
         this.birthDate = birthDate;
         this.address = address;
         this.diagnosis = diagnosis;
+
     }
+
+
 
     public ObjectId getId() {
         return id;
@@ -202,7 +205,7 @@ public class Patient extends Person {
                 }
             }
 
-            Patient patient = new Patient(firstName, lastName, pesel, birthDate, address, age, login, password, salt, diagnosis);
+            Patient patient = new Patient(firstName, lastName, pesel, birthDate, address, age, password, salt, diagnosis);
             if (id != null) {
                 patient.setId(id);
             } else {

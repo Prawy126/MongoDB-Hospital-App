@@ -15,7 +15,6 @@ public class Person {
     private long pesel;
     private String password;
     private String salt;
-    private String login;
 
     /**
      * Domyślny konstruktor.
@@ -98,61 +97,39 @@ public class Person {
      * @throws NullNameException jeśli imię lub nazwisko są puste
      * @throws AgeException      jeśli wiek jest ujemny
      */
+    public Person(String firstName, String lastName, long pesel, int age, String password, String salt) throws PeselException, NullNameException, AgeException {
+        validateName(firstName, lastName);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        setPesel(pesel);
+        setAge(age);
+        setPassword(password);
+        setSalt(salt);
+    }
+
+    /**
+     * Konstruktor z imieniem, nazwiskiem, peselem, wiekiem i hasłem.
+     *
+     * @param firstName Imię
+     * @param lastName  Nazwisko
+     * @param pesel     Numer PESEL
+     * @param age       Wiek
+     * @param password  Hasło
+     * @throws PeselException    jeśli pesel nie ma 11 cyfr
+     * @throws NullNameException jeśli imię lub nazwisko są puste
+     * @throws AgeException      jeśli wiek jest ujemny
+     */
     public Person(String firstName, String lastName, long pesel, int age, String password) throws PeselException, NullNameException, AgeException {
         validateName(firstName, lastName);
         this.firstName = firstName;
         this.lastName = lastName;
         setPesel(pesel);
         setAge(age);
-        setPassword(password);
+        Password password1 = new Password(password);
+        this.password = password1.getHashedPassword();
+        this.salt = password1.getSalt();
     }
 
-    /**
-     * Konstruktor z imieniem, nazwiskiem, peselem, wiekiem, loginem i hasłem.
-     *
-     * @param firstName Imię
-     * @param lastName  Nazwisko
-     * @param pesel     Numer PESEL
-     * @param age       Wiek
-     * @param login     Login
-     * @param password  Hasło
-     * @throws PeselException    jeśli pesel nie ma 11 cyfr
-     * @throws NullNameException jeśli imię lub nazwisko są puste
-     * @throws AgeException      jeśli wiek jest ujemny
-     */
-    public Person(String firstName, String lastName, long pesel, int age, String login,String password) throws PeselException, NullNameException, AgeException {
-        validateName(firstName, lastName);
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.login = login;
-        setPesel(pesel);
-        setAge(age);
-        setPassword(password);
-    }
-
-
-    /**
-     * Konstruktor z imieniem, nazwiskiem, peselem, wiekiem, loginem, hasłem(Zahashowanym) oraz solą.
-     *
-     * @param firstName Imię
-     * @param lastName  Nazwisko
-     * @param pesel     Numer PESEL
-     * @param age       Wiek
-     * @param password  Hasło
-     * @throws PeselException    jeśli pesel nie ma 11 cyfr
-     * @throws NullNameException jeśli imię lub nazwisko są puste
-     * @throws AgeException      jeśli wiek jest ujemny
-     */
-    public Person(String firstName, String lastName, long pesel, int age, String login, String password, String salt) throws PeselException, NullNameException, AgeException {
-        validateName(firstName, lastName);
-        this.firstName = firstName;
-        this.lastName = lastName;
-        setPesel(pesel);
-        setAge(age);
-        this.password = password;
-        this.login = login;
-        this.salt = salt;
-    }
 
     public String getFirstName() {
         return firstName;
@@ -236,12 +213,6 @@ public class Person {
         return salt;
     }
 
-    public void setLogin(String login) {
-        this.login = login;
-    }
-    public String getLogin() {
-        return login;
-    }
     public void setSalt(String salt) {
         this.salt = salt;
     }

@@ -181,23 +181,6 @@ public class DataLoader {
         this.appointmentRepository = new AppointmentRepository(database);
     }
 
-    private String generateUniqueLogin(String firstName, String lastName) {
-        String baseLogin = firstName.toLowerCase() + "." + lastName.toLowerCase();
-        String uniqueLogin = baseLogin;
-        int counter = 1;
-
-        while (!isLoginUnique(uniqueLogin)) {
-            uniqueLogin = baseLogin + counter;
-            counter++;
-        }
-        return uniqueLogin;
-    }
-
-    private boolean isLoginUnique(String login) {
-        return patientRepository.findPatientByLogin(login) == null
-                && doctorRepository.findDoctorByLogin(login) == null;
-    }
-
     /**
      * Metoda do ładowania przykładowych danych do bazy danych.
      * Dodaje pacjentów, lekarzy i wizyty do bazy danych.
@@ -209,7 +192,7 @@ public class DataLoader {
             try {
                 String firstName = getRandomFirstName();
                 String lastName = getRandomLastName();
-                String login = generateUniqueLogin(firstName, lastName);
+                //String login = generateUniqueLogin(firstName, lastName);
                 String salt = "iQnPQNj6A7VvqJCn4KJNiw==";
                 String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
                 LocalDate date = generateRandomBirthDate();
@@ -219,7 +202,6 @@ public class DataLoader {
                 patient.setBirthDate(date);
                 patient.setAge(LocalDate.now().getYear() - date.getYear());
                 patient.setAddress(generateRandomAddress());
-                patient.setLogin(login);
                 patient.setPassword(passwordHash);
                 patient.setSalt(salt);
 
@@ -240,7 +222,7 @@ public class DataLoader {
             try {
                 String firstName = getRandomFirstName();
                 String lastName = getRandomLastName();
-                String login = generateUniqueLogin(firstName, lastName);
+                //String login = generateUniqueLogin(firstName, lastName);
                 String salt = "iQnPQNj6A7VvqJCn4KJNiw==";
                 String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
 
@@ -263,7 +245,7 @@ public class DataLoader {
                 );
 
                 doctor.setContactInformation(generateRandomPhoneNumber());
-                doctor.setLogin(login);
+                //doctor.setLogin(login);
                 doctor.setPassword(passwordHash);
                 doctor.setSalt(salt);
 

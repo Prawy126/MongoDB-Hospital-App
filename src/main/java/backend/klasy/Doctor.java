@@ -110,6 +110,7 @@ public class Doctor extends Person {
         private long pesel;
         private String contactInformation;
         private String password;
+        private String salt;
 
         public Builder() {}
 
@@ -163,6 +164,11 @@ public class Doctor extends Person {
             return this;
         }
 
+        public Builder salt(String salt) {
+            this.salt = salt;
+            return this;
+        }
+
         public Doctor build() throws PeselException, NullNameException, AgeException {
             if (firstName == null || firstName.trim().isEmpty()) {
                 throw new NullNameException("Imię nie może być puste.");
@@ -186,6 +192,7 @@ public class Doctor extends Person {
             doctor.setPesel(pesel);
             doctor.setAge(age);
             doctor.setPassword(password);
+            doctor.setSalt(salt);
             doctor.setContactInformation(contactInformation);
 
             if (id == null) {
