@@ -8,9 +8,6 @@ import org.bson.types.ObjectId;
 
 import java.time.LocalDate;
 
-/**
- * Klasa Patient reprezentuje pacjenta w systemie.
- */
 public class Patient extends Person {
 
     private ObjectId id;
@@ -18,27 +15,60 @@ public class Patient extends Person {
     private String address;
     private Diagnosis diagnosis;
 
-    public Patient() {
-        // Publiczny pusty konstruktor
-    }
+    public Patient() {}
 
-    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age) throws PeselException, NullNameException, AgeException {
+    public Patient(
+            String firstName,
+            String lastName,
+            long pesel,
+            LocalDate birthDate,
+            String address,
+            int age
+    ) throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age);
         this.birthDate = birthDate;
         this.address = address;
     }
 
-    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age, String password) throws PeselException, NullNameException, AgeException {
-        super(firstName, lastName, pesel, age, password);
+    public Patient(
+            String firstName,
+            String lastName,
+            long pesel,
+            LocalDate birthDate,
+            String address,
+            int age,
+            String plainPassword
+    ) throws PeselException, NullNameException, AgeException {
+        super(firstName, lastName, pesel, age, plainPassword);
         this.birthDate = birthDate;
         this.address = address;
     }
 
-    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age, String password, Diagnosis diagnosis) throws PeselException, NullNameException, AgeException {
-        super(firstName, lastName, pesel, age, password);
+    public Patient(
+            String firstName,
+            String lastName,
+            long pesel,
+            LocalDate birthDate,
+            String address,
+            int age,
+            String plainPassword,
+            Diagnosis diagnosis
+    ) throws PeselException, NullNameException, AgeException {
+        super(firstName, lastName, pesel, age, plainPassword);
         this.birthDate = birthDate;
         this.address = address;
         this.diagnosis = diagnosis;
+    }
+
+    public Patient(
+            String firstName,
+            String lastName,
+            long pesel,
+            int age,
+            String passwordHash,
+            String passwordSalt
+    ) throws PeselException, NullNameException, AgeException {
+        super(firstName, lastName, pesel, age, passwordHash, passwordSalt);
     }
 
     public ObjectId getId() {
@@ -69,24 +99,8 @@ public class Patient extends Person {
         return diagnosis;
     }
 
-    public void setAge(int age) throws AgeException {
-        super.setAge(age);
-    }
-
-    public void setFirstName(String firstName) throws NullNameException {
-        super.setFirstName(firstName);
-    }
-
-    public void setLastName(String lastName) throws NullNameException {
-        super.setLastName(lastName);
-    }
-
     public void setDiagnosis(Diagnosis diagnosis) {
         this.diagnosis = diagnosis;
-    }
-
-    public void setPesel(long pesel) throws PeselException {
-        super.setPesel(pesel);
     }
 
     @Override
@@ -94,9 +108,6 @@ public class Patient extends Person {
         return getFirstName() + " " + getLastName() + " (" + getPesel() + ")";
     }
 
-    /**
-     * Klasa pomocnicza Builder do tworzenia obiektów Patient z możliwością konfiguracji pól.
-     */
     public static class Builder {
         private ObjectId id;
         private String firstName;
@@ -105,11 +116,10 @@ public class Patient extends Person {
         private LocalDate birthDate;
         private int age;
         private String address;
-        private String password;
+        private String plainPassword;
+        private String passwordHash;
+        private String passwordSalt;
         private boolean skipValidation = false;
-
-        public Builder() {
-        }
 
         public Builder withId(ObjectId id) {
             this.id = id;
@@ -146,22 +156,27 @@ public class Patient extends Person {
             return this;
         }
 
-        public Builder password(String password) {
-            this.password = password;
+        public Builder plainPassword(String plainPassword) {
+            this.plainPassword = plainPassword;
             return this;
         }
 
-        /**
-         * Flaga pozwalająca pominąć walidację przy tworzeniu obiektu.
-         */
+        public Builder passwordHash(String passwordHash) {
+            this.passwordHash = passwordHash;
+            return this;
+        }
+
+        public Builder passwordSalt(String passwordSalt) {
+            this.passwordSalt = passwordSalt;
+            return this;
+        }
+
+
         public Builder skipValidation(boolean skipValidation) {
             this.skipValidation = skipValidation;
             return this;
         }
 
-        /**
-         * Buduje obiekt Patient. Może rzucić wyjątki walidacyjne.
-         */
         public Patient build() throws PeselException, NullNameException, AgeException {
             if (!skipValidation) {
                 if (firstName == null || firstName.trim().isEmpty()) {
@@ -178,26 +193,18 @@ public class Patient extends Person {
                 }
             }
 
-            Patient patient = new Patient(firstName, lastName, pesel, birthDate, address, age, password);
-            if (id != null) {
-                patient.setId(id);
+            Patient patient;
+            if (plainPassword != null) {
+                patient = new Patient(firstName, lastName, pesel, birthDate, address, age, plainPassword);
             } else {
-                patient.setId(new ObjectId());
+                patient = new Patient(firstName, lastName, pesel, age, passwordHash, passwordSalt);
+                patient.setBirthDate(birthDate);
+                patient.setAddress(address);
             }
+
+            patient.setId(id != null ? id : new ObjectId());
             return patient;
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Patient patient = (Patient) o;
-            return id != null && id.equals(patient.id);
-        }
-
-        @Override
-        public int hashCode() {
-            return id != null ? id.hashCode() : 0;
-        }
     }
 }

@@ -10,13 +10,13 @@ public enum AppointmentStatus {
     CANCELED("Odwołany"),
     RESCHEDULED("Przełożony");
 
-    private final String describtion;
+    private final String description;
 
     AppointmentStatus(String description) {
-        this.describtion = description;
+        this.description = description;
     }
 
     public String getDescribtion(){
-        return describtion;
+        return description;
     }
 }

@@ -1,5 +1,6 @@
 package org.example.projekt;
 
+import backend.klasy.Password;
 import backend.klasy.Patient;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
@@ -56,11 +57,7 @@ public class PatientForm {
             try {
                 Patient.Builder builder = existingPatient != null
                         ? new Patient.Builder().withId(existingPatient.getId())
-                        : new Patient.Builder();
-
-                if (existingPatient == null) {
-                    builder.password("haslo");
-                }
+                        : new Patient.Builder().plainPassword("haslo");
 
                 Patient patient = builder
                         .firstName(firstNameField.getText())
@@ -81,6 +78,8 @@ public class PatientForm {
                 alert.showAndWait();
             }
         });
+
+
 
         Button cancelButton = new Button("Anuluj");
         cancelButton.setOnAction(e -> stage.close());

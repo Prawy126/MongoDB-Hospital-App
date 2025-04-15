@@ -1,6 +1,7 @@
 package org.example.projekt;
 
 import backend.klasy.Doctor;
+import backend.klasy.Password;
 import backend.status.Day;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -71,7 +72,7 @@ public class DoctorForm {
                             .availableDays(Arrays.asList(Day.MONDAY, Day.WEDNESDAY)); // przykładowe dni
 
                     if (doctorToEdit == null) {
-                        builder.password("haslo"); // ustawienie domyślnego hasła
+                        builder.plainPassword("haslo");
                     }
 
 
