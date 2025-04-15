@@ -87,6 +87,10 @@ public class DoctorRepository {
         return collection.find(eq("lastName", lastName)).into(new ArrayList<>());
     }
 
+    public Doctor findDoctorByLogin(String login) {
+        return collection.find(eq("login", login)).first();
+    }
+
     /**
      * Znajduje lekarzy po specjalizacji.
      *

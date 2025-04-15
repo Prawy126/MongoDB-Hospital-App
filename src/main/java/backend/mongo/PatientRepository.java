@@ -111,8 +111,8 @@ public class PatientRepository {
      * @return lista pacjentów o podanym loginie
      */
     //do przetestowania
-    public List<Patient> findPatientByLogin(String login) {
-        return collection.find(eq("login", login)).into(new ArrayList<>());
+    public Patient findPatientByLogin(String login) {
+        return collection.find(eq("login", login)).first();
     }
 
     /**

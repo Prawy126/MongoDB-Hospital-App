@@ -5,15 +5,21 @@ import backend.klasy.Doctor;
 import backend.klasy.Patient;
 import backend.status.AppointmentStatus;
 import backend.status.Day;
+import backend.wyjatki.NullNameException;
 import com.mongodb.client.MongoDatabase;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+/**
+ * Klasa DataLoader służy do ładowania przykładowych danych do bazy MongoDB.
+ * Zawiera metody do generowania losowych danych pacjentów, lekarzy i wizyt.
+ */
 public class DataLoader {
 
     private static final String[] FIRST_NAMES = {
@@ -63,10 +69,26 @@ public class DataLoader {
                         .passwordHash(passwordHash)
                         .passwordSalt(salt)
                         .build();
+                String firstName = getRandomFirstName();
+                String lastName = getRandomLastName();
+                String login = generateUniqueLogin(firstName, lastName);
+                String salt = "iQnPQNj6A7VvqJCn4KJNiw==";
+                String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
+                LocalDate date = generateRandomBirthDate();
+                patient.setFirstName(firstName);
+                patient.setLastName(lastName);
+                patient.setPesel(generateRandomPesel());
+                patient.setBirthDate(date);
+                patient.setAge(LocalDate.now().getYear() - date.getYear());
+                patient.setAddress(generateRandomAddress());
+                patient.setLogin(login);
+                patient.setPassword(passwordHash);
+                patient.setSalt(salt);
 
                 patientRepository.createPatient(patient);
             } catch (Exception e) {
-                System.out.println("Błąd pacjenta: " + e.getMessage());
+                System.out.println("Błąd podczas tworzenia pacjenta: " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
@@ -78,11 +100,31 @@ public class DataLoader {
         };
 
         for (int i = 1; i <= 10; i++) {
+            Doctor doctor = new Doctor();
             try {
+                String firstName = getRandomFirstName();
+                String lastName = getRandomLastName();
+                String login = generateUniqueLogin(firstName, lastName);
+                String salt = "iQnPQNj6A7VvqJCn4KJNiw==";
+                String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
+
+                doctor.setFirstName(firstName);
+                doctor.setLastName(lastName);
+                doctor.setAge(25 + random.nextInt(56)); // wiek 25-80 lat
+                doctor.setPesel(20000000000L + i); // PESEL 11 cyfr
+                doctor.setRoom(String.format("%03d", random.nextInt(500) + 1)); // numery pokoi 001-500
+                doctor.setSpecialization(specializations[random.nextInt(specializations.length)]);
+
+                // Losowy wybór 1-3 dni pracy
                 String[] selectedDays = new String[random.nextInt(3) + 1];
                 for (int j = 0; j < selectedDays.length; j++) {
                     selectedDays[j] = days[random.nextInt(days.length)];
                 }
+                doctor.setAvailableDays(
+                        Arrays.stream(selectedDays)
+                                .map(day -> Day.valueOf(day))
+                                .collect(Collectors.toList())
+                );
 
                 Doctor doctor = new Doctor.Builder()
                         .firstName(getRandomFirstName())
@@ -99,7 +141,7 @@ public class DataLoader {
 
                 doctorRepository.createDoctor(doctor);
             } catch (Exception e) {
-                System.out.println("Błąd lekarza: " + e.getMessage());
+                System.out.println("Błąd podczas tworzenia lekarza: " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -108,6 +150,11 @@ public class DataLoader {
         List<Doctor> doctors = doctorRepository.findAll();
         List<Patient> patients = patientRepository.findAll();
         AppointmentStatus[] statuses = AppointmentStatus.values();
+
+        if (doctors.isEmpty() || patients.isEmpty()) {
+            System.out.println("Brak lekarzy lub pacjentów, pomijam dodawanie wizyt.");
+            return;
+        }
 
         for (int i = 0; i < 10; i++) {
             try {
@@ -119,9 +166,11 @@ public class DataLoader {
 
                 appointmentRepository.createAppointment(appointment);
             } catch (Exception e) {
-                System.out.println("Błąd wizyty: " + e.getMessage());
+                System.out.println("Błąd podczas tworzenia wizyty: " + e.getMessage());
+                e.printStackTrace();
             }
         }
+        System.out.println("Dane załadowane pomyślnie!");
     }
 
     private String getRandomFirstName() {
@@ -157,6 +206,11 @@ public class DataLoader {
                 random.nextInt(900) + 100);
     }
 
+    /**
+     * Metoda main do uruchomienia ładowania danych.
+     *
+     * @param args argumenty wiersza poleceń
+     */
     private LocalDateTime generateRandomAppointmentDateTime() {
         int year = 2025;
         int month = random.nextInt(12) + 1;
