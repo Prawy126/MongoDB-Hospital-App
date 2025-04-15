@@ -40,6 +40,12 @@ public class Patient extends Person {
         this.address = address;
         this.diagnosis = diagnosis;
     }
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age, String login,String password, String salt, Diagnosis diagnosis) throws PeselException, NullNameException, AgeException {
+        super(firstName, lastName, pesel, age, login, password, salt);
+        this.birthDate = birthDate;
+        this.address = address;
+        this.diagnosis = diagnosis;
+    }
 
     public ObjectId getId() {
         return id;
@@ -105,7 +111,10 @@ public class Patient extends Person {
         private LocalDate birthDate;
         private int age;
         private String address;
+        private String login;
         private String password;
+        private String salt;
+        private Diagnosis diagnosis;
         private boolean skipValidation = false;
 
         public Builder() {
@@ -159,6 +168,21 @@ public class Patient extends Person {
             return this;
         }
 
+        public Builder salt(String salt) {
+            this.salt = salt;
+            return this;
+        }
+
+        public Builder login(String login) {
+            this.login = login;
+            return this;
+        }
+
+        public Builder diagnosis(Diagnosis diagnosis) {
+            this.diagnosis = diagnosis;
+            return this;
+        }
+
         /**
          * Buduje obiekt Patient. Może rzucić wyjątki walidacyjne.
          */
@@ -178,7 +202,7 @@ public class Patient extends Person {
                 }
             }
 
-            Patient patient = new Patient(firstName, lastName, pesel, birthDate, address, age, password);
+            Patient patient = new Patient(firstName, lastName, pesel, birthDate, address, age, login, password, salt, diagnosis);
             if (id != null) {
                 patient.setId(id);
             } else {
