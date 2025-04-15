@@ -72,12 +72,11 @@ public class DoctorForm {
                             .availableDays(Arrays.asList(Day.MONDAY, Day.WEDNESDAY)); // przykładowe dni
 
                     if (doctorToEdit == null) {
-                        builder.plainPassword("haslo");
-                    }
-
-
-                    if (doctorToEdit != null) {
-                        builder.withId(doctorToEdit.getId());
+                        builder.plainPassword("haslo"); // lub inne źródło hasła
+                    } else {
+                        builder.withId(doctorToEdit.getId())
+                                .passwordHash(doctorToEdit.getPasswordHash())
+                                .passwordSalt(doctorToEdit.getPasswordSalt());
                     }
 
                     return builder.build();

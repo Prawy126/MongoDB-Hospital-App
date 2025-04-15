@@ -53,7 +53,6 @@ public class PatientForm {
         }
 
         Button saveButton = new Button("Zapisz");
-        Password password = new Password("haslo");
         saveButton.setOnAction(e -> {
             try {
                 Patient.Builder builder = existingPatient != null
@@ -67,9 +66,6 @@ public class PatientForm {
                         .birthDate(birthDatePicker.getValue())
                         .age(Integer.parseInt(ageField.getText()))
                         .address(addressField.getText())
-                        .password(password.getHashedPassword())
-                        .salt(password.getSalt())
-                        .login(firstNameField.getText() + lastNameField.getText())
                         .build();
 
                 onSave.accept(patient);
