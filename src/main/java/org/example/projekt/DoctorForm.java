@@ -70,6 +70,11 @@ public class DoctorForm {
                             .pesel(Long.parseLong(pesel.getText()))
                             .availableDays(Arrays.asList(Day.MONDAY, Day.WEDNESDAY)); // przykładowe dni
 
+                    if (doctorToEdit == null) {
+                        builder.password("haslo"); // ustawienie domyślnego hasła
+                    }
+
+
                     if (doctorToEdit != null) {
                         builder.withId(doctorToEdit.getId());
                     }

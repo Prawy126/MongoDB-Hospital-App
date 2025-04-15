@@ -58,6 +58,10 @@ public class PatientForm {
                         ? new Patient.Builder().withId(existingPatient.getId())
                         : new Patient.Builder();
 
+                if (existingPatient == null) {
+                    builder.password("haslo");
+                }
+
                 Patient patient = builder
                         .firstName(firstNameField.getText())
                         .lastName(lastNameField.getText())
