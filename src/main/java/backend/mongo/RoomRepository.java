@@ -24,13 +24,8 @@ public class RoomRepository {
     private final CodecRegistry codecRegistry;
     private List<Room> rooms;
 
-    public RoomRepository(MongoClient mongoClient, String databaseName) {
-        this.codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(),
-                fromProviders(PojoCodecProvider.builder().automatic(true).build()));
-
-        MongoDatabase database = mongoClient.getDatabase(databaseName)
-                .withCodecRegistry(codecRegistry);
-        this.collection = database.getCollection("rooms", Room.class);
+    public RoomRepository(MongoDatabase database) {
+        this.collection = database.getCollection("rooms");
     }
 
     public Room createRoom(Room room) {

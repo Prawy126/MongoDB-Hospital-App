@@ -54,8 +54,8 @@ public class DoctorRepository {
      * @param id ID lekarza
      * @return Optional zawierający znalezionego lekarza lub pusty, jeśli nie znaleziono
      */
-    public Optional<Doctor> findDoctorById(ObjectId id) {
-        return Optional.ofNullable(collection.find(eq("_id", id)).first());
+    public Doctor findDoctorById(ObjectId id) {
+        return collection.find(eq("_id", id)).first();
     }
 
     /**
@@ -85,10 +85,6 @@ public class DoctorRepository {
      */
     public List<Doctor> findDoctorByLastName(String lastName) {
         return collection.find(eq("lastName", lastName)).into(new ArrayList<>());
-    }
-
-    public Doctor findDoctorByLogin(String login) {
-        return collection.find(eq("login", login)).first();
     }
 
     /**

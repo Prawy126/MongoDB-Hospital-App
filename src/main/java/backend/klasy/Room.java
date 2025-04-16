@@ -3,41 +3,26 @@ package backend.klasy;
 import backend.status.TypeOfRoom;
 
 import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Klasa reprezentująca pokój w placówce medycznej.
- */
 public class Room {
 
     private String address;
     private int floor;
     private int number;
     private int maxPatients;
-    private int currentPatients;
-    private ArrayList<Patient> patients;
+    private List<Patient> patients;
     private TypeOfRoom type;
 
-    /**
-     * Konstruktor z pełnym zestawem parametrów.
-     *
-     * @param address         Adres pokoju
-     * @param floor           Piętro
-     * @param number          Numer pokoju
-     * @param maxPatients     Maksymalna liczba pacjentów
-     * @param currentPatients Aktualna liczba pacjentów
-     */
-    public Room(String address, int floor, int number, int maxPatients, int currentPatients) {
+    public Room(String address, int floor, int number, int maxPatients, TypeOfRoom type) {
         this.address = address;
         this.floor = floor;
         this.number = number;
         this.maxPatients = maxPatients;
-        this.currentPatients = currentPatients;
+        this.type = type;
         this.patients = new ArrayList<>();
     }
 
-    /**
-     * Domyślny konstruktor.
-     */
     public Room() {
         this.patients = new ArrayList<>();
     }
@@ -71,49 +56,47 @@ public class Room {
     }
 
     public void setMaxPatients(int maxPatients) {
+        if (maxPatients < patients.size()) {
+            throw new IllegalArgumentException("Nowy limit nie może być mniejszy niż liczba aktualnych pacjentów");
+        }
         this.maxPatients = maxPatients;
     }
 
     public int getCurrentPatients() {
-        return currentPatients;
+        return patients.size();
     }
 
-    public void setCurrentPatients(int currentPatients) {
-        this.currentPatients = currentPatients;
-    }
-
-    /**
-     * Dodaje pacjenta do pokoju.
-     *
-     * @param patient Pacjent do dodania
-     */
     public void addPatient(Patient patient) {
-        if (patients.size() < maxPatients) {
-            patients.add(patient);
-            currentPatients++;
-        } else {
-            throw new IllegalStateException("Pokój jest już pełny.");
+        if (patients.size() >= maxPatients) {
+            throw new IllegalStateException("Pokój jest pełny");
         }
+        TypeOfRoom requiredType = TypeOfRoom.determineDepartment(patient);
+        if (requiredType != this.type) {
+            throw new IllegalArgumentException("Pacjent nie pasuje do typu pokoju");
+        }
+        patients.add(patient);
+
     }
 
-    /**
-     * Usuwa pacjenta z pokoju.
-     *
-     * @param patient Pacjent do usunięcia
-     */
     public void removePatient(Patient patient) {
-        if (patients.remove(patient)) {
-            currentPatients--;
+        patients.remove(patient);
+    }
+
+    public List<Patient> getPatients() {
+        return new ArrayList<>(patients); // Zwraca kopię listy
+    }
+
+    public void setPatients(List<Patient> patients) {
+        if (patients.size() > maxPatients) {
+            throw new IllegalArgumentException("Liczba pacjentów przekracza limit");
         }
-    }
-
-    public ArrayList<Patient> getPatients() {
-        return patients;
-    }
-
-    public void setPatients(ArrayList<Patient> patients) {
-        this.patients = patients;
-        this.currentPatients = patients != null ? patients.size() : 0;
+        for (Patient patient : patients) {
+            TypeOfRoom requiredType = TypeOfRoom.determineDepartment(patient);
+            if (requiredType != this.type) {
+                throw new IllegalArgumentException("Niekompatybilny pacjent: " + patient);
+            }
+        }
+        this.patients = new ArrayList<>(patients);
     }
 
     public TypeOfRoom getType() {
@@ -121,11 +104,18 @@ public class Room {
     }
 
     public void setType(TypeOfRoom type) {
+        for (Patient patient : patients) {
+            TypeOfRoom requiredType = TypeOfRoom.determineDepartment(patient);
+            if (requiredType != type) {
+                throw new IllegalArgumentException("Nie można zmienić typu - pacjenci są niekompatybilni");
+            }
+        }
         this.type = type;
     }
 
     @Override
     public String toString() {
-        return number + " - " + address;
+        return String.format("Pokój %d (%s) - %d/%d miejsc, oddział: %s",
+                number, address, getCurrentPatients(), maxPatients, type.getDescription());
     }
 }

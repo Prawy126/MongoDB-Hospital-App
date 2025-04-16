@@ -80,8 +80,8 @@ public class PatientRepository {
      * @param pesel numer PESEL pacjentów
      * @return lista pacjentów o podanym numerze PESEL
      */
-    public List<Patient> findPatientByPesel(long pesel) {
-        return collection.find(eq("pesel", pesel)).into(new ArrayList<>());
+    public Patient findPatientByPesel(long pesel) {
+        return collection.find(eq("pesel", pesel)).first();
     }
 
     /**
@@ -102,17 +102,6 @@ public class PatientRepository {
      */
     public List<Patient> findPatientByBirthDate(LocalDate birthDate) {
         return collection.find(eq("birthDate", birthDate)).into(new ArrayList<>());
-    }
-
-    /**
-     * Znajduje pacjentów po ich loginie.
-     *
-     * @param login login pacjentów
-     * @return lista pacjentów o podanym loginie
-     */
-    //do przetestowania
-    public Patient findPatientByLogin(String login) {
-        return collection.find(eq("login", login)).first();
     }
 
     /**

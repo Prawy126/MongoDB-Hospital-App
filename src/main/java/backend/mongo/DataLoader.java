@@ -3,8 +3,10 @@ package backend.mongo;
 import backend.klasy.Appointment;
 import backend.klasy.Doctor;
 import backend.klasy.Patient;
+import backend.klasy.Room;
 import backend.status.AppointmentStatus;
 import backend.status.Day;
+import backend.status.TypeOfRoom;
 import com.mongodb.client.MongoDatabase;
 
 import java.time.LocalDate;
@@ -38,11 +40,14 @@ public class DataLoader {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final AppointmentRepository appointmentRepository;
+    private final RoomRepository roomRepository;
 
     public DataLoader(MongoDatabase database) {
         this.patientRepository = new PatientRepository(database);
         this.doctorRepository = new DoctorRepository(database);
         this.appointmentRepository = new AppointmentRepository(database);
+        this.roomRepository = new RoomRepository(database);
+
     }
 
     public void loadData() {
@@ -105,6 +110,26 @@ public class DataLoader {
             }
         }
 
+        // === Nowa sekcja ładowania pokojów ===
+        TypeOfRoom[] roomTypes = TypeOfRoom.values();
+        for (int i = 0; i < 15; i++) {
+            try {
+                Room room = new Room(
+                        generateRandomAddress(),
+                        random.nextInt(6), // Piętro 0-5
+                        100 + i, // Numery 100-114
+                        2 + random.nextInt(5),
+                        TypeOfRoom.INTERNAL// Max pacjenci 2-6
+                );
+
+                room.setType(roomTypes[random.nextInt(roomTypes.length)]);
+                roomRepository.createRoom(room); // Zapis do bazy
+
+            } catch (Exception e) {
+                System.out.println("Błąd tworzenia pokoju: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
         // === Wizyty ===
         List<Doctor> doctors = doctorRepository.findAll();
         List<Patient> patients = patientRepository.findAll();
@@ -173,6 +198,10 @@ public class DataLoader {
         int hour = 8 + random.nextInt(9);
         int minute = random.nextInt(60);
         return LocalDateTime.of(year, month, day, hour, minute);
+    }
+    // Nowa metoda generująca numery pokojów
+    private String generateRoomNumber(int baseNumber) {
+        return String.format("%03d", baseNumber);
     }
 
     public static void main(String[] args) {
