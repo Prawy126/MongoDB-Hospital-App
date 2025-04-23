@@ -18,6 +18,10 @@ import org.bson.types.ObjectId;
 
 import java.time.LocalDate;
 import java.util.List;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.and;
+import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 /**
  * Kontroler panelu administratora. Odpowiada za wyświetlanie i obsługę zarządzania pacjentami, lekarzami, zabiegami i salami.
@@ -194,7 +198,10 @@ public class AdminPanelController {
         TableColumn<Appointment, String> doctorCol = new TableColumn<>("Lekarz");
         doctorCol.setCellValueFactory(cellData -> {
             ObjectId docId = cellData.getValue().getDoctorId();
-            Doctor doc = doctorRepo.findDoctorById(docId).orElse(new Doctor());
+            Doctor doc = doctorRepo.findDoctorById(docId);
+            if (doc == null) {
+                throw new RuntimeException("Nie znaleziono lekarza");
+            }
             return new ReadOnlyStringWrapper(doc.getFirstName() + " " + doc.getLastName());
         });
 
@@ -223,7 +230,7 @@ public class AdminPanelController {
             AppointmentForm form = new AppointmentForm(
                     doctorRepo.findAll(),
                     new PatientRepository(MongoDatabaseConnector.connectToDatabase()).findAll(),
-                    new RoomRepository(MongoDatabaseConnector.getClient(), "hospitalDB").getAllRooms()
+                    new RoomRepository(MongoDatabaseConnector.connectToDatabase()).getAllRooms()
             );
             form.showForm(null, appointment -> {
                 appointmentRepo.createAppointment(appointment);
@@ -237,7 +244,7 @@ public class AdminPanelController {
                 AppointmentForm form = new AppointmentForm(
                         doctorRepo.findAll(),
                         new PatientRepository(MongoDatabaseConnector.connectToDatabase()).findAll(),
-                        new RoomRepository(MongoDatabaseConnector.getClient(), "hospitalDB").getAllRooms()
+                        new RoomRepository(MongoDatabaseConnector.connectToDatabase()).getAllRooms()
                 );
                 form.showForm(selected, appointment -> {
                     appointmentRepo.updateAppointment(appointment);
@@ -262,8 +269,20 @@ public class AdminPanelController {
     }
 
     private void refreshAppointments(TableView<Appointment> tableView) {
-        appointmentData.setAll(appointmentRepo.findAll());
-        tableView.refresh();
+        try {
+            List<Appointment> appointments = appointmentRepo.findAll();
+            appointmentData.clear();
+            appointmentData.addAll(appointments);
+            tableView.refresh();
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Optional: Show error dialog
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Błąd");
+            alert.setHeaderText("Nie udało się załadować zabiegów");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
+        }
     }
 
     /**
@@ -278,8 +297,10 @@ public class AdminPanelController {
 
         TableView<Room> tableView = new TableView<>();
         ObservableList<Room> roomData = FXCollections.observableArrayList();
-        RoomRepository roomRepo = new RoomRepository(MongoDatabaseConnector.getClient(), "hospitalDB");
+        final RoomRepository roomRepo = new RoomRepository(MongoDatabaseConnector.connectToDatabase());
 
+// Update these lines in showReportsPanel and showIssuesPanel:
+        new RoomRepository(MongoDatabaseConnector.connectToDatabase());
         TableColumn<Room, String> addressCol = new TableColumn<>("Adres");
         addressCol.setCellValueFactory(new PropertyValueFactory<>("address"));
 

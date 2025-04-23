@@ -1,6 +1,7 @@
 package org.example.projekt;
 
 import backend.klasy.Room;
+import backend.status.TypeOfRoom;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -34,14 +35,15 @@ public class RoomForm {
         TextField floorField = new TextField();
         TextField numberField = new TextField();
         TextField maxPatientsField = new TextField();
-        TextField currentPatientsField = new TextField();
+        ComboBox<TypeOfRoom> typeOfRoomComboBox = new ComboBox<>();
+        typeOfRoomComboBox.getItems().addAll(TypeOfRoom.values());
 
         if (existingRoom != null) {
             addressField.setText(existingRoom.getAddress());
             floorField.setText(String.valueOf(existingRoom.getFloor()));
             numberField.setText(String.valueOf(existingRoom.getNumber()));
             maxPatientsField.setText(String.valueOf(existingRoom.getMaxPatients()));
-            currentPatientsField.setText(String.valueOf(existingRoom.getCurrentPatients()));
+            typeOfRoomComboBox.setValue(existingRoom.getType());
         }
 
         Button saveButton = new Button("Zapisz");
@@ -52,11 +54,11 @@ public class RoomForm {
                         Integer.parseInt(floorField.getText()),
                         Integer.parseInt(numberField.getText()),
                         Integer.parseInt(maxPatientsField.getText()),
-                        Integer.parseInt(currentPatientsField.getText())
+                        typeOfRoomComboBox.getValue() // Przekazanie wybranego typu pokoju
                 );
                 onSave.accept(room);
                 stage.close();
-            } catch (NumberFormatException ex) {
+            } catch (NumberFormatException | NullPointerException ex) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Błąd");
                 alert.setHeaderText("Nieprawidłowe dane");
@@ -72,7 +74,7 @@ public class RoomForm {
         grid.addRow(1, new Label("Piętro:"), floorField);
         grid.addRow(2, new Label("Numer:"), numberField);
         grid.addRow(3, new Label("Maks. pacjentów:"), maxPatientsField);
-        grid.addRow(4, new Label("Obecnych pacjentów:"), currentPatientsField);
+        grid.addRow(4, new Label("Typ sali:"), typeOfRoomComboBox);
         grid.addRow(5, saveButton, cancelButton);
 
         Scene scene = new Scene(grid, 400, 300);

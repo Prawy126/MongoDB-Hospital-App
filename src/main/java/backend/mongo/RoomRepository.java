@@ -1,6 +1,8 @@
 package backend.mongo;
 
 import backend.klasy.Room;
+import backend.klasy.Patient;
+import backend.klasy.Doctor;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
@@ -21,12 +23,24 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class RoomRepository {
     private final MongoCollection<Room> collection;
-    private final CodecRegistry codecRegistry;
+    private  CodecRegistry codecRegistry;
     private List<Room> rooms;
 
     public RoomRepository(MongoDatabase database) {
-        this.collection = database.getCollection("rooms");
+        // Tworzymy CodecRegistry z odpowiednim CodecProviderem dla naszych klas (Room, Patient itd.)
+        CodecRegistry pojoCodecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(),
+                fromProviders(PojoCodecProvider.builder()
+                        .register(Room.class)  // Rejestrujemy klasę Room
+                        .register(Patient.class)  // Rejestrujemy klasę Patient
+                        .register(Doctor.class)  // Rejestrujemy klasę Doctor
+                        .build()));
+
+        // Ustawiamy nasz CodecRegistry dla kolekcji rooms
+        this.collection = database.getCollection("rooms", Room.class)
+                .withCodecRegistry(pojoCodecRegistry);
     }
+
+
 
     public Room createRoom(Room room) {
         try {
