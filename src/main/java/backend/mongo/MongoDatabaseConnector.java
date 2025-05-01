@@ -15,7 +15,7 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
  */
 public class MongoDatabaseConnector {
 
-    private static final String DB_IP = "192.168.141.191";
+    private static final String DB_IP = "192.168.0.106";
     private static final int DB_PORT = 27017;
     private static final String DB_NAME = "hospitalDB";
     private static MongoClient mongoClient;
@@ -38,7 +38,7 @@ public class MongoDatabaseConnector {
 
             mongoClient = MongoClients.create(settings);
             MongoDatabase database = mongoClient.getDatabase(DB_NAME);
-            System.out.println("[SUCCESS] Połączono z bazą danych: " + DB_NAME);
+            System.err.println("[SUCCESS] Połączono z bazą danych: " + DB_NAME);
             return database;
         } catch (MongoException e) {
             System.err.println("[ERROR] Błąd połączenia: " + e.getMessage());
