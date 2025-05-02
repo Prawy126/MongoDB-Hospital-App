@@ -49,21 +49,32 @@ public class RoomForm {
         Button saveButton = new Button("Zapisz");
         saveButton.setOnAction(e -> {
             try {
-                Room room = new Room(
-                        addressField.getText(),
-                        Integer.parseInt(floorField.getText()),
-                        Integer.parseInt(numberField.getText()),
-                        Integer.parseInt(maxPatientsField.getText()),
-                        typeOfRoomComboBox.getValue() // Przekazanie wybranego typu pokoju
-                );
-                onSave.accept(room);
+                String addr   = addressField.getText();
+                int    floor  = Integer.parseInt(floorField.getText());
+                int    number = Integer.parseInt(numberField.getText());
+                int    max    = Integer.parseInt(maxPatientsField.getText());
+                TypeOfRoom type = typeOfRoomComboBox.getValue();
+
+                if (existingRoom == null) {
+                    Room room = new Room(addr, floor, number, max, type);
+                    onSave.accept(room);
+                } else {
+                    existingRoom.setAddress(addr);
+                    existingRoom.setFloor(floor);
+                    existingRoom.setNumber(number);
+                    existingRoom.setMaxPatients(max);
+                    existingRoom.setType(type);
+                    onSave.accept(existingRoom);
+                }
+
                 stage.close();
+
             } catch (NumberFormatException | NullPointerException ex) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Błąd");
-                alert.setHeaderText("Nieprawidłowe dane");
-                alert.setContentText("Wszystkie pola muszą być poprawnie wypełnione.");
-                alert.showAndWait();
+                Alert a = new Alert(Alert.AlertType.ERROR);
+                a.setTitle("Błąd");
+                a.setHeaderText("Nieprawidłowe dane");
+                a.setContentText("Wszystkie pola muszą być poprawnie wypełnione.");
+                a.showAndWait();
             }
         });
 

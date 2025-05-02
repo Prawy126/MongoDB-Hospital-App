@@ -35,6 +35,7 @@ public class AdminPanelController {
     private final ObservableList<Appointment> appointmentData = FXCollections.observableArrayList();
     private final ObservableList<Doctor> doctorData = FXCollections.observableArrayList();
     private final DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
+    private final RoomRepository roomRepo = new RoomRepository(MongoDatabaseConnector.connectToDatabase());
 
     public AdminPanelController(AdminPanel adminPanel) {
         this.adminPanel = adminPanel;
@@ -289,6 +290,7 @@ public class AdminPanelController {
      * Wyświetla panel zarządzania salami.
      */
     public VBox showIssuesPanel() {
+
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
 
@@ -297,10 +299,8 @@ public class AdminPanelController {
 
         TableView<Room> tableView = new TableView<>();
         ObservableList<Room> roomData = FXCollections.observableArrayList();
-        final RoomRepository roomRepo = new RoomRepository(MongoDatabaseConnector.connectToDatabase());
 
-// Update these lines in showReportsPanel and showIssuesPanel:
-        new RoomRepository(MongoDatabaseConnector.connectToDatabase());
+        /* -------- kolumny -------- */
         TableColumn<Room, String> addressCol = new TableColumn<>("Adres");
         addressCol.setCellValueFactory(new PropertyValueFactory<>("address"));
 
@@ -320,6 +320,7 @@ public class AdminPanelController {
         roomData.setAll(roomRepo.getAllRooms());
         tableView.setItems(roomData);
 
+        /* -------- przyciski -------- */
         Button addRoom = new Button("Dodaj salę");
         addRoom.setOnAction(e -> RoomForm.showForm(null, room -> {
             roomRepo.createRoom(room);
@@ -341,7 +342,7 @@ public class AdminPanelController {
         deleteRoom.setOnAction(e -> {
             Room selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                roomRepo.deleteRoom(selected.getAddress(), selected.getFloor(), selected.getNumber());
+                roomRepo.deleteRoom(selected.getId());
                 roomData.setAll(roomRepo.getAllRooms());
             }
         });
@@ -353,6 +354,7 @@ public class AdminPanelController {
         adminPanel.setCenterPane(layout);
         return layout;
     }
+
 
     /**
      * Wylogowuje użytkownika i otwiera panel logowania.

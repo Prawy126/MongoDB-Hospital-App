@@ -12,6 +12,8 @@ import com.mongodb.client.result.UpdateResult;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,42 +64,21 @@ public class RoomRepository {
     }
 
     public Room updateRoom(Room room) {
-        if (room == null) {
-            throw new IllegalArgumentException("Sala nie może być pusta");
-        }
+        if (room == null || room.getId() == null)
+            throw new IllegalArgumentException("Sala lub jej id jest puste");
 
-        try {
-            Bson filter = and(
-                    eq("address", room.getAddress()),
-                    eq("floor", room.getFloor()),
-                    eq("number", room.getNumber())
-            );
+        UpdateResult r = collection.replaceOne(eq("_id", room.getId()), room);
 
-            UpdateResult result = collection.replaceOne(filter, room);
+        if (r.getMatchedCount() == 0)
+            throw new RuntimeException("Nie znaleziono sali do aktualizacji");
 
-            if (result.getModifiedCount() == 0) {
-                throw new RuntimeException("Nie znaleziono sali do aktualizacji");
-            }
-
-            return room;
-        } catch (Exception e) {
-            throw new RuntimeException("Błąd podczas aktualizacji sali: " + e.getMessage(), e);
-        }
+        return room;
     }
 
-    public boolean deleteRoom(String address, int floor, int number) {
-        try {
-            DeleteResult result = collection.deleteOne(
-                    and(
-                            eq("address", address),
-                            eq("floor", floor),
-                            eq("number", number)
-                    )
-            );
-            return result.getDeletedCount() > 0;
-        } catch (Exception e) {
-            throw new RuntimeException("Błąd podczas usuwania sali: " + e.getMessage(), e);
-        }
+    public boolean deleteRoom(ObjectId id) {
+        if (id == null) throw new IllegalArgumentException("Brak id sali");
+
+        return collection.deleteOne(eq("_id", id)).getDeletedCount() > 0;
     }
 
     public List<Room> getAllRooms() {
