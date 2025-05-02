@@ -46,7 +46,7 @@ db.runCommand({
         },
         diagnosis: {
           bsonType: "string",
-          enum: ["AWAITING", "POSITIVE", "NEGATIVE"], // dostosuj do swoich wartości
+          enum: ["AWIATING", "CADIAC", "NEUROLOGICAL", "SURGICAL", "PREGNANCY", "GENERAL"], // Dostosowałem enum do naszych przykładów zawsze można je zmienić
           description: "Diagnoza musi być jednym z dozwolonych statusów"
         }
       }
