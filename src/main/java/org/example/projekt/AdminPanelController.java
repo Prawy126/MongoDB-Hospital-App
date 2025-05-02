@@ -331,7 +331,7 @@ public class AdminPanelController {
             Room selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
                 RoomForm.showForm(selected, updated -> {
-                    roomRepo.updateRoom(updated);
+                    roomRepo.updateRoom(updated.getId(), updated);
                     roomData.setAll(roomRepo.getAllRooms());
                 });
             }

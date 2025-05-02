@@ -98,7 +98,7 @@ public class AppointmentForm {
                 Appointment appointment = builder
                         .doctorId(doctorBox.getValue())
                         .patientId(patientBox.getValue())
-                        .room(roomBox.getValue().getAddress() + " - " + roomBox.getValue().getNumber())
+                        .room(roomBox.getValue().getId())
                         .date(LocalDateTime.of(date, time))
                         .description(descriptionField.getText())
                         .status(statusBox.getValue())
