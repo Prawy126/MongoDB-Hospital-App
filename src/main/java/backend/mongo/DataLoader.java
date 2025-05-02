@@ -6,6 +6,7 @@ import backend.klasy.Patient;
 import backend.klasy.Room;
 import backend.status.AppointmentStatus;
 import backend.status.Day;
+import backend.status.Diagnosis;
 import backend.status.TypeOfRoom;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
@@ -41,7 +42,6 @@ public class DataLoader {
         createDemoPatients(passwordHash, salt);
         createDemoDoctors(passwordHash, salt);
         createDemoRooms();
-        fillRoomsWithPatients();
         createDemoAppointments();
 
         System.out.println("Dane załadowane pomyślnie!");
@@ -57,9 +57,10 @@ public class DataLoader {
                         .pesel(generateRandomPesel(birthDate))
                         .birthDate(birthDate)
                         .address(generateRandomAddress())
-                        .age(20 + random.nextInt(60))
+                        .age(random.nextInt(100))
                         .passwordHash(passwordHash)
                         .passwordSalt(salt)
+                        .diagnosis(Diagnosis.AWAITING)
                         .build();
                 patientRepository.createPatient(patient);
             } catch (Exception e) {
@@ -119,27 +120,6 @@ public class DataLoader {
         }
     }
 
-    private void fillRoomsWithPatients() {
-        List<Room> rooms = roomRepository.getAllRooms();
-        List<Patient> allPatients = patientRepository.findAll();
-
-        if (rooms.isEmpty() || allPatients.isEmpty()) {
-            System.out.println("Brak sal lub pacjentów – pomijam przydział.");
-            return;
-        }
-
-        Collections.shuffle(allPatients, random);
-        Iterator<Patient> it = allPatients.iterator();
-
-        for (Room room : rooms) {
-            List<ObjectId> patientIds = new ArrayList<>();
-            while (it.hasNext() && patientIds.size() < room.getMaxPatients()) {
-                patientIds.add(it.next().getId());
-            }
-            room.setPatientIds(patientIds);
-            roomRepository.updateRoom(room);
-        }
-    }
 
     private void createDemoAppointments() {
         List<Doctor> doctors = doctorRepository.findAll();
@@ -211,18 +191,12 @@ public class DataLoader {
 
         // Określamy offset dla miesiąca w zależności od wieku
         int mm;
-        if (year >= 1800 && year < 1900) {
-            mm = month + 80;
-        } else if (year >= 1900 && year < 2000) {
+        if (year >= 1900 && year < 2000) {
             mm = month;
         } else if (year >= 2000 && year < 2100) {
             mm = month + 20;
-        } else if (year >= 2100 && year < 2200) {
-            mm = month + 40;
-        } else if (year >= 2200 && year < 2300) {
-            mm = month + 60;
         } else {
-            throw new IllegalArgumentException("Rok poza obsługiwanym zakresem (1800-2299)");
+            throw new IllegalArgumentException("Rok poza obsługiwanym zakresem (1900-2100)");
         }
 
         // Generujemy losową część seryjną

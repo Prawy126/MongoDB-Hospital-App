@@ -28,6 +28,7 @@ public class Patient extends Person {
         super(firstName, lastName, pesel, age);
         this.birthDate = birthDate;
         this.address = address;
+        this.diagnosis = Diagnosis.AWAITING;
     }
 
     public Patient(
@@ -42,6 +43,7 @@ public class Patient extends Person {
         super(firstName, lastName, pesel, age, plainPassword);
         this.birthDate = birthDate;
         this.address = address;
+        this.diagnosis = Diagnosis.AWAITING;
     }
 
     public Patient(
@@ -69,6 +71,7 @@ public class Patient extends Person {
             String passwordSalt
     ) throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age, passwordHash, passwordSalt);
+        setDiagnosis(Diagnosis.AWAITING);
     }
 
     public ObjectId getId() {
@@ -120,6 +123,7 @@ public class Patient extends Person {
         private String passwordHash;
         private String passwordSalt;
         private boolean skipValidation = false;
+        private Diagnosis diagnosis = Diagnosis.AWAITING;
 
         public Builder withId(ObjectId id) {
             this.id = id;
@@ -177,6 +181,11 @@ public class Patient extends Person {
             return this;
         }
 
+        public Builder diagnosis(Diagnosis diagnosis) {
+            this.diagnosis = diagnosis;
+            return this;
+        }
+
         public Patient build() throws PeselException, NullNameException, AgeException {
             if (!skipValidation) {
                 if (firstName == null || firstName.trim().isEmpty()) {
@@ -200,6 +209,7 @@ public class Patient extends Person {
                 patient = new Patient(firstName, lastName, pesel, age, passwordHash, passwordSalt);
                 patient.setBirthDate(birthDate);
                 patient.setAddress(address);
+
             }
 
             patient.setId(id != null ? id : new ObjectId());

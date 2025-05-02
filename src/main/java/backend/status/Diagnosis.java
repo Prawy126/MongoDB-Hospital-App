@@ -8,6 +8,7 @@ package backend.status;
  * <p>PREGNANCY</p>
  * <p>GENERAL</p>*/
 public enum Diagnosis {
+    AWAITING("Oczekiwanie na diagnozę", TypeOfRoom.ADMISSION),
     CARDIAC("Choroba serca", TypeOfRoom.CARDIOLOGY),
     NEUROLOGICAL("Choroba układu nerwowego", TypeOfRoom.NEUROLOGY),
     SURGICAL("Wymagana operacja", TypeOfRoom.SURGICAL),
