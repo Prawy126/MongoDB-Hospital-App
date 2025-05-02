@@ -235,6 +235,7 @@ public class DataLoader {
     public static void main(String[] args) {
         MongoDatabase db = MongoDatabaseConnector.connectToDatabase();
         new DataLoader(db).loadData();
+        MongoDatabaseConnector.close();
     }
 
 }

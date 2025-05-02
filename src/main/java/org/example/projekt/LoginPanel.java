@@ -3,6 +3,7 @@ package org.example.projekt;
 import backend.klasy.Doctor;
 import backend.klasy.Login;
 import backend.klasy.Patient;
+import backend.mongo.MongoDatabaseConnector;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -37,7 +38,7 @@ public class LoginPanel extends Application {
         Label passLabel = new Label("Hasło:");
         PasswordField passField = new PasswordField();
 
-        loginBtn = new Button("Zaloguj się");
+
         loginBtn.setPrefWidth(150);
         loginBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
 
@@ -72,19 +73,25 @@ public class LoginPanel extends Application {
             }
 
             switch (role) {
-                case ADMIN   -> openAdminPanel();
+                case ADMIN   -> {
+                    openAdminPanel();
+                    MongoDatabaseConnector.close();
+                }
                 case DOCTOR -> {
                     Doctor doctor = loginService.getAuthenticatedDoctor();
                     openDoctorPanel(doctor);
+                    MongoDatabaseConnector.close();
                 }
                 case PATIENT -> {
                     Patient patient = loginService.getAuthenticatedPatient();
                     openPatientPanel(patient);
+                    MongoDatabaseConnector.close();
                 }
             }
         });
 
         exitBtn.setOnAction(e -> System.exit(0));
+        MongoDatabaseConnector.close();
         registerBtn.setOnAction(e -> new RegisterPanel().start(new Stage()));
 
         primaryStage.setScene(new Scene(grid, 500, 350));

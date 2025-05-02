@@ -1,6 +1,7 @@
 package org.example.projekt;
 
 import backend.klasy.Patient;
+import backend.mongo.MongoDatabaseConnector;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -58,6 +59,7 @@ public class PatientPanelController {
     /** Wylogowanie. */
     public void logout() {
         primaryStage.close();
+        MongoDatabaseConnector.close();
         try { new LoginPanel().start(new Stage()); }
         catch (Exception e) { e.printStackTrace(); }
     }

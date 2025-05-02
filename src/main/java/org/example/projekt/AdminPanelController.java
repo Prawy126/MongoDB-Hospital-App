@@ -361,6 +361,7 @@ public class AdminPanelController {
     public void logout() {
         primaryStage.close();
         Stage loginStage = new Stage();
+        MongoDatabaseConnector.close();
         try {
             new LoginPanel().start(loginStage);
         } catch (Exception e) {

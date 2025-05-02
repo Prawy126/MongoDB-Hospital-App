@@ -1,6 +1,7 @@
 package org.example.projekt;
 
 import backend.klasy.Doctor;
+import backend.mongo.MongoDatabaseConnector;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -84,6 +85,7 @@ public class DoctorPanelController {
     public void logout() {
         primaryStage.close();
         Stage loginStage = new Stage();
+        MongoDatabaseConnector.close();
         try {
             new LoginPanel().start(loginStage);
         } catch (Exception e) {
