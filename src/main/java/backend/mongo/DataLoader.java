@@ -9,8 +9,6 @@ import backend.status.Day;
 import backend.status.Diagnosis;
 import backend.status.TypeOfRoom;
 import com.mongodb.client.MongoDatabase;
-import org.bson.types.ObjectId;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -40,13 +38,12 @@ public class DataLoader {
         String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
 
         createDemoPatients(passwordHash, salt);
+        createDemoRooms(); // Tworzymy pokoje przed lekarzami i wizytami
         createDemoDoctors(passwordHash, salt);
-        createDemoRooms();
         createDemoAppointments();
 
         System.out.println("Dane załadowane pomyślnie!");
     }
-
     private void createDemoPatients(String passwordHash, String salt) {
         for (int i = 1; i <= 10; i++) {
             try {
@@ -124,6 +121,7 @@ public class DataLoader {
     private void createDemoAppointments() {
         List<Doctor> doctors = doctorRepository.findAll();
         List<Patient> patients = patientRepository.findAll();
+        List<Room> rooms = roomRepository.getAllRooms();
         AppointmentStatus[] statuses = AppointmentStatus.values();
 
         if (doctors.isEmpty() || patients.isEmpty()) {
@@ -133,9 +131,13 @@ public class DataLoader {
 
         for (int i = 0; i < 10; i++) {
             try {
+                Doctor doctor = doctors.get(random.nextInt(doctors.size()));
                 Appointment appt = new Appointment();
-                appt.setDoctorId(doctors.get(random.nextInt(doctors.size())).getId());
+                appt.setDoctorId(doctor.getId());
                 appt.setPatientId(patients.get(random.nextInt(patients.size())).getId());
+                // Ustawiłem na razie żeby do każdego pokoju po kolei przypisywało ale powinno przypisywać do specjalnych pokojów
+                // TODO: Poprawić przypisywanie zabiegów do pokojów
+                appt.setRoom(rooms.get(i).getId());
                 appt.setDate(generateRandomAppointmentDateTime());
                 appt.setStatus(statuses[random.nextInt(statuses.length)]);
                 appointmentRepository.createAppointment(appt);
