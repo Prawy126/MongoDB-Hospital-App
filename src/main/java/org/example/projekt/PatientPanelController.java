@@ -1,5 +1,6 @@
 package org.example.projekt;
 
+import backend.klasy.Patient;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -7,76 +8,57 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-/**
- * Kontroler panelu pacjenta. Obsługuje dashboard i historię leczenia.
- */
+/** Kontroler panelu pacjenta. */
 public class PatientPanelController {
 
-    private final PatientPanel patientPanel;
-    private final Stage primaryStage;
+    private final PatientPanel view;
+    private final Stage        primaryStage;
+    private final Patient      patient;
 
-    /**
-     * Konstruktor kontrolera.
-     * @param patientPanel panel pacjenta, do którego przypisany jest kontroler
-     */
-    public PatientPanelController(PatientPanel patientPanel) {
-        this.patientPanel = patientPanel;
-        this.primaryStage = patientPanel.getPrimaryStage();
+    public PatientPanelController(PatientPanel view, Patient patient) {
+        this.view         = view;
+        this.primaryStage = view.getPrimaryStage();
+        this.patient      = patient;
     }
 
-    /**
-     * Wyświetla dashboard pacjenta z najbliższym zabiegiem.
-     */
+    /** Ekran powitalny. */
     public VBox showDashboard() {
-        VBox layout = new VBox(20);
-        layout.setPadding(new Insets(20));
-        layout.setAlignment(Pos.TOP_CENTER);
+        VBox box = new VBox(20);
+        box.setPadding(new Insets(20));
+        box.setAlignment(Pos.TOP_CENTER);
 
-        Label titleLabel = new Label("Dashboard pacjenta");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label hello = new Label(
+                "Witaj " + patient.getFirstName() + " " + patient.getLastName()
+        );
+        hello.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        Label nextProcedureLabel = new Label("Najbliższy zabieg: 10 kwietnia 2025, godz. 10:30 – RTG klatki piersiowej");
-        nextProcedureLabel.setStyle("-fx-font-size: 14px;");
+        Label next = new Label("Najbliższy zabieg: 10 kwietnia 2025, godz. 10:30 – RTG klatki piersiowej");
+        next.setStyle("-fx-font-size: 14px;");
 
-        layout.getChildren().addAll(titleLabel, nextProcedureLabel);
-        patientPanel.setCenterPane(layout);
-        return layout;
+        box.getChildren().addAll(hello, next);
+        view.setCenterPane(box);
+        return box;
     }
 
-    /**
-     * Wyświetla historię leczenia pacjenta w tabeli.
-     */
+    /** Historia leczenia (na razie pusta tabela). */
     public VBox showTreatmentHistory() {
-        VBox layout = new VBox(15);
-        layout.setPadding(new Insets(20));
+        VBox box = new VBox(15);
+        box.setPadding(new Insets(20));
 
-        Label titleLabel = new Label("Historia leczenia");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label title = new Label("Historia leczenia");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        TableView<?> historyTable = createHistoryTable();
+        TableView<?> table = new TableView<>();   // TODO: uzupełnić kolumny
 
-        layout.getChildren().addAll(titleLabel, historyTable);
-        patientPanel.setCenterPane(layout);
-        return layout;
+        box.getChildren().addAll(title, table);
+        view.setCenterPane(box);
+        return box;
     }
 
-    /**
-     * Tworzy pustą tabelę historii leczenia (do uzupełnienia).
-     */
-    private TableView<?> createHistoryTable() {
-        return new TableView<>();
-    }
-
-    /**
-     * Wylogowuje pacjenta i otwiera ekran logowania.
-     */
+    /** Wylogowanie. */
     public void logout() {
         primaryStage.close();
-        Stage loginStage = new Stage();
-        try {
-            new LoginPanel().start(loginStage);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        try { new LoginPanel().start(new Stage()); }
+        catch (Exception e) { e.printStackTrace(); }
     }
 }

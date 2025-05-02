@@ -1,5 +1,6 @@
 package org.example.projekt;
 
+import backend.klasy.Doctor;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -14,35 +15,38 @@ import javafx.stage.Stage;
  */
 public class DoctorPanelController {
 
-    private final DoctorPanel doctorPanel;
+    private final DoctorPanel view;
     private final Stage primaryStage;
+    private final Doctor doctor;
 
-    /**
-     * Konstruktor kontrolera.
-     * @param doctorPanel powiązany panel graficzny
-     */
-    public DoctorPanelController(DoctorPanel doctorPanel) {
-        this.doctorPanel = doctorPanel;
-        this.primaryStage = doctorPanel.getPrimaryStage();
+
+    public DoctorPanelController(DoctorPanel view, Doctor doctor) {
+        this.view         = view;
+        this.primaryStage = view.getPrimaryStage();
+        this.doctor       = doctor;
     }
 
     /**
      * Wyświetla dashboard z informacjami ogólnymi.
      */
     public VBox showDashboard() {
-        VBox layout = new VBox(20);
-        layout.setPadding(new Insets(20));
-        layout.setAlignment(Pos.TOP_CENTER);
+        VBox box = new VBox(20);
+        box.setPadding(new Insets(20));
+        box.setAlignment(Pos.TOP_CENTER);
 
-        Label titleLabel = new Label("Dashboard lekarza");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label hello = new Label(
+                "Witaj " + doctor.getFirstName() + " " + doctor.getLastName()
+        );                                               // ← personalizacja
+        hello.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        Label statsLabel = new Label("Statystyki:\n- Liczba zabiegów dzisiaj: 3\n- Najbliższy zabieg: godz. 14:00");
-        statsLabel.setStyle("-fx-font-size: 14px;");
+        Label stats = new Label(
+                "Statystyki:\n- Liczba zabiegów dzisiaj: 3\n- Najbliższy zabieg: godz. 14:00"
+        );
+        stats.setStyle("-fx-font-size: 14px;");
 
-        layout.getChildren().addAll(titleLabel, statsLabel);
-        doctorPanel.setCenterPane(layout);
-        return layout;
+        box.getChildren().addAll(hello, stats);
+        view.setCenterPane(box);
+        return box;
     }
 
     /**
@@ -63,7 +67,7 @@ public class DoctorPanelController {
         buttonBox.getChildren().add(refreshButton);
 
         layout.getChildren().addAll(titleLabel, procedureTable, buttonBox);
-        doctorPanel.setCenterPane(layout);
+        view.setCenterPane(layout);
         return layout;
     }
 

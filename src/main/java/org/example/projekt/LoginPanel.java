@@ -1,6 +1,8 @@
 package org.example.projekt;
 
+import backend.klasy.Doctor;
 import backend.klasy.Login;
+import backend.klasy.Patient;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -71,8 +73,14 @@ public class LoginPanel extends Application {
 
             switch (role) {
                 case ADMIN   -> openAdminPanel();
-                case DOCTOR  -> openDoctorPanel();
-                case PATIENT -> openPatientPanel();
+                case DOCTOR -> {
+                    Doctor doctor = loginService.getAuthenticatedDoctor();
+                    openDoctorPanel(doctor);
+                }
+                case PATIENT -> {
+                    Patient patient = loginService.getAuthenticatedPatient();
+                    openPatientPanel(patient);
+                }
             }
         });
 
@@ -87,8 +95,17 @@ public class LoginPanel extends Application {
     }
 
     private void openAdminPanel()  { new AdminPanel(new Stage());  closeLoginWindow(); }
-    private void openDoctorPanel() { new DoctorPanel(new Stage()); closeLoginWindow(); }
-    private void openPatientPanel(){ new PatientPanel(new Stage());closeLoginWindow(); }
+    private void openDoctorPanel(Doctor doctor) {
+        Stage doctorStage = new Stage();
+        new DoctorPanel(doctorStage, doctor);
+        closeLoginWindow();
+    }
+
+    private void openPatientPanel(Patient patient) {
+        Stage patientStage = new Stage();
+        new PatientPanel(patientStage, patient);
+        closeLoginWindow();
+    }
 
     private void closeLoginWindow() {
         ((Stage) loginBtn.getScene().getWindow()).close();

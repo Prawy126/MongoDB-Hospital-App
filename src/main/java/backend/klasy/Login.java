@@ -1,24 +1,21 @@
 package backend.klasy;
 
-import backend.mongo.DoctorRepository;
-import backend.mongo.MongoDatabaseConnector;
-import backend.mongo.PatientRepository;
-
+import backend.mongo.*;
 import java.util.Optional;
 
-/**
- * Odpowiada tylko za uwierzytelnianie użytkownika.
- * W przypadku błędnych danych zwraca null.
- */
+/** Obsługa uwierzytelniania.  Po udanym logowaniu przechowuje obiekt użytkownika. */
 public class Login {
 
     public enum Role { ADMIN, DOCTOR, PATIENT }
 
-    private static final String ADMIN_LOGIN    = "admin";
+    private static final String ADMIN_LOGIN = "admin";
     private static final String ADMIN_PASSWORD = "admin";
 
     private final DoctorRepository  doctorRepo;
     private final PatientRepository patientRepo;
+
+    private Doctor  authenticatedDoctor;
+    private Patient authenticatedPatient;
 
     public Login() {
         var db = MongoDatabaseConnector.connectToDatabase();
@@ -26,14 +23,12 @@ public class Login {
         this.patientRepo = new PatientRepository(db);
     }
 
-    /**
-     * Próbuje zalogować użytkownika.
-     *
-     * @param login    PESEL lub login admina
-     * @param password hasło w postaci jawnej
-     * @return         rola zalogowanego użytkownika; null gdy uwierzytelnienie się nie powiedzie
-     */
+    /** Próbuje zalogować – zwraca rolę lub null; obiekt użytkownika można pobrać getterem. */
     public Role authenticate(String login, String password) {
+
+        authenticatedDoctor  = null;
+        authenticatedPatient = null;
+
         if (ADMIN_LOGIN.equals(login) && ADMIN_PASSWORD.equals(password)) {
             return Role.ADMIN;
         }
@@ -42,24 +37,33 @@ public class Login {
         try { pesel = Long.parseLong(login); }
         catch (NumberFormatException ex) { return null; }
 
-        Optional<Doctor> doc = doctorRepo.findAll()
-                .stream()
+        /* lekarz */
+        Optional<Doctor> doc = doctorRepo.findAll().stream()
                 .filter(d -> d.getPesel() == pesel)
                 .findFirst();
         if (doc.isPresent()) {
             doc.get().reconstructPasswordObject();
-            return doc.get().getPassword().verify(password) ? Role.DOCTOR : null;
+            if (doc.get().getPassword().verify(password)) {
+                authenticatedDoctor = doc.get();
+                return Role.DOCTOR;
+            }
+            return null;
         }
 
-        Optional<Patient> pat = patientRepo.findAll()
-                .stream()
+        /* pacjent */
+        Optional<Patient> pat = patientRepo.findAll().stream()
                 .filter(p -> p.getPesel() == pesel)
                 .findFirst();
         if (pat.isPresent()) {
             pat.get().reconstructPasswordObject();
-            return pat.get().getPassword().verify(password) ? Role.PATIENT : null;
+            if (pat.get().getPassword().verify(password)) {
+                authenticatedPatient = pat.get();
+                return Role.PATIENT;
+            }
         }
-
         return null;
     }
+
+    public Doctor  getAuthenticatedDoctor()  { return authenticatedDoctor;  }
+    public Patient getAuthenticatedPatient() { return authenticatedPatient; }
 }
