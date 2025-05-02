@@ -1,17 +1,12 @@
 package backend.mongo;
 
 import backend.klasy.Doctor;
-import backend.status.Day;
-import backend.wyjatki.AgeException;
-import backend.wyjatki.NullNameException;
-import backend.wyjatki.PeselException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import org.bson.types.ObjectId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import static com.mongodb.client.model.Filters.eq;
 
 /**
@@ -37,15 +32,13 @@ public class DoctorRepository {
      * Tworzy nowego lekarza w bazie danych.
      *
      * @param doctor lekarz do utworzenia
-     * @return utworzony lekarz
      * @throws IllegalArgumentException jeśli lekarz jest null
      */
-    public Doctor createDoctor(Doctor doctor) {
+    public void createDoctor(Doctor doctor) {
         if (doctor == null) {
-            throw new IllegalArgumentException("Doctor cannot be null");
+            throw new IllegalArgumentException("Doktor nie może być nullem!!");
         }
         collection.insertOne(doctor);
-        return doctor;
     }
 
     /**

@@ -14,7 +14,7 @@ public class Appointment {
     private ObjectId patientId;
     private ObjectId doctorId;
     private LocalDateTime date;
-    private String room;
+    private ObjectId room;
     private String description;
     private AppointmentStatus status;
 
@@ -28,13 +28,27 @@ public class Appointment {
      * Konstruktor tworzący pełną wizytę.
      */
     public Appointment(ObjectId patientId, ObjectId doctorId, LocalDateTime date,
-                       String room, String description, AppointmentStatus status) {
+                       ObjectId room, String description, AppointmentStatus status) {
         this.patientId = patientId;
         this.doctorId = doctorId;
         this.date = date;
         this.room = room;
         this.description = description;
         this.status = status;
+    }
+
+    /**
+     * Konstruktor tworzący pełną wizytę.
+     */
+    public Appointment(ObjectId patientId, ObjectId doctorId, ObjectId roomId, LocalDateTime date,
+                       ObjectId room, String description, AppointmentStatus status) {
+        this.patientId = patientId;
+        this.doctorId = doctorId;
+        this.date = date;
+        this.room = room;
+        this.description = description;
+        this.status = status;
+
     }
 
     public ObjectId getId() {
@@ -69,11 +83,11 @@ public class Appointment {
         this.date = date;
     }
 
-    public String getRoom() {
+    public ObjectId getRoom() {
         return room;
     }
 
-    public void setRoom(String room) {
+    public void setRoom(ObjectId room) {
         this.room = room;
     }
 
@@ -101,7 +115,7 @@ public class Appointment {
         private ObjectId patientId;
         private ObjectId doctorId;
         private LocalDateTime date;
-        private String room;
+        private ObjectId room;
         private String description;
         private AppointmentStatus status;
 
@@ -128,7 +142,7 @@ public class Appointment {
             return this;
         }
 
-        public Builder room(String room) {
+        public Builder room(ObjectId room) {
             this.room = room;
             return this;
         }

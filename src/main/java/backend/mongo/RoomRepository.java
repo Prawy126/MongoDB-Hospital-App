@@ -4,14 +4,11 @@ import backend.klasy.Room;
 import backend.klasy.Patient;
 import backend.klasy.Doctor;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
@@ -23,11 +20,23 @@ import static com.mongodb.client.model.Filters.and;
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
+/**
+ * Klasa RoomRepository zarządza operacjami CRUD dla kolekcji sal w bazie MongoDB.
+ * <p>
+ * Metody tej klasy pozwalają na tworzenie, wyszukiwanie, aktualizowanie i usuwanie sal.
+ * Klasa ta zapewnia również metody do testowania operacji na kolekcji sal.
+ * </p>
+ */
 public class RoomRepository {
     private final MongoCollection<Room> collection;
     private  CodecRegistry codecRegistry;
     private List<Room> rooms;
 
+    /**
+     * Konstruktor inicjalizujący kolekcję sal.
+     *
+     * @param database obiekt MongoDatabase reprezentujący połączenie z bazą danych
+     */
     public RoomRepository(MongoDatabase database) {
         // Tworzymy CodecRegistry z odpowiednim CodecProviderem dla naszych klas (Room, Patient itd.)
         CodecRegistry pojoCodecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(),
@@ -43,16 +52,28 @@ public class RoomRepository {
     }
 
 
-
-    public Room createRoom(Room room) {
+    /**
+     * Tworzy nową salę w bazie danych.
+     *
+     * @param room sala do utworzenia
+     * @throws IllegalArgumentException jeśli sala jest null
+     */
+    public void createRoom(Room room) {
         try {
             collection.insertOne(room);
-            return room;
         } catch (Exception e) {
             throw new RuntimeException("Błąd podczas tworzenia sali: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Znajduje salę po jej ID.
+     *
+     * @param address adres sali
+     * @param floor piętro sali
+     * @param number numer sali
+     * @return Optional zawierający znalezioną salę lub pusty, jeśli nie znaleziono
+     */
     public Room findByAddressFloorNumber(String address, int floor, int number) {
         return collection.find(
                 and(
@@ -63,24 +84,47 @@ public class RoomRepository {
         ).first();
     }
 
-    public Room updateRoom(Room room) {
-        if (room == null || room.getId() == null)
-            throw new IllegalArgumentException("Sala lub jej id jest puste");
+    /**
+     * Znajduje salę po jej ID.
+     *
+     * @param roomId ID sali
+     * @param updatedRoom zaktualizowane dane sali
+     * @return Optional zawierający znalezioną salę lub pusty, jeśli nie znaleziono
+     */
+    public Room updateRoom(ObjectId roomId, Room updatedRoom) {
+        if (roomId == null)
+            throw new IllegalArgumentException("Id sali jest puste");
 
-        UpdateResult r = collection.replaceOne(eq("_id", room.getId()), room);
+        if (updatedRoom == null)
+            throw new IllegalArgumentException("Dane aktualizowanej sali są puste");
+
+        updatedRoom.setId(roomId);
+
+        UpdateResult r = collection.replaceOne(eq("_id", roomId), updatedRoom);
 
         if (r.getMatchedCount() == 0)
-            throw new RuntimeException("Nie znaleziono sali do aktualizacji");
+            throw new RuntimeException("Nie znaleziono sali o id: " + roomId.toString());
 
-        return room;
+        return updatedRoom;
     }
 
+    /**
+     * Znajduje salę po jej ID.
+     *
+     * @param id ID sali
+     * @return Optional zawierający znalezioną salę lub pusty, jeśli nie znaleziono
+     */
     public boolean deleteRoom(ObjectId id) {
         if (id == null) throw new IllegalArgumentException("Brak id sali");
 
         return collection.deleteOne(eq("_id", id)).getDeletedCount() > 0;
     }
 
+    /**
+     * Znajduje wszystkie sale w bazie danych.
+     *
+     * @return lista wszystkich sal
+     */
     public List<Room> getAllRooms() {
         try {
             return collection.find().into(new ArrayList<>());
@@ -89,6 +133,14 @@ public class RoomRepository {
         }
     }
 
+    /**
+     * Znajduje sale po ich adresie.
+     *
+     * @param collection sale
+     * @param codecRegistry rejestrator kodów
+     * @param rooms lista sal
+     * @return lista sal o podanym adresie
+     */
     public RoomRepository(MongoCollection<Room> collection, CodecRegistry codecRegistry, List<Room> rooms) {
         this.collection = collection;
         this.codecRegistry = codecRegistry;
