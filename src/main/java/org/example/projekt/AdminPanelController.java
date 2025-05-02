@@ -2,7 +2,6 @@ package org.example.projekt;
 
 import backend.klasy.*;
 import backend.mongo.*;
-import backend.status.AppointmentStatus;
 import com.mongodb.client.MongoDatabase;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -47,7 +46,7 @@ public class AdminPanelController {
     /**
      * Wyświetla panel zarządzania pacjentami.
      */
-    public VBox showUserManagement() {
+    public VBox showPatientsManagement() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
         layout.setAlignment(Pos.TOP_CENTER);
@@ -112,7 +111,7 @@ public class AdminPanelController {
     /**
      * Wyświetla panel zarządzania lekarzami.
      */
-    public VBox showConfigPanel() {
+    public VBox showDoctorsManagement() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
         layout.setAlignment(Pos.TOP_CENTER);
@@ -177,7 +176,7 @@ public class AdminPanelController {
     /**
      * Wyświetla panel harmonogramu zabiegów.
      */
-    public VBox showReportsPanel() {
+    public VBox showAppointmentsManagement() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
 
@@ -289,7 +288,7 @@ public class AdminPanelController {
     /**
      * Wyświetla panel zarządzania salami.
      */
-    public VBox showIssuesPanel() {
+    public VBox showRoomsManagement() {
 
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
