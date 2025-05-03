@@ -20,7 +20,7 @@ public class LoginPanel extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        
+
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(20));
         grid.setVgap(15);
@@ -38,7 +38,8 @@ public class LoginPanel extends Application {
         Label passLabel = new Label("Hasło:");
         PasswordField passField = new PasswordField();
 
-
+        // Tworzenie przycisku loginBtn
+        loginBtn = new Button("Zaloguj");
         loginBtn.setPrefWidth(150);
         loginBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
 

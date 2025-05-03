@@ -33,14 +33,20 @@ public class AdminPanelController {
     private final AppointmentRepository appointmentRepo;
     private final ObservableList<Appointment> appointmentData = FXCollections.observableArrayList();
     private final ObservableList<Doctor> doctorData = FXCollections.observableArrayList();
-    private final DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
-    private final RoomRepository roomRepo = new RoomRepository(MongoDatabaseConnector.connectToDatabase());
+    private final DoctorRepository doctorRepo;
+    private final RoomRepository roomRepo;
+    private final PatientRepository patientRepo;
 
     public AdminPanelController(AdminPanel adminPanel) {
         this.adminPanel = adminPanel;
         this.primaryStage = adminPanel.getPrimaryStage();
+
+        // Użyj jednego połączenia dla wszystkich repozytoriów
         MongoDatabase db = MongoDatabaseConnector.connectToDatabase();
         this.appointmentRepo = new AppointmentRepository(db);
+        this.doctorRepo = new DoctorRepository(db);
+        this.roomRepo = new RoomRepository(db);
+        this.patientRepo = new PatientRepository(db);
     }
 
     /**
@@ -56,7 +62,6 @@ public class AdminPanelController {
 
         TableView<Patient> tableView = new TableView<>();
         ObservableList<Patient> patientData = FXCollections.observableArrayList();
-        PatientRepository patientRepo = new PatientRepository(MongoDatabaseConnector.connectToDatabase());
 
         TableColumn<Patient, String> firstNameCol = new TableColumn<>("Imię");
         firstNameCol.setCellValueFactory(new PropertyValueFactory<>("firstName"));
@@ -120,8 +125,7 @@ public class AdminPanelController {
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         TableView<Doctor> tableView = new TableView<>();
-        ObservableList<Doctor> doctorData = FXCollections.observableArrayList();
-        DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
+        ObservableList<Doctor> doctorList = FXCollections.observableArrayList();
 
         TableColumn<Doctor, String> nameCol = new TableColumn<>("Imię");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("firstName"));
@@ -136,13 +140,13 @@ public class AdminPanelController {
         roomCol.setCellValueFactory(new PropertyValueFactory<>("room"));
 
         tableView.getColumns().addAll(nameCol, lastNameCol, specializationCol, roomCol);
-        tableView.setItems(doctorData);
-        doctorData.setAll(doctorRepo.findAll());
+        tableView.setItems(doctorList);
+        doctorList.setAll(doctorRepo.findAll());
 
         Button addBtn = new Button("Dodaj lekarza");
         addBtn.setOnAction(e -> DoctorForm.showForm(null, doctor -> {
             doctorRepo.createDoctor(doctor);
-            doctorData.setAll(doctorRepo.findAll());
+            doctorList.setAll(doctorRepo.findAll());
         }));
 
         Button editBtn = new Button("Edytuj lekarza");
@@ -151,7 +155,7 @@ public class AdminPanelController {
             if (selected != null) {
                 DoctorForm.showForm(selected, updated -> {
                     doctorRepo.updateDoctor(updated);
-                    doctorData.setAll(doctorRepo.findAll());
+                    doctorList.setAll(doctorRepo.findAll());
                 });
             }
         });
@@ -161,7 +165,7 @@ public class AdminPanelController {
             Doctor selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
                 doctorRepo.deleteDoctor(selected.getId());
-                doctorData.setAll(doctorRepo.findAll());
+                doctorList.setAll(doctorRepo.findAll());
             }
         });
 
@@ -208,8 +212,7 @@ public class AdminPanelController {
         TableColumn<Appointment, String> patientCol = new TableColumn<>("Pacjent");
         patientCol.setCellValueFactory(cellData -> {
             ObjectId patId = cellData.getValue().getPatientId();
-            Patient pat = new PatientRepository(MongoDatabaseConnector.connectToDatabase())
-                    .findPatientById(patId).orElse(new Patient());
+            Patient pat = patientRepo.findPatientById(patId).orElse(new Patient());
             return new ReadOnlyStringWrapper(pat.getFirstName() + " " + pat.getLastName());
         });
 
@@ -229,8 +232,8 @@ public class AdminPanelController {
         scheduleProcedure.setOnAction(e -> {
             AppointmentForm form = new AppointmentForm(
                     doctorRepo.findAll(),
-                    new PatientRepository(MongoDatabaseConnector.connectToDatabase()).findAll(),
-                    new RoomRepository(MongoDatabaseConnector.connectToDatabase()).getAllRooms()
+                    patientRepo.findAll(),
+                    roomRepo.getAllRooms()
             );
             form.showForm(null, appointment -> {
                 appointmentRepo.createAppointment(appointment);
@@ -243,8 +246,8 @@ public class AdminPanelController {
             if (selected != null) {
                 AppointmentForm form = new AppointmentForm(
                         doctorRepo.findAll(),
-                        new PatientRepository(MongoDatabaseConnector.connectToDatabase()).findAll(),
-                        new RoomRepository(MongoDatabaseConnector.connectToDatabase()).getAllRooms()
+                        patientRepo.findAll(),
+                        roomRepo.getAllRooms()
                 );
                 form.showForm(selected, appointment -> {
                     appointmentRepo.updateAppointment(appointment);
@@ -276,7 +279,6 @@ public class AdminPanelController {
             tableView.refresh();
         } catch (Exception e) {
             e.printStackTrace();
-            // Optional: Show error dialog
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Błąd");
             alert.setHeaderText("Nie udało się załadować zabiegów");
@@ -289,7 +291,6 @@ public class AdminPanelController {
      * Wyświetla panel zarządzania salami.
      */
     public VBox showRoomsManagement() {
-
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
 
@@ -354,14 +355,24 @@ public class AdminPanelController {
         return layout;
     }
 
+    /**
+     * Metoda zwalniająca zasoby przy zamknięciu panelu admin.
+     * Powinna być wywoływana przy zamykaniu panelu.
+     */
+    public void cleanup() {
+        MongoDatabaseConnector.close();
+    }
 
     /**
      * Wylogowuje użytkownika i otwiera panel logowania.
      */
     public void logout() {
+        // Zwolnij zasoby przed zamknięciem panelu
+        cleanup();
+
         primaryStage.close();
         Stage loginStage = new Stage();
-        MongoDatabaseConnector.close();
+
         try {
             new LoginPanel().start(loginStage);
         } catch (Exception e) {
