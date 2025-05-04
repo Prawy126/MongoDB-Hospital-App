@@ -355,28 +355,14 @@ public class AdminPanelController {
         return layout;
     }
 
-    /**
-     * Metoda zwalniająca zasoby przy zamknięciu panelu admin.
-     * Powinna być wywoływana przy zamykaniu panelu.
-     */
-    public void cleanup() {
-        MongoDatabaseConnector.close();
-    }
-
-    /**
-     * Wylogowuje użytkownika i otwiera panel logowania.
-     */
     public void logout() {
-        // Zwolnij zasoby przed zamknięciem panelu
-        cleanup();
-
         primaryStage.close();
         Stage loginStage = new Stage();
-
         try {
             new LoginPanel().start(loginStage);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 }

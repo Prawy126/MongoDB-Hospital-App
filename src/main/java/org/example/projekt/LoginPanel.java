@@ -76,23 +76,22 @@ public class LoginPanel extends Application {
             switch (role) {
                 case ADMIN   -> {
                     openAdminPanel();
-                    MongoDatabaseConnector.close();
                 }
                 case DOCTOR -> {
                     Doctor doctor = loginService.getAuthenticatedDoctor();
                     openDoctorPanel(doctor);
-                    MongoDatabaseConnector.close();
                 }
                 case PATIENT -> {
                     Patient patient = loginService.getAuthenticatedPatient();
                     openPatientPanel(patient);
-                    MongoDatabaseConnector.close();
                 }
             }
         });
 
-        exitBtn.setOnAction(e -> System.exit(0));
-        MongoDatabaseConnector.close();
+        exitBtn.setOnAction(e -> {
+            MongoDatabaseConnector.close();
+            System.exit(0);
+        });
         registerBtn.setOnAction(e -> new RegisterPanel().start(new Stage()));
 
         primaryStage.setScene(new Scene(grid, 500, 350));
