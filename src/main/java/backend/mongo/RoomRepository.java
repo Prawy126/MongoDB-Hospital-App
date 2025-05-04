@@ -13,6 +13,7 @@ import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -164,4 +165,11 @@ public class RoomRepository {
                 .filter(this::isRoomNotFull)
                 .collect(Collectors.toList());
     }
+
+    public Optional<Room> findRoomById(ObjectId id) {
+        return Optional.ofNullable(
+                collection.find(eq("_id", id)).first()
+        );
+    }
+
 }

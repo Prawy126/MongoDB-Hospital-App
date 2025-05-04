@@ -104,4 +104,9 @@ public class Room {
                 number, address, getCurrentPatientCount(), maxPatients, type.getDescription());
     }
 
+    public String toString2() {
+        return number + " – " + address;
+    }
+
+
 }

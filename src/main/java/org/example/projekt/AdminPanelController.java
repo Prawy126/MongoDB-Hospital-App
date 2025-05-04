@@ -204,7 +204,11 @@ public class AdminPanelController {
         ));
 
         TableColumn<Appointment, String> roomCol = new TableColumn<>("Sala");
-        roomCol.setCellValueFactory(new PropertyValueFactory<>("room"));
+        roomCol.setCellValueFactory(cellData -> {
+            ObjectId roomId = cellData.getValue().getRoom();
+            Room room = roomRepo.findRoomById(roomId).orElse(null);
+            return new ReadOnlyStringWrapper(room != null ? room.toString2() : "Nieznana sala");
+        });
 
         TableColumn<Appointment, String> descCol = new TableColumn<>("Opis");
         descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
