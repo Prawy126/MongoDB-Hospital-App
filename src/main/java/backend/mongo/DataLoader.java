@@ -6,10 +6,9 @@ import backend.klasy.Patient;
 import backend.klasy.Room;
 import backend.status.AppointmentStatus;
 import backend.status.Day;
+import backend.status.Diagnosis;
 import backend.status.TypeOfRoom;
 import com.mongodb.client.MongoDatabase;
-import org.bson.types.ObjectId;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,26 +38,26 @@ public class DataLoader {
         String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
 
         createDemoPatients(passwordHash, salt);
+        createDemoRooms(); // Tworzymy pokoje przed lekarzami i wizytami
         createDemoDoctors(passwordHash, salt);
-        createDemoRooms();
-        fillRoomsWithPatients();
         createDemoAppointments();
 
         System.out.println("Dane załadowane pomyślnie!");
     }
-
     private void createDemoPatients(String passwordHash, String salt) {
         for (int i = 1; i <= 10; i++) {
             try {
+                LocalDate birthDate = generateRandomBirthDate();
                 Patient patient = new Patient.Builder()
                         .firstName(getRandomFirstName())
                         .lastName(getRandomLastName())
-                        .pesel(10000000000L + i)
-                        .birthDate(generateRandomBirthDate())
+                        .pesel(generateRandomPesel(birthDate))
+                        .birthDate(birthDate)
                         .address(generateRandomAddress())
-                        .age(20 + random.nextInt(60))
+                        .age(random.nextInt(100))
                         .passwordHash(passwordHash)
                         .passwordSalt(salt)
+                        .diagnosis(Diagnosis.AWAITING)
                         .build();
                 patientRepository.createPatient(patient);
             } catch (Exception e) {
@@ -78,11 +77,12 @@ public class DataLoader {
                 for (int j = 0; j < selectedDays.length; j++) {
                     selectedDays[j] = days[random.nextInt(days.length)];
                 }
+                LocalDate birthDate = generateRandomBirthDate();
                 Doctor doctor = new Doctor.Builder()
                         .firstName(getRandomFirstName())
                         .lastName(getRandomLastName())
                         .age(30 + random.nextInt(35))
-                        .pesel(20000000000L + i)
+                        .pesel(generateRandomPesel(birthDate))
                         .specialization(specializations[random.nextInt(specializations.length)])
                         .availableDays(Arrays.stream(selectedDays).map(Day::valueOf).collect(Collectors.toList()))
                         .room(String.format("%03d", random.nextInt(500) + 1))
@@ -117,31 +117,11 @@ public class DataLoader {
         }
     }
 
-    private void fillRoomsWithPatients() {
-        List<Room> rooms = roomRepository.getAllRooms();
-        List<Patient> allPatients = patientRepository.findAll();
-
-        if (rooms.isEmpty() || allPatients.isEmpty()) {
-            System.out.println("Brak sal lub pacjentów – pomijam przydział.");
-            return;
-        }
-
-        Collections.shuffle(allPatients, random);
-        Iterator<Patient> it = allPatients.iterator();
-
-        for (Room room : rooms) {
-            List<ObjectId> patientIds = new ArrayList<>();
-            while (it.hasNext() && patientIds.size() < room.getMaxPatients()) {
-                patientIds.add(it.next().getId());
-            }
-            room.setPatientIds(patientIds);
-            roomRepository.updateRoom(room);
-        }
-    }
 
     private void createDemoAppointments() {
         List<Doctor> doctors = doctorRepository.findAll();
         List<Patient> patients = patientRepository.findAll();
+        List<Room> rooms = roomRepository.getAllRooms();
         AppointmentStatus[] statuses = AppointmentStatus.values();
 
         if (doctors.isEmpty() || patients.isEmpty()) {
@@ -151,9 +131,13 @@ public class DataLoader {
 
         for (int i = 0; i < 10; i++) {
             try {
+                Doctor doctor = doctors.get(random.nextInt(doctors.size()));
                 Appointment appt = new Appointment();
-                appt.setDoctorId(doctors.get(random.nextInt(doctors.size())).getId());
+                appt.setDoctorId(doctor.getId());
                 appt.setPatientId(patients.get(random.nextInt(patients.size())).getId());
+                // Ustawiłem na razie żeby do każdego pokoju po kolei przypisywało ale powinno przypisywać do specjalnych pokojów
+                // TODO: Poprawić przypisywanie zabiegów do pokojów
+                appt.setRoom(rooms.get(i).getId());
                 appt.setDate(generateRandomAppointmentDateTime());
                 appt.setStatus(statuses[random.nextInt(statuses.length)]);
                 appointmentRepository.createAppointment(appt);
@@ -195,9 +179,63 @@ public class DataLoader {
         return LocalDateTime.of(year, month, day, hour, minute);
     }
 
+    /**
+     * Generuje PESEL na podstawie daty urodzenia (11 cyfr, z poprawną sumą kontrolną).
+     * @param birthDate Data urodzenia pacjenta.
+     * @return Wygenerowany PESEL jako long.
+     */
+    private long generateRandomPesel(LocalDate birthDate) {
+        int year = birthDate.getYear();
+        int month = birthDate.getMonthValue();
+        int day = birthDate.getDayOfMonth();
+
+        int yy = year % 100;
+
+        // Określamy offset dla miesiąca w zależności od wieku
+        int mm;
+        if (year >= 1900 && year < 2000) {
+            mm = month;
+        } else if (year >= 2000 && year < 2100) {
+            mm = month + 20;
+        } else {
+            throw new IllegalArgumentException("Rok poza obsługiwanym zakresem (1900-2100)");
+        }
+
+        // Generujemy losową część seryjną
+        int serial = random.nextInt(10000);
+
+        // Budujemy PESEL bez cyfry kontrolnej
+        String datePart = String.format("%02d%02d%02d", yy, mm, day);
+        String serialPart = String.format("%04d", serial);
+        String firstTen = datePart + serialPart;
+
+        // Sprawdzamy, czy pierwsza cyfra to 0 i jeśli tak, zamieniamy na losową cyfrę 1-9
+        char[] firstTenChars = firstTen.toCharArray();
+        if (firstTenChars[0] == '0') {
+            // Losujemy cyfrę od 1 do 9
+            firstTenChars[0] = (char)('1' + random.nextInt(9));
+        }
+
+        firstTen = new String(firstTenChars);
+
+        // Obliczamy sumę kontrolną dla zmodyfikowanego numeru
+        int[] weights = {1, 3, 7, 9, 1, 3, 7, 9, 1, 3};
+        int sum = 0;
+        for (int i = 0; i < 10; i++) {
+            int digit = Character.getNumericValue(firstTen.charAt(i));
+            sum += digit * weights[i];
+        }
+        int checkDigit = (10 - sum % 10) % 10;
+
+        // Tworzymy pełny PESEL
+        String fullPesel = firstTen + checkDigit;
+
+        return Long.parseLong(fullPesel);
+    }
     public static void main(String[] args) {
         MongoDatabase db = MongoDatabaseConnector.connectToDatabase();
         new DataLoader(db).loadData();
+        MongoDatabaseConnector.close();
     }
 
 }
