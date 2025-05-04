@@ -1,5 +1,6 @@
 package org.example.projekt;
 
+import backend.klasy.Doctor;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ScaleTransition;
@@ -21,14 +22,16 @@ public class DoctorPanel {
     private BorderPane root;
     private Stage primaryStage;
     private DoctorPanelController controller;
+    private final Doctor currentDoctor;
 
     /**
      * Konstruktor inicjalizujący panel lekarza.
      * @param stage główne okno aplikacji
      */
-    public DoctorPanel(Stage stage) {
+    public DoctorPanel(Stage stage, Doctor doctor) {
         this.primaryStage = stage;
-        this.controller = new DoctorPanelController(this);
+        this.currentDoctor  = doctor;
+        this.controller = new DoctorPanelController(this, doctor);
 
         primaryStage.setTitle("Panel lekarza");
 

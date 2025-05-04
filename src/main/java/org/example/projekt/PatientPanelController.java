@@ -1,82 +1,134 @@
 package org.example.projekt;
 
+import backend.klasy.Appointment;
+import backend.klasy.Patient;
+import backend.mongo.AppointmentRepository;
+import backend.mongo.DoctorRepository;
+import backend.mongo.MongoDatabaseConnector;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
 
-/**
- * Kontroler panelu pacjenta. Obsługuje dashboard i historię leczenia.
- */
+
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
+/** Kontroler panelu pacjenta. */
 public class PatientPanelController {
 
-    private final PatientPanel patientPanel;
-    private final Stage primaryStage;
+    private final PatientPanel view;
+    private final Stage        primaryStage;
+    private final Patient      patient;
+    private final DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm", new Locale("pl", "PL"));
+    private final AppointmentRepository appointmentRepo =
+            new AppointmentRepository(MongoDatabaseConnector.connectToDatabase());
+    private final DoctorRepository doctorRepo =
+            new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
 
-    /**
-     * Konstruktor kontrolera.
-     * @param patientPanel panel pacjenta, do którego przypisany jest kontroler
-     */
-    public PatientPanelController(PatientPanel patientPanel) {
-        this.patientPanel = patientPanel;
-        this.primaryStage = patientPanel.getPrimaryStage();
+
+
+    public PatientPanelController(PatientPanel view, Patient patient) {
+        this.view         = view;
+        this.primaryStage = view.getPrimaryStage();
+        this.patient      = patient;
     }
 
-    /**
-     * Wyświetla dashboard pacjenta z najbliższym zabiegiem.
-     */
+    /** Ekran powitalny. */
     public VBox showDashboard() {
-        VBox layout = new VBox(20);
-        layout.setPadding(new Insets(20));
-        layout.setAlignment(Pos.TOP_CENTER);
+        VBox box = new VBox(20);
+        box.setPadding(new Insets(20));
+        box.setAlignment(Pos.TOP_CENTER);
 
-        Label titleLabel = new Label("Dashboard pacjenta");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label hello = new Label("Witaj " + patient.getFirstName() + " " + patient.getLastName());
+        hello.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        Label nextProcedureLabel = new Label("Najbliższy zabieg: 10 kwietnia 2025, godz. 10:30 – RTG klatki piersiowej");
-        nextProcedureLabel.setStyle("-fx-font-size: 14px;");
+        List<Appointment> allAppointments = appointmentRepo.findAppointmentsByPatient(patient);
 
-        layout.getChildren().addAll(titleLabel, nextProcedureLabel);
-        patientPanel.setCenterPane(layout);
-        return layout;
+        Optional<Appointment> nextAppointment = allAppointments.stream()
+                .filter(app -> app.getDate().isAfter(LocalDateTime.now()))
+                .min(Comparator.comparing(Appointment::getDate));
+
+        Label next;
+        if (nextAppointment.isPresent()) {
+            Appointment a = nextAppointment.get();
+            next = new Label("Najbliższy zabieg: " +
+                    a.getDate().format(formatter) + " – " + a.getDescription());
+        } else {
+            next = new Label("Brak zbliżających się zabiegów");
+        }
+
+        next.setStyle("-fx-font-size: 14px;");
+        box.getChildren().addAll(hello, next);
+
+        view.setCenterPane(box);
+        return box;
     }
 
-    /**
-     * Wyświetla historię leczenia pacjenta w tabeli.
-     */
+
+    /** Historia leczenia (na razie pusta tabela). */
     public VBox showTreatmentHistory() {
-        VBox layout = new VBox(15);
-        layout.setPadding(new Insets(20));
+        VBox box = new VBox(15);
+        box.setPadding(new Insets(20));
 
-        Label titleLabel = new Label("Historia leczenia");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label title = new Label("Historia leczenia");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        TableView<?> historyTable = createHistoryTable();
+        TableView<Appointment> table = new TableView<>();
+        ObservableList<Appointment> data = FXCollections.observableArrayList(
+                appointmentRepo.findAppointmentsByPatient(patient)
+        );
 
-        layout.getChildren().addAll(titleLabel, historyTable);
-        patientPanel.setCenterPane(layout);
-        return layout;
+        TableColumn<Appointment, String> dateCol = new TableColumn<>("Data");
+        dateCol.setCellValueFactory(a -> new ReadOnlyStringWrapper(
+                a.getValue().getDate().format(formatter)
+        ));
+
+        TableColumn<Appointment, String> descCol = new TableColumn<>("Opis");
+        descCol.setCellValueFactory(a -> new ReadOnlyStringWrapper(
+                a.getValue().getDescription()
+        ));
+
+        TableColumn<Appointment, String> doctorCol = new TableColumn<>("Lekarz");
+        doctorCol.setCellValueFactory(a -> {
+            var doc = doctorRepo.findDoctorById(a.getValue().getDoctorId());
+            if (doc != null) {
+                return new ReadOnlyStringWrapper(doc.getFirstName() + " " + doc.getLastName());
+            } else {
+                return new ReadOnlyStringWrapper("Nieznany");
+            }
+        });
+
+        TableColumn<Appointment, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(a -> new ReadOnlyStringWrapper(
+                a.getValue().getStatus().toString()
+        ));
+
+        table.getColumns().addAll(dateCol, descCol, doctorCol, statusCol);
+        table.setItems(data);
+
+        box.getChildren().addAll(title, table);
+        view.setCenterPane(box);
+        return box;
     }
 
-    /**
-     * Tworzy pustą tabelę historii leczenia (do uzupełnienia).
-     */
-    private TableView<?> createHistoryTable() {
-        return new TableView<>();
-    }
 
-    /**
-     * Wylogowuje pacjenta i otwiera ekran logowania.
-     */
+    /** Wylogowanie. */
     public void logout() {
         primaryStage.close();
-        Stage loginStage = new Stage();
-        try {
-            new LoginPanel().start(loginStage);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        try { new LoginPanel().start(new Stage()); }
+        catch (Exception e) { e.printStackTrace(); }
     }
 }

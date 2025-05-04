@@ -74,7 +74,10 @@ public class AppointmentForm {
 
             doctors.stream().filter(doc -> doc.getId().equals(existingAppointment.getDoctorId())).findFirst().ifPresent(doctorBox::setValue);
             patients.stream().filter(p -> p.getId().equals(existingAppointment.getPatientId())).findFirst().ifPresent(patientBox::setValue);
-            rooms.stream().filter(r -> (r.getAddress() + " - " + r.getNumber()).equals(existingAppointment.getRoom())).findFirst().ifPresent(roomBox::setValue);
+            rooms.stream()
+                    .filter(r -> r.getId().equals(existingAppointment.getRoom()))
+                    .findFirst()
+                    .ifPresent(roomBox::setValue);
         }
 
         Button saveButton = new Button("Zapisz");
@@ -98,7 +101,7 @@ public class AppointmentForm {
                 Appointment appointment = builder
                         .doctorId(doctorBox.getValue())
                         .patientId(patientBox.getValue())
-                        .room(roomBox.getValue().getAddress() + " - " + roomBox.getValue().getNumber())
+                        .room(roomBox.getValue().getId())
                         .date(LocalDateTime.of(date, time))
                         .description(descriptionField.getText())
                         .status(statusBox.getValue())

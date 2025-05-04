@@ -21,7 +21,6 @@ import javafx.util.Duration;
 public class AdminPanel {
     //TODO: Dodać animacje do przycisków
     //TODO: Dodać animacje do przejść między widokami
-    //TODO: Naprawić bugi przy podstawowym crudzie
     private BorderPane root;
     private Stage primaryStage;
     private AdminPanelController controller;
@@ -43,7 +42,7 @@ public class AdminPanel {
         VBox menu = createMenu();
         root.setLeft(menu);
 
-        controller.showUserManagement();
+        controller.showPatientsManagement();
 
         animateFadeIn(menu, 1000);
         animateSlideDown(menu, 800);
@@ -64,16 +63,16 @@ public class AdminPanel {
         menu.setAlignment(Pos.TOP_LEFT);
 
         Button patientsButton = createStyledButton("Pacjenci");
-        patientsButton.setOnAction(e -> controller.showUserManagement());
+        patientsButton.setOnAction(e -> controller.showPatientsManagement());
 
         Button doctorsButton = createStyledButton("Lekarze");
-        doctorsButton.setOnAction(e -> controller.showConfigPanel());
+        doctorsButton.setOnAction(e -> controller.showDoctorsManagement());
 
         Button proceduresButton = createStyledButton("Zabiegi");
-        proceduresButton.setOnAction(e -> controller.showReportsPanel());
+        proceduresButton.setOnAction(e -> controller.showAppointmentsManagement());
 
         Button roomsButton = createStyledButton("Sale");
-        roomsButton.setOnAction(e -> controller.showIssuesPanel());
+        roomsButton.setOnAction(e -> controller.showRoomsManagement());
 
         Button logoutButton = createStyledButton("Wyloguj", "#E74C3C");
         logoutButton.setOnAction(e -> controller.logout());

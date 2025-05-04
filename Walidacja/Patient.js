@@ -3,7 +3,7 @@ db.runCommand({
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["firstName", "lastName", "age", "birthDate", "pesel", "password", "salt"], // Dodano 'password'
+      required: ["firstName", "lastName", "age", "birthDate", "pesel", "password", "salt", "diagnosis"], // Dodano 'password'
       properties: {
         firstName: {
           bsonType: "string",
@@ -43,6 +43,11 @@ db.runCommand({
         salt: {
           bsonType: "string",
           description: "Sól musi być stringiem (opcjonalna)"
+        },
+        diagnosis: {
+          bsonType: "string",
+          enum: ["AWIATING", "CADIAC", "NEUROLOGICAL", "SURGICAL", "PREGNANCY", "GENERAL"], // Dostosowałem enum do naszych przykładów zawsze można je zmienić
+          description: "Diagnoza musi być jednym z dozwolonych statusów"
         }
       }
     }

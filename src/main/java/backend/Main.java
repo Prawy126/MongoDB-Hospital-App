@@ -7,6 +7,8 @@ import backend.mongo.DoctorRepository;
 import backend.mongo.MongoDatabaseConnector;
 import backend.mongo.PatientRepository;
 import backend.status.Day;
+import backend.status.Diagnosis;
+import backend.status.TypeOfRoom;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
@@ -26,8 +28,7 @@ import static com.mongodb.client.model.Filters.eq;
 public class Main {
     public static void main(String[] args) throws NullNameException, AgeException, PeselException {
         MongoDatabase database = MongoDatabaseConnector.connectToDatabase();
-
-        Password password = new Password("No9lhtUt/hnXZOGU7XhABQ==", "1QCfaMmedBVJKhgf0dMETAaa/YhI+pp/uZZ/NmWCg3I=");
-        System.out.println("Password: " + password.verify("admin"));
+        Patient patient = new Patient("Jan", "Kowalski", 12345678901L, LocalDate.of(1990, 1, 1), "Warszawa", 33, "password", Diagnosis.CARDIAC);
+        System.err.println("Diagnoza: " + TypeOfRoom.determineDepartment(patient));
     }
 }

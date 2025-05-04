@@ -3,19 +3,11 @@ package backend.mongo;
 import backend.klasy.Appointment;
 import backend.klasy.Doctor;
 import backend.klasy.Patient;
-import backend.status.Day;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
-import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import static com.mongodb.client.model.Filters.eq;
@@ -43,15 +35,13 @@ public class AppointmentRepository {
      * Tworzy nową wizytę w bazie danych.
      *
      * @param appointment wizyta do utworzenia
-     * @return utworzona wizyta
      * @throws IllegalArgumentException jeśli wizyta jest null
      */
-    public Appointment createAppointment(Appointment appointment) {
+    public void createAppointment(Appointment appointment) {
         if (appointment == null) {
-            throw new IllegalArgumentException("Appointment cannot be null");
+            throw new IllegalArgumentException("Zabieg nie może być nullem!!");
         }
         collection.insertOne(appointment);
-        return appointment;
     }
 
     /**

@@ -4,7 +4,6 @@ import backend.klasy.Patient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +16,11 @@ public class PatientRepository {
     private final MongoCollection<Patient> collection;
     private final MongoDatabase database;
 
+    /**
+     * Konstruktor inicjalizujący kolekcję pacjentów.
+     *
+     * @param database obiekt MongoDatabase reprezentujący połączenie z bazą danych
+     */
     public PatientRepository(MongoDatabase database) {
         this.database = database;
         this.collection = database.getCollection("patients", Patient.class);
@@ -121,6 +125,12 @@ public class PatientRepository {
         }
         return patient;
     }
+
+    /**
+     * Usuwa pacjenta po jego ID.
+     *
+     * @param id ID pacjenta do usunięcia
+     */
     public void deletePatient(ObjectId id) {
         collection.deleteOne(eq("_id", id));
     }

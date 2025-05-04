@@ -4,8 +4,13 @@ import backend.status.TypeOfRoom;
 import org.bson.types.ObjectId;
 import java.util.ArrayList;
 import java.util.List;
+import org.bson.codecs.pojo.annotations.BsonId;
 
 public class Room {
+
+    @BsonId
+    private ObjectId id = new ObjectId();
+
     private String address;
     private int floor;
     private int number;
@@ -43,6 +48,9 @@ public class Room {
 
     public int getNumber() { return number; }
     public void setNumber(int number) { this.number = number; }
+
+    public ObjectId getId()          { return id; }
+    public void setId(ObjectId id)   { this.id = id; }
 
     public int getMaxPatients() { return maxPatients; }
     public void setMaxPatients(int maxPatients) {
@@ -95,5 +103,10 @@ public class Room {
         return String.format("Pokój %d (%s) - %d/%d miejsc, oddział: %s",
                 number, address, getCurrentPatientCount(), maxPatients, type.getDescription());
     }
+
+    public String toString2() {
+        return number + " – " + address;
+    }
+
 
 }

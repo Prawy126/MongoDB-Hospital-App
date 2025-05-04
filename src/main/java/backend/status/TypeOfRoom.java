@@ -12,6 +12,7 @@ import backend.klasy.Patient;
  * <p>NEUROLOGY</p>
  * <p>CARDIOLOGY</p>*/
 public enum TypeOfRoom {
+    ADMISSION("Izba przyjęć"),
     PEDIATRIC("Dziecięcy"),
     MATERNITY("Położniczy"),
     INTERNAL("Wewnętrzny"),
