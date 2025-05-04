@@ -16,7 +16,7 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
  * Utrzymuje jedno połączenie przez cały cykl życia aplikacji.
  */
 public class MongoDatabaseConnector {
-    
+
     private static final String DB_IP = "192.168.0.50";
 
     private static final int DB_PORT = 27017;

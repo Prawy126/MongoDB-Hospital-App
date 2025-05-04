@@ -34,6 +34,8 @@ public class DoctorPanel {
         this.controller = new DoctorPanelController(this, doctor);
 
         primaryStage.setTitle("Panel lekarza");
+        primaryStage.setMinWidth(700);
+        primaryStage.setMinHeight(450);
 
         root = new BorderPane();
         root.setPadding(new Insets(10));
