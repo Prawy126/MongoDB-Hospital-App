@@ -14,6 +14,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.bson.types.ObjectId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,6 +39,9 @@ public class AdminPanelController {
     private final DoctorRepository doctorRepo;
     private final RoomRepository roomRepo;
     private final PatientRepository patientRepo;
+    private final DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm", new Locale("pl", "PL"));
+
 
     public AdminPanelController(AdminPanel adminPanel) {
         this.adminPanel = adminPanel;
@@ -72,8 +78,10 @@ public class AdminPanelController {
         TableColumn<Patient, String> addressCol = new TableColumn<>("Adres");
         addressCol.setCellValueFactory(new PropertyValueFactory<>("address"));
 
-        TableColumn<Patient, LocalDate> birthDateCol = new TableColumn<>("Data urodzenia");
-        birthDateCol.setCellValueFactory(new PropertyValueFactory<>("birthDate"));
+        TableColumn<Patient, String> birthDateCol = new TableColumn<>("Data urodzenia");
+        birthDateCol.setCellValueFactory(p -> new ReadOnlyStringWrapper(
+                p.getValue().getBirthDate().format(DateTimeFormatter.ofPattern("d MMMM yyyy", new Locale("pl", "PL")))
+        ));
 
         tableView.getColumns().addAll(firstNameCol, lastNameCol, addressCol, birthDateCol);
         tableView.setItems(patientData);
@@ -191,7 +199,9 @@ public class AdminPanelController {
         refreshAppointments(tableView);
 
         TableColumn<Appointment, String> dateCol = new TableColumn<>("Data");
-        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+        dateCol.setCellValueFactory(cellData -> new ReadOnlyStringWrapper(
+                cellData.getValue().getDate().format(formatter)
+        ));
 
         TableColumn<Appointment, String> roomCol = new TableColumn<>("Sala");
         roomCol.setCellValueFactory(new PropertyValueFactory<>("room"));

@@ -15,6 +15,10 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
+
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -27,7 +31,8 @@ public class PatientPanelController {
     private final PatientPanel view;
     private final Stage        primaryStage;
     private final Patient      patient;
-
+    private final DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm", new Locale("pl", "PL"));
     private final AppointmentRepository appointmentRepo =
             new AppointmentRepository(MongoDatabaseConnector.connectToDatabase());
     private final DoctorRepository doctorRepo =
@@ -60,7 +65,7 @@ public class PatientPanelController {
         if (nextAppointment.isPresent()) {
             Appointment a = nextAppointment.get();
             next = new Label("Najbliższy zabieg: " +
-                    a.getDate().toString() + " – " + a.getDescription());
+                    a.getDate().format(formatter) + " – " + a.getDescription());
         } else {
             next = new Label("Brak zbliżających się zabiegów");
         }
@@ -88,7 +93,7 @@ public class PatientPanelController {
 
         TableColumn<Appointment, String> dateCol = new TableColumn<>("Data");
         dateCol.setCellValueFactory(a -> new ReadOnlyStringWrapper(
-                a.getValue().getDate().toString()
+                a.getValue().getDate().format(formatter)
         ));
 
         TableColumn<Appointment, String> descCol = new TableColumn<>("Opis");

@@ -17,6 +17,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,7 +36,8 @@ public class DoctorPanelController {
     private final DoctorPanel view;
     private final Stage primaryStage;
     private final Doctor doctor;
-
+    private final DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern("d MMMM yyyy, HH:mm", new Locale("pl", "PL"));
     private final AppointmentRepository appointmentRepo =
             new AppointmentRepository(MongoDatabaseConnector.connectToDatabase());
 
@@ -69,7 +74,7 @@ public class DoctorPanelController {
         String statsText = "- Liczba zabiegów dzisiaj: " + todaysAppointments.size() + "\n";
 
         statsText += nextAppointment
-                .map(a -> "- Najbliższy zabieg: " + a.getDate() + " – " + a.getDescription())
+                .map(a -> "- Najbliższy zabieg: " + a.getDate().format(formatter) + " – " + a.getDescription())
                 .orElse("- Brak nadchodzących zabiegów");
 
         Label stats = new Label("Statystyki:\n" + statsText);
@@ -120,7 +125,7 @@ public class DoctorPanelController {
 
         TableColumn<Appointment, String> timeCol = new TableColumn<>("Godzina");
         timeCol.setCellValueFactory(a -> new ReadOnlyStringWrapper(
-                a.getValue().getDate().toLocalTime().toString()
+                a.getValue().getDate().format(DateTimeFormatter.ofPattern("HH:mm"))
         ));
 
         TableColumn<Appointment, String> patientCol = new TableColumn<>("Pacjent");
