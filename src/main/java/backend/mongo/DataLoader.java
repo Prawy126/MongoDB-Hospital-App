@@ -9,6 +9,12 @@ import backend.status.Day;
 import backend.status.Diagnosis;
 import backend.status.TypeOfRoom;
 import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -21,12 +27,17 @@ public class DataLoader {
     private static final String[] STREET_NAMES = {"Polna", "Leśna", "Słoneczna", "Krótka", "Długa", "Warszawska", "Krakowska", "Gdańska", "Poznańska", "Łódzka", "Akacjowa", "Jesionowa", "Brzozowa", "Klonowa", "Dębowa", "Spacerowa", "Ogrodowa", "Parkowa", "Szkolna", "Mickiewicza"};
     private static final Random random = new Random();
 
+    // Ścieżka do katalogu z plikami JS
+    private final String jsScriptsDirectory = "src/main/resources/js";
+
+    private final MongoDatabase database;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final AppointmentRepository appointmentRepository;
     private final RoomRepository roomRepository;
 
     public DataLoader(MongoDatabase database) {
+        this.database = database;
         this.patientRepository = new PatientRepository(database);
         this.doctorRepository = new DoctorRepository(database);
         this.appointmentRepository = new AppointmentRepository(database);
@@ -37,6 +48,8 @@ public class DataLoader {
         String salt         = "iQnPQNj6A7VvqJCn4KJNiw==";
         String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
 
+        applyValidationSchemas();
+
         createDemoPatients(passwordHash, salt);
         createDemoRooms(); // Tworzymy pokoje przed lekarzami i wizytami
         createDemoDoctors(passwordHash, salt);
@@ -44,6 +57,39 @@ public class DataLoader {
 
         System.out.println("Dane załadowane pomyślnie!");
     }
+
+    private void applyValidationSchemas() {
+        try {
+            File jsDirectory = new File(jsScriptsDirectory);
+            if (!jsDirectory.exists() || !jsDirectory.isDirectory()) {
+                System.err.println("Katalog z plikami JS nie istnieje: " + jsScriptsDirectory);
+                return;
+            }
+
+            File[] jsFiles = jsDirectory.listFiles((dir, name) -> name.toLowerCase().endsWith(".js"));
+            if (jsFiles == null || jsFiles.length == 0) {
+                System.err.println("Brak plików JS w katalogu: " + jsScriptsDirectory);
+                return;
+            }
+
+            for (File jsFile : jsFiles) {
+                try {
+                    String scriptContent = new String(Files.readAllBytes(Paths.get(jsFile.getAbsolutePath())));
+                    Document command = Document.parse(scriptContent);
+                    Document result = database.runCommand(command);
+                    System.out.println("Wykonano skrypt: " + jsFile.getName() + ", wynik: " + result.toJson());
+                } catch (IOException e) {
+                    System.err.println("Błąd podczas odczytu pliku JS: " + jsFile.getName() + " - " + e.getMessage());
+                } catch (Exception e) {
+                    System.err.println("Błąd podczas wykonywania skryptu JS: " + jsFile.getName() + " - " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Błąd podczas aplikowania schematów walidacji: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void createDemoPatients(String passwordHash, String salt) {
         for (int i = 1; i <= 10; i++) {
             try {
@@ -117,7 +163,6 @@ public class DataLoader {
         }
     }
 
-
     private void createDemoAppointments() {
         List<Doctor> doctors = doctorRepository.findAll();
         List<Patient> patients = patientRepository.findAll();
@@ -135,8 +180,6 @@ public class DataLoader {
                 Appointment appt = new Appointment();
                 appt.setDoctorId(doctor.getId());
                 appt.setPatientId(patients.get(random.nextInt(patients.size())).getId());
-                // Ustawiłem na razie żeby do każdego pokoju po kolei przypisywało ale powinno przypisywać do specjalnych pokojów
-                // TODO: Poprawić przypisywanie zabiegów do pokojów
                 appt.setRoom(rooms.get(i).getId());
                 appt.setDate(generateRandomAppointmentDateTime());
                 appt.setStatus(statuses[random.nextInt(statuses.length)]);
@@ -179,19 +222,12 @@ public class DataLoader {
         return LocalDateTime.of(year, month, day, hour, minute);
     }
 
-    /**
-     * Generuje PESEL na podstawie daty urodzenia (11 cyfr, z poprawną sumą kontrolną).
-     * @param birthDate Data urodzenia pacjenta.
-     * @return Wygenerowany PESEL jako long.
-     */
     private long generateRandomPesel(LocalDate birthDate) {
         int year = birthDate.getYear();
         int month = birthDate.getMonthValue();
         int day = birthDate.getDayOfMonth();
 
         int yy = year % 100;
-
-        // Określamy offset dla miesiąca w zależności od wieku
         int mm;
         if (year >= 1900 && year < 2000) {
             mm = month;
@@ -200,25 +236,17 @@ public class DataLoader {
         } else {
             throw new IllegalArgumentException("Rok poza obsługiwanym zakresem (1900-2100)");
         }
-
-        // Generujemy losową część seryjną
         int serial = random.nextInt(10000);
-
-        // Budujemy PESEL bez cyfry kontrolnej
         String datePart = String.format("%02d%02d%02d", yy, mm, day);
         String serialPart = String.format("%04d", serial);
         String firstTen = datePart + serialPart;
 
-        // Sprawdzamy, czy pierwsza cyfra to 0 i jeśli tak, zamieniamy na losową cyfrę 1-9
         char[] firstTenChars = firstTen.toCharArray();
         if (firstTenChars[0] == '0') {
-            // Losujemy cyfrę od 1 do 9
             firstTenChars[0] = (char)('1' + random.nextInt(9));
         }
-
         firstTen = new String(firstTenChars);
 
-        // Obliczamy sumę kontrolną dla zmodyfikowanego numeru
         int[] weights = {1, 3, 7, 9, 1, 3, 7, 9, 1, 3};
         int sum = 0;
         for (int i = 0; i < 10; i++) {
@@ -226,16 +254,14 @@ public class DataLoader {
             sum += digit * weights[i];
         }
         int checkDigit = (10 - sum % 10) % 10;
-
-        // Tworzymy pełny PESEL
         String fullPesel = firstTen + checkDigit;
 
         return Long.parseLong(fullPesel);
     }
+
     public static void main(String[] args) {
         MongoDatabase db = MongoDatabaseConnector.connectToDatabase();
         new DataLoader(db).loadData();
         MongoDatabaseConnector.close();
     }
-
 }
