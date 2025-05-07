@@ -99,6 +99,16 @@ public class PatientRepository {
     }
 
     /**
+     * Znajduje wszystkich pacjentów z diagnozą AWAITING.
+     *
+     * @return lista pacjentów z diagnozą AWAITING
+     */
+    public List<Patient> findPatientsWithAwaitingDiagnosis() {
+        return collection.find(eq("diagnosis", "AWAITING"))
+                .into(new ArrayList<>());
+    }
+
+    /**
      * Znajduje pacjentów po ich dacie urodzenia.
      *
      * @param birthDate data urodzenia pacjentów

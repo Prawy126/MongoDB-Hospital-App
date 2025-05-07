@@ -10,7 +10,6 @@ import backend.status.Diagnosis;
 import backend.status.TypeOfRoom;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,7 +27,7 @@ public class DataLoader {
     private static final Random random = new Random();
 
     // Ścieżka do katalogu z plikami JS
-    private final String jsScriptsDirectory = "src/main/resources/js";
+    private final String jsScriptsDirectory = "src/Walidacja";
 
     private final MongoDatabase database;
     private final PatientRepository patientRepository;
@@ -115,7 +114,7 @@ public class DataLoader {
 
     private void createDemoDoctors(String passwordHash, String salt) {
         String[] days = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"};
-        String[] specializations = {"Kardiolog", "Neurolog", "Ortopeda", "Dermatolog", "Ginekolog", "Pediatra", "Chirurg", "Internista"};
+        String[] specializations = {"Kardiolog", "Neurolog", "Ortopeda", "Dermatolog", "Ginekolog", "Pediatra", "Chirurg", "Internista", "Pierwszego kontaktu"};
 
         for (int i = 1; i <= 10; i++) {
             try {

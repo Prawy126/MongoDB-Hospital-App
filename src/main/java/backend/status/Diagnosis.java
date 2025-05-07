@@ -17,12 +17,21 @@ public enum Diagnosis {
 
     private final String description;
     private final TypeOfRoom department;
+    private String diagnosisNotes;
+
+
 
     Diagnosis(String description, TypeOfRoom department) {
         this.description = description;
         this.department = department;
     }
+    public void setDiagnosisNotes(String notes) {
+        this.diagnosisNotes = notes;
+    }
 
+    public String getDiagnosisNotes() {
+        return diagnosisNotes;
+    }
     public String getDescription() {
         return description;
     }

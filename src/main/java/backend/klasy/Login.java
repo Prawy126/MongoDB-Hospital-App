@@ -6,7 +6,7 @@ import java.util.Optional;
 /** Obsługa uwierzytelniania.  Po udanym logowaniu przechowuje obiekt użytkownika. */
 public class Login {
 
-    public enum Role { ADMIN, DOCTOR, PATIENT }
+    public enum Role { ADMIN, DOCTOR, PATIENT, DOCTOR_FIRST}
 
     private static final String ADMIN_LOGIN = "admin";
     private static final String ADMIN_PASSWORD = "admin";
@@ -43,7 +43,11 @@ public class Login {
                 .findFirst();
         if (doc.isPresent()) {
             doc.get().reconstructPasswordObject();
-            if (doc.get().getPassword().verify(password)) {
+            if(doc.get().getPassword().verify(password) && doc.get().isFirstContact()) {
+                authenticatedDoctor = doc.get();
+                return Role.DOCTOR_FIRST;
+            }
+            else if (doc.get().getPassword().verify(password) && !doc.get().isFirstContact()) {
                 authenticatedDoctor = doc.get();
                 return Role.DOCTOR;
             }

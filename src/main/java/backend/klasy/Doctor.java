@@ -59,6 +59,13 @@ public class Doctor extends Person {
     public List<Day> getAvailableDays() { return availableDays; }
     public String getRoom() { return room; }
     public String getContactInformation() { return contactInformation; }
+    public boolean isFirstContact(){
+        if(specialization.equals("Pierwszego kontaktu")){
+            return true;
+        }else {
+            return false;
+        }
+    }
 
     public void setId(ObjectId id) { this.id = id; }
     public void setSpecialization(String specialization) { this.specialization = specialization; }

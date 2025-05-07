@@ -81,6 +81,10 @@ public class LoginPanel extends Application {
                     Doctor doctor = loginService.getAuthenticatedDoctor();
                     openDoctorPanel(doctor);
                 }
+                case DOCTOR_FIRST -> {
+                    Doctor doctor = loginService.getAuthenticatedDoctor();
+                    openDoctorFirstContactPanel(doctor);
+                }
                 case PATIENT -> {
                     Patient patient = loginService.getAuthenticatedPatient();
                     openPatientPanel(patient);
@@ -99,6 +103,12 @@ public class LoginPanel extends Application {
         primaryStage.setMinWidth(500);
         primaryStage.setMinHeight(350);
         primaryStage.show();
+    }
+
+    private void openDoctorFirstContactPanel(Doctor doctor) {
+        Stage doctorStage = new Stage();
+        new DoctorFirstContactPanel(doctorStage, doctor);
+        closeLoginWindow();
     }
 
     private void openAdminPanel()  { new AdminPanel(new Stage());  closeLoginWindow(); }
