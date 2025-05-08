@@ -5,15 +5,28 @@ import backend.klasy.Patient;
 import backend.mongo.MongoDatabaseConnector;
 import backend.mongo.PatientRepository;
 import backend.status.Diagnosis;
+import javafx.animation.ScaleTransition;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class DoctorFirstContactController implements Initializable {
@@ -34,7 +47,7 @@ public class DoctorFirstContactController implements Initializable {
 
     public void showDashboard() {
         VBox dashboard = new VBox(10);
-        dashboard.setPadding(new javafx.geometry.Insets(10));
+        dashboard.setPadding(new Insets(10));
         dashboard.setStyle("-fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10;");
 
         Label welcomeLabel = new Label("Witaj, Dr. " + doctor.getFirstName() + " " + doctor.getLastName());
@@ -52,80 +65,91 @@ public class DoctorFirstContactController implements Initializable {
         patientsList.setPadding(new Insets(10));
         patientsList.setStyle("-fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10;");
 
-        List<Patient> patients = patientRepository.findAll();
-        ListView<String> listView = new ListView<>();
-        patients.forEach(patient ->
-                listView.getItems().add(patient.getFirstName() + " " + patient.getLastName())
+        TableView<Patient> tableView = new TableView<>();
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<Patient, String> nameCol = new TableColumn<>("Imię i Nazwisko");
+        nameCol.setCellValueFactory(param ->
+                new SimpleStringProperty(
+                        param.getValue().getFirstName() + " " + param.getValue().getLastName()
+                )
         );
+
+        TableColumn<Patient, String> diagnosisCol = new TableColumn<>("Diagnoza");
+        diagnosisCol.setCellValueFactory(new PropertyValueFactory<>("diagnosis"));
+
+        TableColumn<Patient, Void> actionCol = new TableColumn<>("Akcje");
+        actionCol.setCellFactory(param -> new TableCell<>() {
+            private final Button diagButton = createStyledButton("Przypisz diagnozę", "#2ECC71");
+
+            {
+                diagButton.setOnAction(event -> {
+                    Patient patient = getTableView().getItems().get(getIndex());
+                    showDiagnosisDialog(patient);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(diagButton);
+                }
+            }
+        });
+
+        tableView.getColumns().addAll(nameCol, diagnosisCol, actionCol);
+
+        List<Patient> patients = patientRepository.findAll();
+        tableView.setItems(FXCollections.observableArrayList(patients));
 
         patientsList.getChildren().addAll(
                 new Label("Lista pacjentów"),
-                listView
+                tableView
         );
+
         panel.setCenterPane(patientsList);
     }
 
-    public void showDiagnosisManagement() {
-        VBox diagnosisManagement = new VBox(10);
-        diagnosisManagement.setPadding(new Insets(10));
-        diagnosisManagement.setStyle("-fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10;");
+    private void showDiagnosisDialog(Patient patient) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Przypisz diagnozę");
+        dialog.setHeaderText("Wybierz diagnozę dla pacjenta: " + patient.getFirstName() + " " + patient.getLastName());
 
-        List<Patient> awaitingPatients = patientRepository.findPatientsWithAwaitingDiagnosis();
+        ComboBox<Diagnosis> diagnosisBox = new ComboBox<>();
+        diagnosisBox.setItems(FXCollections.observableArrayList(Diagnosis.values()));
+        diagnosisBox.setValue(patient.getDiagnosis());
 
-        if (awaitingPatients.isEmpty()) {
-            Label noPatientsLabel = new Label("Brak pacjentów oczekujących na diagnozę");
-            diagnosisManagement.getChildren().add(noPatientsLabel);
-        } else {
-            ComboBox<Patient> patientComboBox = new ComboBox<>();
-            patientComboBox.setItems(FXCollections.observableArrayList(awaitingPatients));
-            patientComboBox.setPromptText("Wybierz pacjenta");
+        TextArea descriptionArea = new TextArea();
+        descriptionArea.setPromptText("Dodatkowy opis diagnozy (opcjonalnie)");
+        descriptionArea.setWrapText(true);
 
-            ComboBox<Diagnosis> diagnosisComboBox = new ComboBox<>();
-            diagnosisComboBox.setItems(FXCollections.observableArrayList(Diagnosis.values()));
-            diagnosisComboBox.setPromptText("Wybierz diagnozę");
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(20));
+        content.getChildren().addAll(
+                new Label("Wybierz diagnozę:"),
+                diagnosisBox,
+                new Label("Opis (opcjonalnie):"),
+                descriptionArea
+        );
 
-            TextArea diagnosisDescription = new TextArea();
-            diagnosisDescription.setPromptText("Opis diagnozy");
-            diagnosisDescription.setMaxHeight(100);
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-            Button saveDiagnosisButton = new Button("Zapisz diagnozę");
-            saveDiagnosisButton.setOnAction(event -> {
-                Patient selectedPatient = patientComboBox.getValue();
-                Diagnosis selectedDiagnosis = diagnosisComboBox.getValue();
-
-                if (selectedPatient != null && selectedDiagnosis != null) {
-                    try {
-                        selectedPatient.setDiagnosis(selectedDiagnosis);
-                        // Ustawiamy tylko diagnozę, bez dodatkowych notatek
-                        patientRepository.updatePatient(selectedPatient);
-
-                        // Odświeżenie listy
-                        patientComboBox.setItems(FXCollections.observableArrayList(
-                                patientRepository.findPatientsWithAwaitingDiagnosis()
-                        ));
-
-                        showAlert(Alert.AlertType.INFORMATION, "Sukces", "Diagnoza została zapisana");
-
-                        // Czyszczenie formularza
-                        patientComboBox.setValue(null);
-                        diagnosisComboBox.setValue(null);
-                        diagnosisDescription.clear();
-                    } catch (Exception e) {
-                        showAlert(Alert.AlertType.ERROR, "Błąd", "Wystąpił błąd podczas zapisywania diagnozy");
-                    }
-                }
-            });
-
-            diagnosisManagement.getChildren().addAll(
-                    new Label("Zarządzanie diagnozami pacjentów"),
-                    patientComboBox,
-                    diagnosisComboBox,
-                    diagnosisDescription,
-                    saveDiagnosisButton
-            );
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            try {
+                patient.setDiagnosis(diagnosisBox.getValue());
+                patientRepository.updatePatient(patient);
+                showAlert(Alert.AlertType.INFORMATION, "Sukces", "Diagnoza została przypisana");
+                panel.setCenterPane(new VBox());
+                showPatientsList();
+            } catch (Exception e) {
+                showAlert(Alert.AlertType.ERROR, "Błąd", "Nie można zapisać diagnozy");
+            }
         }
-
-        panel.setCenterPane(diagnosisManagement);
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
@@ -156,7 +180,28 @@ public class DoctorFirstContactController implements Initializable {
     }
 
     private int getTodayAppointmentsCount() {
-        // TODO: Zaimplementować pobieranie liczby dzisiejszych wizyt
         return 0;
+    }
+
+    // Dodana metoda do tworzenia stylizowanego przycisku
+    private Button createStyledButton(String text, String color) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold;");
+
+        button.setOnMouseEntered(e -> {
+            ScaleTransition scale = new ScaleTransition(Duration.millis(200), button);
+            scale.setToX(1.1);
+            scale.setToY(1.1);
+            scale.play();
+        });
+
+        button.setOnMouseExited(e -> {
+            ScaleTransition scale = new ScaleTransition(Duration.millis(200), button);
+            scale.setToX(1);
+            scale.setToY(1);
+            scale.play();
+        });
+
+        return button;
     }
 }

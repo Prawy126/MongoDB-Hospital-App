@@ -12,12 +12,13 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
+// lekarz do testowania czyli pierwszego konatktu
+//90030224046
 public class LoginPanel extends Application {
 
     private Button loginBtn;
     private final Login loginService = new Login();
-
+// Upewnij się, że robisz notatki w kodzie
     @Override
     public void start(Stage primaryStage) {
 

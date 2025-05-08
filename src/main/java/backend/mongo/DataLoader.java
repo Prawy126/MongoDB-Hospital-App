@@ -27,7 +27,7 @@ public class DataLoader {
     private static final Random random = new Random();
 
     // Ścieżka do katalogu z plikami JS
-    private final String jsScriptsDirectory = "src/Walidacja";
+    private final String jsScriptsDirectory = "src/Walidacja/automatyczna";
 
     private final MongoDatabase database;
     private final PatientRepository patientRepository;
@@ -61,30 +61,26 @@ public class DataLoader {
         try {
             File jsDirectory = new File(jsScriptsDirectory);
             if (!jsDirectory.exists() || !jsDirectory.isDirectory()) {
-                System.err.println("Katalog z plikami JS nie istnieje: " + jsScriptsDirectory);
+                System.err.println("Katalog z plikami JSON nie istnieje: " + jsScriptsDirectory);
                 return;
             }
-
-            File[] jsFiles = jsDirectory.listFiles((dir, name) -> name.toLowerCase().endsWith(".js"));
-            if (jsFiles == null || jsFiles.length == 0) {
-                System.err.println("Brak plików JS w katalogu: " + jsScriptsDirectory);
+            File[] jsonFiles = jsDirectory.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
+            if (jsonFiles == null || jsonFiles.length == 0) {
+                System.err.println("Brak plików JSON w katalogu: " + jsScriptsDirectory);
                 return;
             }
-
-            for (File jsFile : jsFiles) {
+            for (File jsonFile : jsonFiles) {
                 try {
-                    String scriptContent = new String(Files.readAllBytes(Paths.get(jsFile.getAbsolutePath())));
-                    Document command = Document.parse(scriptContent);
-                    Document result = database.runCommand(command);
-                    System.out.println("Wykonano skrypt: " + jsFile.getName() + ", wynik: " + result.toJson());
+                    String jsonContent = new String(Files.readAllBytes(Paths.get(jsonFile.getAbsolutePath())));
+                    Document command = Document.parse(jsonContent);
+                    database.runCommand(command); // Wykonuje JSON jako komendę MongoDB
+                    System.out.println("Wykonano walidację: " + jsonFile.getName());
                 } catch (IOException e) {
-                    System.err.println("Błąd podczas odczytu pliku JS: " + jsFile.getName() + " - " + e.getMessage());
-                } catch (Exception e) {
-                    System.err.println("Błąd podczas wykonywania skryptu JS: " + jsFile.getName() + " - " + e.getMessage());
+                    System.err.println("Błąd odczytu JSON: " + jsonFile.getName() + " - " + e.getMessage());
                 }
             }
         } catch (Exception e) {
-            System.err.println("Błąd podczas aplikowania schematów walidacji: " + e.getMessage());
+            System.err.println("Błąd walidacji schematów: " + e.getMessage());
             e.printStackTrace();
         }
     }
