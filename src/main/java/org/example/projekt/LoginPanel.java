@@ -6,10 +6,13 @@ import backend.klasy.Patient;
 import backend.mongo.MongoDatabaseConnector;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 // lekarz do testowania czyli pierwszego konatktu
@@ -22,47 +25,62 @@ public class LoginPanel extends Application {
     @Override
     public void start(Stage primaryStage) {
 
+// Tworzenie głównego gridu
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(20));
         grid.setVgap(15);
         grid.setHgap(10);
         grid.setStyle("-fx-background-color: lightblue;");
+        grid.setAlignment(Pos.CENTER);  // Centrowanie całego gridu
 
+// Nagłówek
         Label header = new Label("Szpital");
         header.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
         GridPane.setConstraints(header, 0, 0, 3, 1);
         GridPane.setMargin(header, new Insets(0, 0, 20, 0));
+        GridPane.setHalignment(header, HPos.CENTER);  // Centrowanie nagłówka
 
+// Pola wprowadzania danych
         Label userLabel = new Label("PESEL:");
+        GridPane.setHalignment(userLabel, HPos.RIGHT);  // Wyrównanie etykiety w prawo
         TextField userField = new TextField();
+        GridPane.setHalignment(userField, HPos.CENTER);  // Centrowanie pola tekstowego
 
         Label passLabel = new Label("Hasło:");
+        GridPane.setHalignment(passLabel, HPos.RIGHT);  // Wyrównanie etykiety w prawo
         PasswordField passField = new PasswordField();
+        GridPane.setHalignment(passField, HPos.CENTER);  // Centrowanie pola hasła
 
-        // Tworzenie przycisku loginBtn
+// Kontener na przyciski
+        HBox buttonsBox = new HBox(10);
+        buttonsBox.setAlignment(Pos.CENTER_LEFT);
+        buttonsBox.setPadding(new Insets(10));
+
+// Przyciski
         loginBtn = new Button("Zaloguj");
-        loginBtn.setPrefWidth(150);
+        loginBtn.setPrefWidth(120);
+        loginBtn.setMinSize(120, 30);
         loginBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
 
+        Button registerBtn = new Button("Zarejestruj się");
+        registerBtn.setPrefWidth(120);
+        registerBtn.setMinSize(120, 30);
+        registerBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+
         Button exitBtn = new Button("Wyjście");
-        exitBtn.setPrefWidth(150);
+        exitBtn.setPrefWidth(120);
+        exitBtn.setMinSize(120, 30);
         exitBtn.setStyle("-fx-background-color: #FF5733; -fx-text-fill: white;");
 
-        Button registerBtn = new Button("Zarejestruj się");
-        registerBtn.setPrefWidth(150);
-        registerBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
+// Dodanie elementów do gridu
+        GridPane.setConstraints(userLabel, 0, 1);
+        GridPane.setConstraints(userField, 1, 1, 2, 1);
+        GridPane.setConstraints(passLabel, 0, 2);
+        GridPane.setConstraints(passField, 1, 2, 2, 1);
+        GridPane.setConstraints(buttonsBox, 0, 4, 3, 1);
 
-        GridPane.setConstraints(userLabel, 0, 1); GridPane.setConstraints(userField, 1, 1, 2, 1);
-        GridPane.setConstraints(passLabel, 0, 2); GridPane.setConstraints(passField, 1, 2, 2, 1);
-        GridPane.setConstraints(loginBtn, 0, 4);
-        GridPane.setConstraints(registerBtn, 1, 4);
-        GridPane.setConstraints(exitBtn, 0, 5);
-
-        grid.getChildren().addAll(header, userLabel, userField, passLabel, passField,
-                loginBtn, registerBtn, exitBtn);
-        animateFadeIn(grid, 1000);
-
-        loginBtn.setOnAction(e -> {
+        buttonsBox.getChildren().addAll(loginBtn, registerBtn, exitBtn);
+        grid.getChildren().addAll(header, userLabel, userField, passLabel, passField, buttonsBox);loginBtn.setOnAction(e -> {
             String login = userField.getText().trim();
             String password = passField.getText().trim();
 

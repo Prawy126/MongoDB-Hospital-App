@@ -73,11 +73,6 @@ public class DoctorFirstContactPanel {
         Button patientsButton = createStyledButton("Lista pacjentów");
         patientsButton.setOnAction(e -> controller.showPatientsList());
 
-        Button referralsButton = createStyledButton("Skierowania");
-        referralsButton.setOnAction(e -> controller.showReferrals());
-
-        Button medicalHistoryButton = createStyledButton("Historia medyczna");
-        medicalHistoryButton.setOnAction(e -> controller.showMedicalHistory());
 
         Button logoutButton = createStyledButton("Wyloguj", "#E74C3C");
         logoutButton.setOnAction(e -> controller.logout());
@@ -85,8 +80,6 @@ public class DoctorFirstContactPanel {
         menu.getChildren().addAll(
                 dashboardButton,
                 patientsButton,
-                referralsButton,
-                medicalHistoryButton,
                 logoutButton
         );
 

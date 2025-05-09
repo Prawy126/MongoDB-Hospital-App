@@ -22,6 +22,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.net.URL;
@@ -53,7 +54,7 @@ public class DoctorFirstContactController implements Initializable {
         Label welcomeLabel = new Label("Witaj, Dr. " + doctor.getFirstName() + " " + doctor.getLastName());
         welcomeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        Label scheduleLabel = new Label("Dzisiaj masz " + getTodayAppointmentsCount() + " wizyt");
+        Label scheduleLabel = new Label("Dzisiaj masz " + patientRepository.findPatientsWithAwaitingDiagnosis().size() + " pacjentów.");
         scheduleLabel.setStyle("-fx-font-size: 14px;");
 
         dashboard.getChildren().addAll(welcomeLabel, scheduleLabel);
@@ -177,6 +178,12 @@ public class DoctorFirstContactController implements Initializable {
 
     public void logout() {
         panel.getPrimaryStage().close();
+        Stage loginStage = new Stage();
+        try {
+            new LoginPanel().start(loginStage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private int getTodayAppointmentsCount() {
