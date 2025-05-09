@@ -10,7 +10,6 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.time.LocalDate;
-import java.time.Period;
 
 public class RegisterPanelController {
     private TextField nameField;
@@ -93,8 +92,8 @@ public class RegisterPanelController {
             throw new AgeException("Data urodzenia jest wymagana");
         }
 
-        // Sprawdzenie czy wiek jest większy od 0
-        int age = calculateAge(birthDatePicker.getValue());
+        // Sprawdzenie czy wiek jest większy od 0 używając metody z klasy Patient
+        int age = Patient.calculateAge(birthDatePicker.getValue());
         if (age <= 0) {
             throw new AgeException("Wiek pacjenta musi być większy niż 0");
         }
@@ -108,8 +107,7 @@ public class RegisterPanelController {
     }
 
     private void createPatient() throws PeselException, NullNameException, AgeException {
-        // Obliczenie wieku na podstawie daty urodzenia
-        int age = calculateAge(birthDatePicker.getValue());
+        int age = Patient.calculateAge(birthDatePicker.getValue());
 
         Patient patient = new Patient.Builder()
                 .firstName(nameField.getText().trim())
@@ -117,24 +115,12 @@ public class RegisterPanelController {
                 .pesel(Long.parseLong(peselField.getText()))
                 .birthDate(birthDatePicker.getValue())
                 .address(addressField.getText().trim())
-                .age(age)  // Przekazanie obliczonego wieku
+                .age(age)
                 .plainPassword(passwordField.getText())
                 .diagnosis(Diagnosis.AWAITING)
                 .build();
 
         patientRepository.createPatient(patient);
-    }
-
-    /**
-     * Oblicza wiek na podstawie daty urodzenia.
-     * @param birthDate data urodzenia
-     * @return wiek w latach
-     */
-    private int calculateAge(LocalDate birthDate) {
-        if (birthDate == null) {
-            return 0;
-        }
-        return Period.between(birthDate, LocalDate.now()).getYears();
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

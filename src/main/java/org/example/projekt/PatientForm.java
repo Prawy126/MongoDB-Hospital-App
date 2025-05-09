@@ -1,7 +1,7 @@
 package org.example.projekt;
 
-import backend.klasy.Password;
 import backend.klasy.Patient;
+import backend.status.Diagnosis;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
@@ -9,6 +9,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -39,32 +40,55 @@ public class PatientForm {
         TextField lastNameField = new TextField();
         TextField peselField = new TextField();
         DatePicker birthDatePicker = new DatePicker();
-        TextField ageField = new TextField();
+        Label ageValueLabel = new Label("");
         TextField addressField = new TextField();
 
-        // Prefill danych pacjenta
         if (existingPatient != null) {
             firstNameField.setText(existingPatient.getFirstName());
             lastNameField.setText(existingPatient.getLastName());
             peselField.setText(String.valueOf(existingPatient.getPesel()));
             birthDatePicker.setValue(existingPatient.getBirthDate());
-            ageField.setText(String.valueOf(existingPatient.getAge()));
+            ageValueLabel.setText(String.valueOf(existingPatient.getAge()) + " lat");
             addressField.setText(existingPatient.getAddress());
         }
+
+        birthDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                int age = Patient.calculateAge(newValue);
+                ageValueLabel.setText(String.valueOf(age) + " lat");
+            } else {
+                ageValueLabel.setText("");
+            }
+        });
 
         Button saveButton = new Button("Zapisz");
         saveButton.setOnAction(e -> {
             try {
-                Patient.Builder builder = existingPatient != null
-                        ? new Patient.Builder().withId(existingPatient.getId())
-                        : new Patient.Builder().plainPassword("haslo");
+                if (birthDatePicker.getValue() == null) {
+                    throw new AgeException("Data urodzenia jest wymagana");
+                }
+
+                int age = Patient.calculateAge(birthDatePicker.getValue());
+
+                Patient.Builder builder = new Patient.Builder();
+
+                if (existingPatient != null) {
+                    builder.withId(existingPatient.getId())
+                            .diagnosis(existingPatient.getDiagnosis());
+
+                    builder.passwordHash(existingPatient.getPasswordHash())
+                            .passwordSalt(existingPatient.getPasswordSalt());
+                } else {
+                    builder.plainPassword("haslo")
+                            .diagnosis(Diagnosis.AWAITING);
+                }
 
                 Patient patient = builder
                         .firstName(firstNameField.getText())
                         .lastName(lastNameField.getText())
                         .pesel(Long.parseLong(peselField.getText()))
                         .birthDate(birthDatePicker.getValue())
-                        .age(Integer.parseInt(ageField.getText()))
+                        .age(age)
                         .address(addressField.getText())
                         .build();
 
@@ -79,8 +103,6 @@ public class PatientForm {
             }
         });
 
-
-
         Button cancelButton = new Button("Anuluj");
         cancelButton.setOnAction(e -> stage.close());
 
@@ -88,7 +110,7 @@ public class PatientForm {
         grid.addRow(1, new Label("Nazwisko:"), lastNameField);
         grid.addRow(2, new Label("PESEL:"), peselField);
         grid.addRow(3, new Label("Data urodzenia:"), birthDatePicker);
-        grid.addRow(4, new Label("Wiek:"), ageField);
+        grid.addRow(4, new Label("Wiek:"), ageValueLabel);
         grid.addRow(5, new Label("Adres:"), addressField);
         grid.addRow(6, saveButton, cancelButton);
 

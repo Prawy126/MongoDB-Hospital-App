@@ -50,7 +50,7 @@ public class DataLoader {
         applyValidationSchemas();
 
         createDemoPatients(passwordHash, salt);
-        createDemoRooms(); // Tworzymy pokoje przed lekarzami i wizytami
+        createDemoRooms();
         createDemoDoctors(passwordHash, salt);
         createDemoAppointments();
 
@@ -89,13 +89,16 @@ public class DataLoader {
         for (int i = 1; i <= 10; i++) {
             try {
                 LocalDate birthDate = generateRandomBirthDate();
+
+                int age = Patient.calculateAge(birthDate);
+
                 Patient patient = new Patient.Builder()
                         .firstName(getRandomFirstName())
                         .lastName(getRandomLastName())
                         .pesel(generateRandomPesel(birthDate))
                         .birthDate(birthDate)
                         .address(generateRandomAddress())
-                        .age(random.nextInt(100))
+                        .age(age)
                         .passwordHash(passwordHash)
                         .passwordSalt(salt)
                         .diagnosis(Diagnosis.AWAITING)
