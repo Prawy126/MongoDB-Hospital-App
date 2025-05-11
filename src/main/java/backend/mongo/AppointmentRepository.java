@@ -3,9 +3,12 @@ package backend.mongo;
 import backend.klasy.Appointment;
 import backend.klasy.Doctor;
 import backend.klasy.Patient;
+import backend.klasy.Room;
 import backend.status.AppointmentStatus;
 import backend.status.Day;
+import backend.status.TypeOfRoom;
 import backend.wyjatki.DoctorIsNotAvailableException;
+import backend.wyjatki.InappropriateRoomException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
@@ -26,6 +29,8 @@ import static com.mongodb.client.model.Filters.*;
  */
 public class AppointmentRepository {
     private final MongoCollection<Appointment> collection;
+    private final RoomRepository roomRepository;
+    private final DoctorRepository doctorRepository;
 
     /**
      * Konstruktor inicjalizujący kolekcję wizyt.
@@ -34,6 +39,8 @@ public class AppointmentRepository {
      */
     public AppointmentRepository(MongoDatabase database) {
         this.collection = database.getCollection("appointments", Appointment.class);
+        this.roomRepository = new RoomRepository(database);
+        this.doctorRepository = new DoctorRepository(database);
     }
 
     /**
@@ -45,8 +52,7 @@ public class AppointmentRepository {
      * @return true jeśli lekarz jest dostępny, false w przeciwnym razie
      */
     private boolean isDoctorAvailable(ObjectId doctorId, LocalDateTime appointmentDateTime, ObjectId excludeAppointmentId) {
-        DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
-        Doctor doctor = doctorRepo.findDoctorById(doctorId);
+        Doctor doctor = doctorRepository.findDoctorById(doctorId);
 
         if (doctor == null) {
             return false;
@@ -83,6 +89,28 @@ public class AppointmentRepository {
     }
 
     /**
+     * Sprawdza czy sala jest odpowiednia dla specjalizacji lekarza.
+     *
+     * @param doctorId ID lekarza
+     * @param roomId ID sali
+     * @return true jeśli sala jest odpowiednia, false w przeciwnym razie
+     */
+    private boolean isRoomAppropriateForDoctor(ObjectId doctorId, ObjectId roomId) {
+        Doctor doctor = doctorRepository.findDoctorById(doctorId);
+        Optional<Room> roomOpt = roomRepository.findRoomById(roomId);
+
+        if (doctor == null || !roomOpt.isPresent()) {
+            return false;
+        }
+
+        Room room = roomOpt.get();
+        TypeOfRoom compatibleRoomType = doctor.getSpecialization().getCompatibleRoomType();
+        TypeOfRoom roomType = room.getType();
+
+        return compatibleRoomType == roomType;
+    }
+
+    /**
      * Konwertuje java.time.DayOfWeek na backend.status.Day
      *
      * @param dayOfWeek Dzień tygodnia z java.time
@@ -115,16 +143,28 @@ public class AppointmentRepository {
      * @param appointment wizyta do utworzenia
      * @throws IllegalArgumentException jeśli wizyta jest null
      * @throws DoctorIsNotAvailableException jeśli lekarz nie jest dostępny w danym terminie
+     * @throws InappropriateRoomException jeśli sala nie jest odpowiednia dla specjalizacji lekarza
      */
-    public void createAppointment(Appointment appointment) throws DoctorIsNotAvailableException {
+    public void createAppointment(Appointment appointment) throws DoctorIsNotAvailableException, InappropriateRoomException {
         if (appointment == null) {
             throw new IllegalArgumentException("Zabieg nie może być nullem!!");
         }
 
-        // Sprawdź dostępność lekarza
         if (!isDoctorAvailable(appointment.getDoctorId(), appointment.getDate(), null)) {
             throw new DoctorIsNotAvailableException(
                     "Lekarz jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
+            );
+        }
+
+        if (!isRoomAppropriateForDoctor(appointment.getDoctorId(), appointment.getRoom())) {
+            Doctor doctor = doctorRepository.findDoctorById(appointment.getDoctorId());
+            Optional<Room> room = roomRepository.findRoomById(appointment.getRoom());
+
+            String doctorSpec = doctor != null ? doctor.getSpecialization().getDescription() : "nieznana";
+            String roomType = room.isPresent() ? room.get().getType().getDescription() : "nieznana";
+
+            throw new InappropriateRoomException(
+                    "Lekarz o specjalizacji " + doctorSpec + " nie może przeprowadzać zabiegu w sali typu " + roomType
             );
         }
 
@@ -184,16 +224,28 @@ public class AppointmentRepository {
      * @param appointment wizyta do zaktualizowania
      * @return zaktualizowana wizyta
      * @throws DoctorIsNotAvailableException jeśli lekarz nie jest dostępny w danym terminie
+     * @throws InappropriateRoomException jeśli sala nie jest odpowiednia dla specjalizacji lekarza
      */
-    public Appointment updateAppointment(Appointment appointment) throws DoctorIsNotAvailableException {
+    public Appointment updateAppointment(Appointment appointment) throws DoctorIsNotAvailableException, InappropriateRoomException {
         if (appointment == null) {
             throw new IllegalArgumentException("Zabieg nie może być nullem!!");
         }
 
-        // Sprawdź dostępność lekarza (z wykluczeniem aktualnej wizyty)
         if (!isDoctorAvailable(appointment.getDoctorId(), appointment.getDate(), appointment.getId())) {
             throw new DoctorIsNotAvailableException(
                     "Lekarz jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
+            );
+        }
+
+        if (!isRoomAppropriateForDoctor(appointment.getDoctorId(), appointment.getRoom())) {
+            Doctor doctor = doctorRepository.findDoctorById(appointment.getDoctorId());
+            Optional<Room> room = roomRepository.findRoomById(appointment.getRoom());
+
+            String doctorSpec = doctor != null ? doctor.getSpecialization().getDescription() : "nieznana";
+            String roomType = room.isPresent() ? room.get().getType().getDescription() : "nieznana";
+
+            throw new InappropriateRoomException(
+                    "Lekarz o specjalizacji " + doctorSpec + " nie może przeprowadzać zabiegu w sali typu " + roomType
             );
         }
 

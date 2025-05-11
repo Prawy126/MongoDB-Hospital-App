@@ -38,23 +38,18 @@ public class DoctorFirstContactPanel {
         root.setPadding(new Insets(10));
         root.setStyle("-fx-background-color: #f0f8ff;");
 
-        // Ustawienie tytułu i wymiarów okna
         primaryStage.setTitle("Panel lekarza pierwszego kontaktu");
         primaryStage.setMinWidth(800);
         primaryStage.setMinHeight(500);
 
-        // Utworzenie menu nawigacyjnego
         VBox menu = createMenu();
         root.setLeft(menu);
 
-        // Utworzenie panelu głównego
         controller.showDashboard();
 
-        // Animacje początkowe
         animateFadeIn(menu, 1000);
         animateSlideDown(menu, 800);
 
-        // Ustawienie sceny
         Scene scene = new Scene(root, 800, 500);
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -66,13 +61,14 @@ public class DoctorFirstContactPanel {
         menu.setStyle("-fx-background-color: #D0E0F0; -fx-border-radius: 10; -fx-background-radius: 10;");
         menu.setAlignment(Pos.TOP_LEFT);
 
-        // Przyciski nawigacyjne
         Button dashboardButton = createStyledButton("Dashboard");
         dashboardButton.setOnAction(e -> controller.showDashboard());
 
         Button patientsButton = createStyledButton("Lista pacjentów");
         patientsButton.setOnAction(e -> controller.showPatientsList());
 
+        Button availabilityButton = createStyledButton("Moja dostępność");
+        availabilityButton.setOnAction(e -> controller.showAvailabilityCalendar());
 
         Button logoutButton = createStyledButton("Wyloguj", "#E74C3C");
         logoutButton.setOnAction(e -> controller.logout());
@@ -80,6 +76,7 @@ public class DoctorFirstContactPanel {
         menu.getChildren().addAll(
                 dashboardButton,
                 patientsButton,
+                availabilityButton,
                 logoutButton
         );
 

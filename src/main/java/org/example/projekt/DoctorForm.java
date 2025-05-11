@@ -2,22 +2,18 @@ package org.example.projekt;
 
 import backend.klasy.Doctor;
 import backend.status.Day;
+import backend.status.Specialization;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.util.StringConverter;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
  * Formularz do tworzenia i edytowania lekarza (Doctor).
  */
 public class DoctorForm {
-
-    private static final List<String> SPECIALIZATIONS = List.of(
-            "Kardiolog", "Neurolog", "Ortopeda", "Dermatolog",
-            "Ginekolog", "Pediatra", "Chirurg", "Internista"
-    );
 
     /**
      * Wyświetla formularz dialogowy do utworzenia lub edycji lekarza.
@@ -36,24 +32,37 @@ public class DoctorForm {
         grid.setHgap(10);
         grid.setVgap(10);
 
-        TextField firstName  = new TextField();
-        TextField lastName   = new TextField();
-        ComboBox<String> specBox = new ComboBox<>();
-        specBox.getItems().addAll(SPECIALIZATIONS);
+        TextField firstName = new TextField();
+        TextField lastName = new TextField();
+
+        ComboBox<Specialization> specBox = new ComboBox<>();
+        specBox.getItems().addAll(Specialization.values());
         specBox.setEditable(false);
 
-        TextField room       = new TextField();
-        TextField contact    = new TextField();
-        TextField age        = new TextField();
-        TextField pesel      = new TextField();
+        specBox.setConverter(new StringConverter<Specialization>() {
+            @Override
+            public String toString(Specialization spec) {
+                return spec != null ? spec.getDescription() : "";
+            }
 
-        grid.addRow(0, new Label("Imię:"),           firstName);
-        grid.addRow(1, new Label("Nazwisko:"),       lastName);
-        grid.addRow(2, new Label("Specjalizacja:"),  specBox);
-        grid.addRow(3, new Label("Sala:"),           room);
-        grid.addRow(4, new Label("Kontakt:"),        contact);
-        grid.addRow(5, new Label("Wiek:"),           age);
-        grid.addRow(6, new Label("Pesel:"),          pesel);
+            @Override
+            public Specialization fromString(String string) {
+                return Specialization.fromDescription(string);
+            }
+        });
+
+        TextField room = new TextField();
+        TextField contact = new TextField();
+        TextField age = new TextField();
+        TextField pesel = new TextField();
+
+        grid.addRow(0, new Label("Imię:"), firstName);
+        grid.addRow(1, new Label("Nazwisko:"), lastName);
+        grid.addRow(2, new Label("Specjalizacja:"), specBox);
+        grid.addRow(3, new Label("Sala:"), room);
+        grid.addRow(4, new Label("Kontakt:"), contact);
+        grid.addRow(5, new Label("Wiek:"), age);
+        grid.addRow(6, new Label("Pesel:"), pesel);
 
         if (doctorToEdit != null) {
             firstName.setText(doctorToEdit.getFirstName());
@@ -71,8 +80,8 @@ public class DoctorForm {
             if (btn != saveBtn) return null;
 
             try {
-                String specialization = specBox.getValue();
-                if (specialization == null || specialization.isBlank()) {
+                Specialization specialization = specBox.getValue();
+                if (specialization == null) {
                     throw new IllegalArgumentException("Wybierz specjalizację z listy.");
                 }
 
@@ -83,15 +92,16 @@ public class DoctorForm {
                         .room(room.getText())
                         .contactInformation(contact.getText())
                         .age(Integer.parseInt(age.getText()))
-                        .pesel(Long.parseLong(pesel.getText()))
-                        .availableDays(Arrays.asList(Day.MONDAY, Day.WEDNESDAY));
+                        .pesel(Long.parseLong(pesel.getText()));
 
                 if (doctorToEdit == null) {
-                    builder.plainPassword("haslo");
+                    builder.plainPassword("haslo")
+                            .availableDays(Arrays.asList(Day.values()));
                 } else {
                     builder.withId(doctorToEdit.getId())
                             .passwordHash(doctorToEdit.getPasswordHash())
-                            .passwordSalt(doctorToEdit.getPasswordSalt());
+                            .passwordSalt(doctorToEdit.getPasswordSalt())
+                            .availableDays(doctorToEdit.getAvailableDays());
                 }
                 return builder.build();
 

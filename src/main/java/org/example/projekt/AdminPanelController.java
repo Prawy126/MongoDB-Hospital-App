@@ -3,6 +3,7 @@ package org.example.projekt;
 import backend.klasy.*;
 import backend.mongo.*;
 import backend.wyjatki.DoctorIsNotAvailableException;
+import backend.wyjatki.InappropriateRoomException;
 import com.mongodb.client.MongoDatabase;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -260,6 +261,12 @@ public class AdminPanelController {
                     alert.setHeaderText("Lekarz jest niedostępny w wybranym terminie");
                     alert.setContentText(ex.getMessage());
                     alert.showAndWait();
+                } catch (InappropriateRoomException ex) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Błąd przypisania sali");
+                    alert.setHeaderText("Sala nie jest odpowiednia dla specjalizacji lekarza");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
                 }
             });
         });
@@ -277,10 +284,15 @@ public class AdminPanelController {
                         appointmentRepo.updateAppointment(appointment);
                         refreshAppointments(tableView);
                     } catch (DoctorIsNotAvailableException ex) {
-                        // Display error dialog instead of throwing RuntimeException
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Błąd dostępności lekarza");
                         alert.setHeaderText("Lekarz jest niedostępny w wybranym terminie");
+                        alert.setContentText(ex.getMessage());
+                        alert.showAndWait();
+                    } catch (InappropriateRoomException ex) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Błąd przypisania sali");
+                        alert.setHeaderText("Sala nie jest odpowiednia dla specjalizacji lekarza");
                         alert.setContentText(ex.getMessage());
                         alert.showAndWait();
                     }

@@ -70,12 +70,16 @@ public class DoctorPanel {
         Button proceduresButton = createStyledButton("Moje zabiegi");
         proceduresButton.setOnAction(e -> controller.showProcedureSchedule());
 
+        Button availabilityButton = createStyledButton("Moja dostępność");
+        availabilityButton.setOnAction(e -> controller.showAvailabilityCalendar());
+
         Button logoutButton = createStyledButton("Wyloguj", "#E74C3C");
         logoutButton.setOnAction(e -> controller.logout());
 
         menu.getChildren().addAll(
                 dashboardButton,
                 proceduresButton,
+                availabilityButton,
                 logoutButton
         );
 
@@ -146,5 +150,12 @@ public class DoctorPanel {
      */
     public Stage getPrimaryStage() {
         return primaryStage;
+    }
+
+    /**
+     * Zwraca aktualnego lekarza.
+     */
+    public Doctor getCurrentDoctor() {
+        return currentDoctor;
     }
 }
