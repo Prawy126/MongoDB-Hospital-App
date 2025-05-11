@@ -2,6 +2,7 @@ package org.example.projekt;
 
 import backend.klasy.*;
 import backend.mongo.*;
+import backend.wyjatki.DoctorIsNotAvailableException;
 import com.mongodb.client.MongoDatabase;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -250,8 +251,16 @@ public class AdminPanelController {
                     roomRepo.getAllRooms()
             );
             form.showForm(null, appointment -> {
-                appointmentRepo.createAppointment(appointment);
-                refreshAppointments(tableView);
+                try {
+                    appointmentRepo.createAppointment(appointment);
+                    refreshAppointments(tableView);
+                } catch (DoctorIsNotAvailableException ex) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Błąd dostępności lekarza");
+                    alert.setHeaderText("Lekarz jest niedostępny w wybranym terminie");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
+                }
             });
         });
 
@@ -264,8 +273,17 @@ public class AdminPanelController {
                         roomRepo.getAllRooms()
                 );
                 form.showForm(selected, appointment -> {
-                    appointmentRepo.updateAppointment(appointment);
-                    refreshAppointments(tableView);
+                    try {
+                        appointmentRepo.updateAppointment(appointment);
+                        refreshAppointments(tableView);
+                    } catch (DoctorIsNotAvailableException ex) {
+                        // Display error dialog instead of throwing RuntimeException
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Błąd dostępności lekarza");
+                        alert.setHeaderText("Lekarz jest niedostępny w wybranym terminie");
+                        alert.setContentText(ex.getMessage());
+                        alert.showAndWait();
+                    }
                 });
             }
         });

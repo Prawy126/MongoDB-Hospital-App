@@ -3,14 +3,19 @@ package backend.mongo;
 import backend.klasy.Appointment;
 import backend.klasy.Doctor;
 import backend.klasy.Patient;
+import backend.status.AppointmentStatus;
+import backend.status.Day;
+import backend.wyjatki.DoctorIsNotAvailableException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.*;
 
 /**
  * Klasa AppointmentRepository zarządza operacjami CRUD dla kolekcji wizyt w bazie MongoDB.
@@ -32,15 +37,97 @@ public class AppointmentRepository {
     }
 
     /**
+     * Sprawdza czy lekarz jest dostępny w danym terminie.
+     *
+     * @param doctorId ID lekarza
+     * @param appointmentDateTime Data i czas wizyty
+     * @param excludeAppointmentId ID wizyty do wykluczenia z porównania (używane przy aktualizacji)
+     * @return true jeśli lekarz jest dostępny, false w przeciwnym razie
+     */
+    private boolean isDoctorAvailable(ObjectId doctorId, LocalDateTime appointmentDateTime, ObjectId excludeAppointmentId) {
+        DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
+        Doctor doctor = doctorRepo.findDoctorById(doctorId);
+
+        if (doctor == null) {
+            return false;
+        }
+
+        java.time.DayOfWeek javaDayOfWeek = appointmentDateTime.getDayOfWeek();
+        Day appointmentDay = convertToDayEnum(javaDayOfWeek);
+
+        if (!doctor.getAvailableDays().contains(appointmentDay)) {
+            return false;
+        }
+
+        List<Appointment> doctorAppointments = collection.find(
+                and(
+                        eq("doctorId", doctorId),
+                        ne("status", AppointmentStatus.COMPLETED)
+                )
+        ).into(new ArrayList<>());
+
+        if (excludeAppointmentId != null) {
+            doctorAppointments.removeIf(appointment -> appointment.getId().equals(excludeAppointmentId));
+        }
+
+        for (Appointment appointment : doctorAppointments) {
+            LocalDateTime existingAppointmentTime = appointment.getDate();
+
+            long minutesBetween = Math.abs(Duration.between(appointmentDateTime, existingAppointmentTime).toMinutes());
+            if (minutesBetween < 30) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Konwertuje java.time.DayOfWeek na backend.status.Day
+     *
+     * @param dayOfWeek Dzień tygodnia z java.time
+     * @return Odpowiadający enum Day z aplikacji
+     */
+    private Day convertToDayEnum(java.time.DayOfWeek dayOfWeek) {
+        switch (dayOfWeek) {
+            case MONDAY:
+                return Day.MONDAY;
+            case TUESDAY:
+                return Day.TUESDAY;
+            case WEDNESDAY:
+                return Day.WEDNESDAY;
+            case THURSDAY:
+                return Day.THURSDAY;
+            case FRIDAY:
+                return Day.FRIDAY;
+            case SATURDAY:
+                return Day.SATURDAY;
+            case SUNDAY:
+                return Day.SUNDAY;
+            default:
+                throw new IllegalArgumentException("Nieznany dzień tygodnia: " + dayOfWeek);
+        }
+    }
+
+    /**
      * Tworzy nową wizytę w bazie danych.
      *
      * @param appointment wizyta do utworzenia
      * @throws IllegalArgumentException jeśli wizyta jest null
+     * @throws DoctorIsNotAvailableException jeśli lekarz nie jest dostępny w danym terminie
      */
-    public void createAppointment(Appointment appointment) {
+    public void createAppointment(Appointment appointment) throws DoctorIsNotAvailableException {
         if (appointment == null) {
             throw new IllegalArgumentException("Zabieg nie może być nullem!!");
         }
+
+        // Sprawdź dostępność lekarza
+        if (!isDoctorAvailable(appointment.getDoctorId(), appointment.getDate(), null)) {
+            throw new DoctorIsNotAvailableException(
+                    "Lekarz jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
+            );
+        }
+
         collection.insertOne(appointment);
     }
 
@@ -96,8 +183,20 @@ public class AppointmentRepository {
      *
      * @param appointment wizyta do zaktualizowania
      * @return zaktualizowana wizyta
+     * @throws DoctorIsNotAvailableException jeśli lekarz nie jest dostępny w danym terminie
      */
-    public Appointment updateAppointment(Appointment appointment) {
+    public Appointment updateAppointment(Appointment appointment) throws DoctorIsNotAvailableException {
+        if (appointment == null) {
+            throw new IllegalArgumentException("Zabieg nie może być nullem!!");
+        }
+
+        // Sprawdź dostępność lekarza (z wykluczeniem aktualnej wizyty)
+        if (!isDoctorAvailable(appointment.getDoctorId(), appointment.getDate(), appointment.getId())) {
+            throw new DoctorIsNotAvailableException(
+                    "Lekarz jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
+            );
+        }
+
         collection.replaceOne(eq("_id", appointment.getId()), appointment);
         return appointment;
     }
@@ -110,31 +209,4 @@ public class AppointmentRepository {
     public void deleteAppointment(ObjectId id) {
         collection.deleteOne(eq("_id", id));
     }
-    /**
-     * Sprawdza dostępność lekarza w danym terminie.
-     *
-     * @param doctorId ID lekarza
-     * @param date Data w formacie "YYYY-MM-DD"
-     * @param startTime Czas rozpoczęcia "HH:mm"
-     * @param endTime Czas zakończenia "HH:mm"
-     * @return true jeśli dostępny
-     */
-    //zakomentowałem bo sypało błędem a nie chciało mi się tego naprawiać
-    /*public boolean isDoctorAvailable(ObjectId doctorId, String date, String startTime, String endTime) {
-        List<Bson> pipeline = Arrays.asList(
-                Aggregates.match(Filters.and(
-                        Filters.eq("doctorId", doctorId),
-                        Filters.eq("date", date),
-                        Filters.or(
-                                Filters.lt("endTime", startTime),
-                                Filters.gt("startTime", endTime)
-                        )
-                )),
-                Aggregates.count("count")
-        );
-
-        Appointment result = collection.aggregate(pipeline).first();
-        return result == null || result.getInteger("count", 0) == 0;
-    }*/
-
 }
