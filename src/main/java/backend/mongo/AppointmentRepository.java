@@ -9,6 +9,7 @@ import backend.status.Day;
 import backend.status.TypeOfRoom;
 import backend.wyjatki.DoctorIsNotAvailableException;
 import backend.wyjatki.InappropriateRoomException;
+import backend.wyjatki.PatientIsNotAvailableException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.types.ObjectId;
@@ -45,6 +46,7 @@ public class AppointmentRepository {
 
     /**
      * Sprawdza czy lekarz jest dostępny w danym terminie.
+     * Sprawdza tylko wizyty w obrębie tego samego dnia.
      *
      * @param doctorId ID lekarza
      * @param appointmentDateTime Data i czas wizyty
@@ -65,10 +67,15 @@ public class AppointmentRepository {
             return false;
         }
 
+        LocalDateTime startOfDay = appointmentDateTime.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+
         List<Appointment> doctorAppointments = collection.find(
                 and(
                         eq("doctorId", doctorId),
-                        ne("status", AppointmentStatus.COMPLETED)
+                        ne("status", AppointmentStatus.COMPLETED),
+                        gte("date", startOfDay),
+                        lte("date", endOfDay)
                 )
         ).into(new ArrayList<>());
 
@@ -77,6 +84,44 @@ public class AppointmentRepository {
         }
 
         for (Appointment appointment : doctorAppointments) {
+            LocalDateTime existingAppointmentTime = appointment.getDate();
+
+            long minutesBetween = Math.abs(Duration.between(appointmentDateTime, existingAppointmentTime).toMinutes());
+            if (minutesBetween < 30) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Sprawdza czy pacjent jest dostępny w danym terminie.
+     * Sprawdza tylko wizyty w obrębie tego samego dnia.
+     *
+     * @param patientId ID pacjenta
+     * @param appointmentDateTime Data i czas wizyty
+     * @param excludeAppointmentId ID wizyty do wykluczenia z porównania (używane przy aktualizacji)
+     * @return true jeśli pacjent jest dostępny, false w przeciwnym razie
+     */
+    private boolean isPatientAvailable(ObjectId patientId, LocalDateTime appointmentDateTime, ObjectId excludeAppointmentId) {
+        LocalDateTime startOfDay = appointmentDateTime.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+
+        List<Appointment> patientAppointments = collection.find(
+                and(
+                        eq("patientId", patientId),
+                        ne("status", AppointmentStatus.COMPLETED),
+                        gte("date", startOfDay),
+                        lte("date", endOfDay)
+                )
+        ).into(new ArrayList<>());
+
+        if (excludeAppointmentId != null) {
+            patientAppointments.removeIf(appointment -> appointment.getId().equals(excludeAppointmentId));
+        }
+
+        for (Appointment appointment : patientAppointments) {
             LocalDateTime existingAppointmentTime = appointment.getDate();
 
             long minutesBetween = Math.abs(Duration.between(appointmentDateTime, existingAppointmentTime).toMinutes());
@@ -143,9 +188,11 @@ public class AppointmentRepository {
      * @param appointment wizyta do utworzenia
      * @throws IllegalArgumentException jeśli wizyta jest null
      * @throws DoctorIsNotAvailableException jeśli lekarz nie jest dostępny w danym terminie
+     * @throws PatientIsNotAvailableException jeśli pacjent nie jest dostępny w danym terminie
      * @throws InappropriateRoomException jeśli sala nie jest odpowiednia dla specjalizacji lekarza
      */
-    public void createAppointment(Appointment appointment) throws DoctorIsNotAvailableException, InappropriateRoomException {
+    public void createAppointment(Appointment appointment)
+            throws DoctorIsNotAvailableException, InappropriateRoomException, PatientIsNotAvailableException {
         if (appointment == null) {
             throw new IllegalArgumentException("Zabieg nie może być nullem!!");
         }
@@ -153,6 +200,12 @@ public class AppointmentRepository {
         if (!isDoctorAvailable(appointment.getDoctorId(), appointment.getDate(), null)) {
             throw new DoctorIsNotAvailableException(
                     "Lekarz jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
+            );
+        }
+
+        if (!isPatientAvailable(appointment.getPatientId(), appointment.getDate(), null)) {
+            throw new PatientIsNotAvailableException(
+                    "Pacjent jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
             );
         }
 
@@ -224,9 +277,11 @@ public class AppointmentRepository {
      * @param appointment wizyta do zaktualizowania
      * @return zaktualizowana wizyta
      * @throws DoctorIsNotAvailableException jeśli lekarz nie jest dostępny w danym terminie
+     * @throws PatientIsNotAvailableException jeśli pacjent nie jest dostępny w danym terminie
      * @throws InappropriateRoomException jeśli sala nie jest odpowiednia dla specjalizacji lekarza
      */
-    public Appointment updateAppointment(Appointment appointment) throws DoctorIsNotAvailableException, InappropriateRoomException {
+    public Appointment updateAppointment(Appointment appointment)
+            throws DoctorIsNotAvailableException, InappropriateRoomException, PatientIsNotAvailableException {
         if (appointment == null) {
             throw new IllegalArgumentException("Zabieg nie może być nullem!!");
         }
@@ -234,6 +289,12 @@ public class AppointmentRepository {
         if (!isDoctorAvailable(appointment.getDoctorId(), appointment.getDate(), appointment.getId())) {
             throw new DoctorIsNotAvailableException(
                     "Lekarz jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
+            );
+        }
+
+        if (!isPatientAvailable(appointment.getPatientId(), appointment.getDate(), appointment.getId())) {
+            throw new PatientIsNotAvailableException(
+                    "Pacjent jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
             );
         }
 

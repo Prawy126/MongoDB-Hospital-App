@@ -4,6 +4,7 @@ import backend.klasy.*;
 import backend.mongo.*;
 import backend.wyjatki.DoctorIsNotAvailableException;
 import backend.wyjatki.InappropriateRoomException;
+import backend.wyjatki.PatientIsNotAvailableException;
 import com.mongodb.client.MongoDatabase;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -261,6 +262,12 @@ public class AdminPanelController {
                     alert.setHeaderText("Lekarz jest niedostępny w wybranym terminie");
                     alert.setContentText(ex.getMessage());
                     alert.showAndWait();
+                } catch (PatientIsNotAvailableException ex) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Błąd dostępności pacjenta");
+                    alert.setHeaderText("Pacjent jest niedostępny w wybranym terminie");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
                 } catch (InappropriateRoomException ex) {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Błąd przypisania sali");
@@ -287,6 +294,12 @@ public class AdminPanelController {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
                         alert.setTitle("Błąd dostępności lekarza");
                         alert.setHeaderText("Lekarz jest niedostępny w wybranym terminie");
+                        alert.setContentText(ex.getMessage());
+                        alert.showAndWait();
+                    } catch (PatientIsNotAvailableException ex) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Błąd dostępności pacjenta");
+                        alert.setHeaderText("Pacjent jest niedostępny w wybranym terminie");
                         alert.setContentText(ex.getMessage());
                         alert.showAndWait();
                     } catch (InappropriateRoomException ex) {
