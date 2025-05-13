@@ -153,7 +153,7 @@ public class RoomRepository {
      * @param room konkretny pokój
      * @return zwraca treu jeśli pokój jest pełny lub false jeśli w pokoju są jeszcze miejsca*/
     public boolean isRoomNotFull(Room room) {
-        return room.getCurrentPatients() < room.getMaxPatients();
+        return room.getCurrentPatientCount() < room.getMaxPatients();
     }
 
     /**

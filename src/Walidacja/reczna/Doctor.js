@@ -50,7 +50,7 @@ db.runCommand({
           bsonType: "string",
           minLength: 5,
           description: "Kontakt musi być stringiem o długości min. 5 znaków"
-        }
+        },
         password: {
           bsonType: "string",
           minLength: 8, // Minimalna długość hasła

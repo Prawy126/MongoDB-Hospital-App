@@ -64,10 +64,6 @@ public class Room {
         return new ArrayList<>(patientIds);
     }
 
-    public int getCurrentPatients(){
-        return patientIds.size();
-    }
-
     public void setPatientIds(List<ObjectId> patientIds) {
         if (patientIds.size() > maxPatients) {
             throw new IllegalArgumentException("Liczba pacjentów przekracza limit");

@@ -48,13 +48,6 @@ public class DataLoader {
         String salt         = "iQnPQNj6A7VvqJCn4KJNiw==";
         String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
 
-        try {
-            applyValidationSchemas();
-        } catch (Exception e) {
-            System.out.println("Uwaga: Walidacja schematów nie powiodła się. To normalne dla nowej bazy danych.");
-            System.out.println("Szczegóły: " + e.getMessage());
-        }
-
         createDemoPatients(passwordHash, salt);
 
         createRoomsForAllTypes();
@@ -62,6 +55,12 @@ public class DataLoader {
         createDemoDoctors(passwordHash, salt);
         createDemoAppointments();
 
+        try {
+            applyValidationSchemas();
+        } catch (Exception e) {
+            System.out.println("Uwaga: Walidacja schematów nie powiodła się. To normalne dla nowej bazy danych.");
+            System.out.println("Szczegóły: " + e.getMessage());
+        }
         System.out.println("Dane załadowane pomyślnie!");
     }
 
