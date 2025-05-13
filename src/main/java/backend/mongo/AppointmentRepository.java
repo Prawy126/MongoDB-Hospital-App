@@ -142,13 +142,13 @@ public class AppointmentRepository {
      */
     private boolean isRoomAppropriateForDoctor(ObjectId doctorId, ObjectId roomId) {
         Doctor doctor = doctorRepository.findDoctorById(doctorId);
-        Optional<Room> roomOpt = roomRepository.findRoomById(roomId);
+        List<Room> roomOpt = roomRepository.findRoomsById(roomId);
 
-        if (doctor == null || !roomOpt.isPresent()) {
+        if (doctor == null || !roomOpt.isEmpty()) {
             return false;
         }
 
-        Room room = roomOpt.get();
+        Room room = roomOpt.getFirst();
         TypeOfRoom compatibleRoomType = doctor.getSpecialization().getCompatibleRoomType();
         TypeOfRoom roomType = room.getType();
 
@@ -211,10 +211,10 @@ public class AppointmentRepository {
 
         if (!isRoomAppropriateForDoctor(appointment.getDoctorId(), appointment.getRoom())) {
             Doctor doctor = doctorRepository.findDoctorById(appointment.getDoctorId());
-            Optional<Room> room = roomRepository.findRoomById(appointment.getRoom());
+            List<Room> room = roomRepository.findRoomsById(appointment.getRoom());
 
             String doctorSpec = doctor != null ? doctor.getSpecialization().getDescription() : "nieznana";
-            String roomType = room.isPresent() ? room.get().getType().getDescription() : "nieznana";
+            String roomType = room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
 
             throw new InappropriateRoomException(
                     "Lekarz o specjalizacji " + doctorSpec + " nie może przeprowadzać zabiegu w sali typu " + roomType
@@ -300,10 +300,10 @@ public class AppointmentRepository {
 
         if (!isRoomAppropriateForDoctor(appointment.getDoctorId(), appointment.getRoom())) {
             Doctor doctor = doctorRepository.findDoctorById(appointment.getDoctorId());
-            Optional<Room> room = roomRepository.findRoomById(appointment.getRoom());
+            List<Room> room = roomRepository.findRoomsById(appointment.getRoom());
 
             String doctorSpec = doctor != null ? doctor.getSpecialization().getDescription() : "nieznana";
-            String roomType = room.isPresent() ? room.get().getType().getDescription() : "nieznana";
+            String roomType = room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
 
             throw new InappropriateRoomException(
                     "Lekarz o specjalizacji " + doctorSpec + " nie może przeprowadzać zabiegu w sali typu " + roomType

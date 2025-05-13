@@ -3,9 +3,11 @@ package backend;
 import backend.klasy.Doctor;
 import backend.klasy.Password;
 import backend.klasy.Patient;
+import backend.klasy.Room;
 import backend.mongo.DoctorRepository;
 import backend.mongo.MongoDatabaseConnector;
 import backend.mongo.PatientRepository;
+import backend.mongo.RoomRepository;
 import backend.status.Day;
 import backend.status.Diagnosis;
 import backend.status.TypeOfRoom;
@@ -28,7 +30,10 @@ import static com.mongodb.client.model.Filters.eq;
 public class Main {
     public static void main(String[] args) throws NullNameException, AgeException, PeselException {
         MongoDatabase database = MongoDatabaseConnector.connectToDatabase();
-        Patient patient = new Patient("Jan", "Kowalski", 12345678901L, LocalDate.of(1990, 1, 1), "Warszawa", 33, "password", Diagnosis.CARDIAC);
-        System.err.println("Diagnoza: " + TypeOfRoom.determineDepartment(patient));
+        RoomRepository room = new RoomRepository(database);
+        List<Room> rooms = room.findRoomByType(TypeOfRoom.PEDIATRIC);
+        for(Room r : rooms) {
+            System.out.println(r.getAddress() + " " + r.getFloor() + " " + r.getNumber() + " " + r.getMaxPatients() + " " + r.getType());
+        }
     }
 }

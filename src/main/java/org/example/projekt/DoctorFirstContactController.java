@@ -5,6 +5,7 @@ import backend.klasy.Patient;
 import backend.mongo.DoctorRepository;
 import backend.mongo.MongoDatabaseConnector;
 import backend.mongo.PatientRepository;
+import backend.mongo.RoomRepository;
 import backend.status.Diagnosis;
 import javafx.animation.ScaleTransition;
 import javafx.beans.property.SimpleStringProperty;
@@ -33,11 +34,13 @@ public class DoctorFirstContactController implements Initializable {
     private final DoctorFirstContactPanel panel;
     private Doctor doctor;
     private final PatientRepository patientRepository;
+    private final RoomRepository rooms;
 
     public DoctorFirstContactController(DoctorFirstContactPanel panel, Doctor doctor) {
         this.panel = panel;
         this.doctor = doctor;
         this.patientRepository = new PatientRepository(MongoDatabaseConnector.connectToDatabase());
+        this.rooms = new RoomRepository(MongoDatabaseConnector.connectToDatabase());
     }
 
     @Override

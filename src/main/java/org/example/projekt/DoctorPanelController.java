@@ -2,6 +2,7 @@ package org.example.projekt;
 
 import backend.klasy.Appointment;
 import backend.klasy.Doctor;
+import backend.klasy.Patient;
 import backend.mongo.AppointmentRepository;
 import backend.mongo.DoctorRepository;
 import backend.mongo.MongoDatabaseConnector;
@@ -134,11 +135,11 @@ public class DoctorPanelController {
 
         TableColumn<Appointment, String> patientCol = new TableColumn<>("Pacjent");
         patientCol.setCellValueFactory(a -> {
-            var patientOpt = new PatientRepository(MongoDatabaseConnector.connectToDatabase())
+            List<Patient> patients = new PatientRepository(MongoDatabaseConnector.connectToDatabase())
                     .findPatientById(a.getValue().getPatientId());
-            return new ReadOnlyStringWrapper(patientOpt
-                    .map(p -> p.getFirstName() + " " + p.getLastName())
-                    .orElse("Nieznany pacjent"));
+            return new ReadOnlyStringWrapper(
+                    patients.isEmpty() ? "Nieznany pacjent" : patients.get(0).getFirstName() + " " + patients.get(0).getLastName()
+            );
         });
 
         TableColumn<Appointment, String> descCol = new TableColumn<>("Opis");

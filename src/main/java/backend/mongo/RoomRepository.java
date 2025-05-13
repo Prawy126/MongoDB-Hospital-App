@@ -3,6 +3,7 @@ package backend.mongo;
 import backend.klasy.Room;
 import backend.klasy.Patient;
 import backend.klasy.Doctor;
+import backend.status.TypeOfRoom;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -134,6 +135,7 @@ public class RoomRepository {
         }
     }
 
+    // musimy się zastanowić czy ten konstruktor jest potrzebny czy nie jest zbędny
     /**
      * Znajduje sale po ich adresie.
      *
@@ -166,10 +168,12 @@ public class RoomRepository {
                 .collect(Collectors.toList());
     }
 
-    public Optional<Room> findRoomById(ObjectId id) {
-        return Optional.ofNullable(
-                collection.find(eq("_id", id)).first()
-        );
+    public List<Room> findRoomByType(TypeOfRoom type) {
+        return collection.find(eq("type", type)).into(new ArrayList<>());
+    }
+
+    public List<Room> findRoomsById(ObjectId id) {
+        return collection.find(eq("_id", id)).into(new ArrayList<>());
     }
 
 }
