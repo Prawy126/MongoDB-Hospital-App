@@ -3,6 +3,7 @@ package backend.mongo;
 import backend.klasy.Room;
 import backend.klasy.Patient;
 import backend.klasy.Doctor;
+import backend.status.TypeOfRoom;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -170,6 +171,15 @@ public class RoomRepository {
         return Optional.ofNullable(
                 collection.find(eq("_id", id)).first()
         );
+    }
+    /**
+     * Znajduje wszystkie pokoje przypisane do danego oddziału (departamentu).
+     *
+     * @param department typ oddziału (np. TypeOfRoom.CARDIOLOGY)
+     * @return lista pokoi przypisanych do tego oddziału
+     */
+    public List<Room> findRoomsByDepartment(TypeOfRoom department) {
+        return collection.find(eq("department", department)).into(new ArrayList<>());
     }
 
 }

@@ -104,6 +104,7 @@ public class Patient extends Person {
 
     public void setDiagnosis(Diagnosis diagnosis) {
         this.diagnosis = diagnosis;
+
     }
 
     @Override

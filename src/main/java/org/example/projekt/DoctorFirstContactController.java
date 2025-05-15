@@ -2,9 +2,12 @@ package org.example.projekt;
 
 import backend.klasy.Doctor;
 import backend.klasy.Patient;
+import backend.klasy.Room;
 import backend.mongo.MongoDatabaseConnector;
 import backend.mongo.PatientRepository;
+import backend.mongo.RoomRepository;
 import backend.status.Diagnosis;
+import backend.status.TypeOfRoom;
 import javafx.animation.ScaleTransition;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -34,11 +37,14 @@ public class DoctorFirstContactController implements Initializable {
     private final DoctorFirstContactPanel panel;
     private final Doctor doctor;
     private final PatientRepository patientRepository;
+    private final RoomRepository room;
 
     public DoctorFirstContactController(DoctorFirstContactPanel panel, Doctor doctor) {
         this.panel = panel;
         this.doctor = doctor;
         this.patientRepository = new PatientRepository(MongoDatabaseConnector.connectToDatabase());
+        this.room = new RoomRepository(MongoDatabaseConnector.connectToDatabase());
+
     }
 
     @Override
@@ -125,6 +131,7 @@ public class DoctorFirstContactController implements Initializable {
 
         TextArea descriptionArea = new TextArea();
         descriptionArea.setPromptText("Dodatkowy opis diagnozy (opcjonalnie)");
+        descriptionArea.setText(patient.getDiagnosis().toString());
         descriptionArea.setWrapText(true);
 
         VBox content = new VBox(10);
@@ -142,13 +149,40 @@ public class DoctorFirstContactController implements Initializable {
         Optional<ButtonType> result = dialog.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
-                patient.setDiagnosis(diagnosisBox.getValue());
+                Diagnosis selectedDiagnosis = diagnosisBox.getValue();
+
+                // Ustawienie diagnozy i notatek
+                patient.setDiagnosis(selectedDiagnosis);
+
+                // Pobranie oddziału z diagnozy
+                TypeOfRoom department = selectedDiagnosis.getDepartment();
+
+                // Znajdź pokoje na tym oddziale
+                List<Room> roomsInDepartment = room.findRoomsByDepartment(department);
+
+                if (roomsInDepartment != null && !roomsInDepartment.isEmpty()) {
+                    Optional<Room> availableRoomOpt = roomsInDepartment.stream()
+                            .filter(r -> !r.isFull()) // ✅ Sprawdzenie pełności
+                            .findFirst();
+
+                    if (availableRoomOpt.isPresent()) {
+                        Room availableRoom = availableRoomOpt.get();
+                        availableRoom.addPatientId(patient.getId());
+                        room.updateRoom(availableRoom.getId(), availableRoom); // ✅ Zapisz zmiany
+                    } else {
+                        showAlert(Alert.AlertType.WARNING, "Brak wolnych pokoi", "Nie znaleziono wolnego pokoju dla wybranej diagnozy.");
+                    }
+                } else {
+                    showAlert(Alert.AlertType.WARNING, "Brak pokoi", "Nie ma żadnych pokoi przypisanych do tego oddziału.");
+                }
+
                 patientRepository.updatePatient(patient);
-                showAlert(Alert.AlertType.INFORMATION, "Sukces", "Diagnoza została przypisana");
+                showAlert(Alert.AlertType.INFORMATION, "Sukces", "Diagnoza oraz pokój zostały przypisane");
                 panel.setCenterPane(new VBox());
                 showPatientsList();
             } catch (Exception e) {
-                showAlert(Alert.AlertType.ERROR, "Błąd", "Nie można zapisać diagnozy");
+                showAlert(Alert.AlertType.ERROR, "Błąd", "Nie można zapisać diagnozy i pokoju");
+                e.printStackTrace();
             }
         }
     }
