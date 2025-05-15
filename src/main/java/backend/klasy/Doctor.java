@@ -2,6 +2,7 @@ package backend.klasy;
 
 import backend.status.Day;
 import backend.status.Diagnosis;
+import backend.status.Specialization;
 import backend.wyjatki.AgeException;
 import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
@@ -12,7 +13,7 @@ import java.util.List;
 public class Doctor extends Person {
 
     private ObjectId id;
-    private String specialization;
+    private Specialization specialization;
     private List<Day> availableDays;
     private String room;
     private String contactInformation;
@@ -23,7 +24,7 @@ public class Doctor extends Person {
                   String lastName,
                   int age,
                   long pesel,
-                  String specialization,
+                  Specialization specialization,
                   List<Day> availableDays,
                   String room,
                   String contactInformation,
@@ -40,7 +41,7 @@ public class Doctor extends Person {
                   String lastName,
                   int age,
                   long pesel,
-                  String specialization,
+                  Specialization specialization,
                   List<Day> availableDays,
                   String room,
                   String contactInformation,
@@ -55,20 +56,16 @@ public class Doctor extends Person {
     }
 
     public ObjectId getId() { return id; }
-    public String getSpecialization() { return specialization; }
+    public Specialization getSpecialization() { return specialization; }
     public List<Day> getAvailableDays() { return availableDays; }
     public String getRoom() { return room; }
     public String getContactInformation() { return contactInformation; }
     public boolean isFirstContact(){
-        if(specialization.equals("Pierwszego kontaktu")){
-            return true;
-        }else {
-            return false;
-        }
+        return specialization == Specialization.FIRST_CONTACT;
     }
 
     public void setId(ObjectId id) { this.id = id; }
-    public void setSpecialization(String specialization) { this.specialization = specialization; }
+    public void setSpecialization(Specialization specialization) { this.specialization = specialization; }
     public void setAvailableDays(List<Day> availableDays) { this.availableDays = availableDays; }
     public void setRoom(String room) { this.room = room; }
     public void setContactInformation(String contactInformation) { this.contactInformation = contactInformation; }
@@ -83,7 +80,7 @@ public class Doctor extends Person {
         private String lastName;
         private int age;
         private long pesel;
-        private String specialization;
+        private Specialization specialization;
         private List<Day> availableDays;
         private String room;
         private String contactInformation;
@@ -116,7 +113,7 @@ public class Doctor extends Person {
             return this;
         }
 
-        public Builder specialization(String specialization) {
+        public Builder specialization(Specialization specialization) {
             this.specialization = specialization;
             return this;
         }
@@ -163,6 +160,9 @@ public class Doctor extends Person {
             }
             if (pesel < 10000000000L || pesel > 99999999999L) {
                 throw new PeselException("Pesel musi mieć dokładnie 11 cyfr.");
+            }
+            if (specialization == null) {
+                throw new IllegalArgumentException("Specjalizacja nie może być pusta.");
             }
 
             Doctor doctor;
@@ -216,6 +216,6 @@ public class Doctor extends Person {
 
     @Override
     public String toString() {
-        return getFirstName() + " " + getLastName() + " (" + specialization + ")";
+        return getFirstName() + " " + getLastName() + " (" + specialization.getDescription() + ")";
     }
 }

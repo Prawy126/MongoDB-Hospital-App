@@ -13,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 // lekarz do testowania czyli pierwszego konatktu
@@ -25,7 +26,7 @@ public class LoginPanel extends Application {
     @Override
     public void start(Stage primaryStage) {
 
-// Tworzenie głównego gridu
+        // Tworzenie głównego gridu
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(20));
         grid.setVgap(15);
@@ -33,14 +34,14 @@ public class LoginPanel extends Application {
         grid.setStyle("-fx-background-color: lightblue;");
         grid.setAlignment(Pos.CENTER);  // Centrowanie całego gridu
 
-// Nagłówek
+        // Nagłówek
         Label header = new Label("Szpital");
         header.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
         GridPane.setConstraints(header, 0, 0, 3, 1);
         GridPane.setMargin(header, new Insets(0, 0, 20, 0));
         GridPane.setHalignment(header, HPos.CENTER);  // Centrowanie nagłówka
 
-// Pola wprowadzania danych
+        // Pola wprowadzania danych
         Label userLabel = new Label("PESEL:");
         GridPane.setHalignment(userLabel, HPos.RIGHT);  // Wyrównanie etykiety w prawo
         TextField userField = new TextField();
@@ -51,36 +52,44 @@ public class LoginPanel extends Application {
         PasswordField passField = new PasswordField();
         GridPane.setHalignment(passField, HPos.CENTER);  // Centrowanie pola hasła
 
-// Kontener na przyciski
-        HBox buttonsBox = new HBox(10);
-        buttonsBox.setAlignment(Pos.CENTER_LEFT);
-        buttonsBox.setPadding(new Insets(10));
+        // Kontener na przyciski (główny)
+        VBox buttonsContainer = new VBox(10);
+        buttonsContainer.setAlignment(Pos.CENTER);
 
-// Przyciski
+        // Kontener na górną linię przycisków
+        HBox topButtonsBox = new HBox(10);
+        topButtonsBox.setAlignment(Pos.CENTER);
+
+        // Przyciski
         loginBtn = new Button("Zaloguj");
-        loginBtn.setPrefWidth(120);
-        loginBtn.setMinSize(120, 30);
+        loginBtn.setPrefWidth(100);
+        loginBtn.setMinSize(100, 30);
         loginBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
 
         Button registerBtn = new Button("Zarejestruj się");
-        registerBtn.setPrefWidth(120);
-        registerBtn.setMinSize(120, 30);
+        registerBtn.setPrefWidth(100);
+        registerBtn.setMinSize(100, 30);
         registerBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
 
         Button exitBtn = new Button("Wyjście");
-        exitBtn.setPrefWidth(120);
-        exitBtn.setMinSize(120, 30);
+        exitBtn.setPrefWidth(100);
+        exitBtn.setMinSize(100, 30);
         exitBtn.setStyle("-fx-background-color: #FF5733; -fx-text-fill: white;");
 
-// Dodanie elementów do gridu
+        // Organizacja przycisków
+        topButtonsBox.getChildren().addAll(loginBtn, registerBtn);
+        buttonsContainer.getChildren().addAll(topButtonsBox, exitBtn);
+
+        // Dodanie elementów do gridu
         GridPane.setConstraints(userLabel, 0, 1);
         GridPane.setConstraints(userField, 1, 1, 2, 1);
         GridPane.setConstraints(passLabel, 0, 2);
         GridPane.setConstraints(passField, 1, 2, 2, 1);
-        GridPane.setConstraints(buttonsBox, 0, 4, 3, 1);
+        GridPane.setConstraints(buttonsContainer, 0, 4, 3, 1);
 
-        buttonsBox.getChildren().addAll(loginBtn, registerBtn, exitBtn);
-        grid.getChildren().addAll(header, userLabel, userField, passLabel, passField, buttonsBox);loginBtn.setOnAction(e -> {
+        grid.getChildren().addAll(header, userLabel, userField, passLabel, passField, buttonsContainer);
+
+        loginBtn.setOnAction(e -> {
             String login = userField.getText().trim();
             String password = passField.getText().trim();
 
@@ -115,6 +124,7 @@ public class LoginPanel extends Application {
             MongoDatabaseConnector.close();
             System.exit(0);
         });
+
         registerBtn.setOnAction(e -> new RegisterPanel().start(new Stage()));
 
         primaryStage.setScene(new Scene(grid, 500, 350));

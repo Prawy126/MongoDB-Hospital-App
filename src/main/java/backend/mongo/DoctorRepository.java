@@ -45,7 +45,7 @@ public class DoctorRepository {
      * Znajduje lekarza po jego ID.
      *
      * @param id ID lekarza
-     * @return Optional zawierający znalezionego lekarza lub pusty, jeśli nie znaleziono
+     * @return Obiekt Doctor zawierający znalezionego lekarza lub pusty, jeśli nie znaleziono
      */
     public Doctor findDoctorById(ObjectId id) {
         return collection.find(eq("_id", id)).first();

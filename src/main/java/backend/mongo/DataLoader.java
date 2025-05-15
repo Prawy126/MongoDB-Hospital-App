@@ -4,12 +4,11 @@ import backend.klasy.Appointment;
 import backend.klasy.Doctor;
 import backend.klasy.Patient;
 import backend.klasy.Room;
-import backend.status.AppointmentStatus;
-import backend.status.Day;
-import backend.status.Diagnosis;
-import backend.status.TypeOfRoom;
+import backend.status.*;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
+import org.bson.types.ObjectId;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,6 +34,8 @@ public class DataLoader {
     private final AppointmentRepository appointmentRepository;
     private final RoomRepository roomRepository;
 
+    private final Map<ObjectId, Set<LocalDateTime>> doctorAppointmentTimes = new HashMap<>();
+
     public DataLoader(MongoDatabase database) {
         this.database = database;
         this.patientRepository = new PatientRepository(database);
@@ -47,13 +48,19 @@ public class DataLoader {
         String salt         = "iQnPQNj6A7VvqJCn4KJNiw==";
         String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
 
-        applyValidationSchemas();
-
         createDemoPatients(passwordHash, salt);
-        createDemoRooms(); // Tworzymy pokoje przed lekarzami i wizytami
+
+        createRoomsForAllTypes();
+
         createDemoDoctors(passwordHash, salt);
         createDemoAppointments();
 
+        try {
+            applyValidationSchemas();
+        } catch (Exception e) {
+            System.out.println("Uwaga: Walidacja schematów nie powiodła się. To normalne dla nowej bazy danych.");
+            System.out.println("Szczegóły: " + e.getMessage());
+        }
         System.out.println("Dane załadowane pomyślnie!");
     }
 
@@ -73,7 +80,7 @@ public class DataLoader {
                 try {
                     String jsonContent = new String(Files.readAllBytes(Paths.get(jsonFile.getAbsolutePath())));
                     Document command = Document.parse(jsonContent);
-                    database.runCommand(command); // Wykonuje JSON jako komendę MongoDB
+                    database.runCommand(command);
                     System.out.println("Wykonano walidację: " + jsonFile.getName());
                 } catch (IOException e) {
                     System.err.println("Błąd odczytu JSON: " + jsonFile.getName() + " - " + e.getMessage());
@@ -81,7 +88,7 @@ public class DataLoader {
             }
         } catch (Exception e) {
             System.err.println("Błąd walidacji schematów: " + e.getMessage());
-            e.printStackTrace();
+            throw e;
         }
     }
 
@@ -89,13 +96,16 @@ public class DataLoader {
         for (int i = 1; i <= 10; i++) {
             try {
                 LocalDate birthDate = generateRandomBirthDate();
+
+                int age = Patient.calculateAge(birthDate);
+
                 Patient patient = new Patient.Builder()
                         .firstName(getRandomFirstName())
                         .lastName(getRandomLastName())
                         .pesel(generateRandomPesel(birthDate))
                         .birthDate(birthDate)
                         .address(generateRandomAddress())
-                        .age(random.nextInt(100))
+                        .age(age)
                         .passwordHash(passwordHash)
                         .passwordSalt(salt)
                         .diagnosis(Diagnosis.AWAITING)
@@ -108,9 +118,46 @@ public class DataLoader {
         }
     }
 
+    private void createRoomsForAllTypes() {
+        TypeOfRoom[] roomTypes = TypeOfRoom.values();
+
+        for (TypeOfRoom type : roomTypes) {
+            try {
+                Room room = new Room(
+                        generateRandomAddress(),
+                        random.nextInt(6),
+                        100 + roomTypes.length + random.nextInt(100),
+                        2 + random.nextInt(5),
+                        type
+                );
+                roomRepository.createRoom(room);
+                System.out.println("Utworzono pokój typu: " + type.getDescription());
+            } catch (Exception e) {
+                System.out.println("Błąd tworzenia pokoju typu " + type + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        for (int i = 0; i < 10; i++) {
+            try {
+                Room room = new Room(
+                        generateRandomAddress(),
+                        random.nextInt(6),
+                        200 + i,
+                        2 + random.nextInt(5),
+                        roomTypes[random.nextInt(roomTypes.length)]
+                );
+                roomRepository.createRoom(room);
+            } catch (Exception e) {
+                System.out.println("Błąd tworzenia dodatkowego pokoju: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
     private void createDemoDoctors(String passwordHash, String salt) {
         String[] days = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"};
-        String[] specializations = {"Kardiolog", "Neurolog", "Ortopeda", "Dermatolog", "Ginekolog", "Pediatra", "Chirurg", "Internista", "Pierwszego kontaktu"};
+        Specialization[] specializations = Specialization.values();
 
         for (int i = 1; i <= 10; i++) {
             try {
@@ -124,7 +171,7 @@ public class DataLoader {
                         .lastName(getRandomLastName())
                         .age(30 + random.nextInt(35))
                         .pesel(generateRandomPesel(birthDate))
-                        .specialization(specializations[random.nextInt(specializations.length)])
+                        .specialization(specializations[random.nextInt(specializations.length)]) // Używamy enuma
                         .availableDays(Arrays.stream(selectedDays).map(Day::valueOf).collect(Collectors.toList()))
                         .room(String.format("%03d", random.nextInt(500) + 1))
                         .contactInformation(generateRandomPhoneNumber())
@@ -132,27 +179,9 @@ public class DataLoader {
                         .passwordSalt(salt)
                         .build();
                 doctorRepository.createDoctor(doctor);
+                doctorAppointmentTimes.put(doctor.getId(), new HashSet<>());
             } catch (Exception e) {
                 System.out.println("Błąd podczas tworzenia lekarza: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void createDemoRooms() {
-        TypeOfRoom[] roomTypes = TypeOfRoom.values();
-        for (int i = 0; i < 15; i++) {
-            try {
-                Room room = new Room(
-                        generateRandomAddress(),
-                        random.nextInt(6),
-                        100 + i,
-                        2 + random.nextInt(5),
-                        roomTypes[random.nextInt(roomTypes.length)]
-                );
-                roomRepository.createRoom(room);
-            } catch (Exception e) {
-                System.out.println("Błąd tworzenia pokoju: " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -169,20 +198,113 @@ public class DataLoader {
             return;
         }
 
-        for (int i = 0; i < 10; i++) {
+        int successfulAppointments = 0;
+        int maxAttempts = 30;
+        int attempts = 0;
+
+        while (successfulAppointments < 10 && attempts < maxAttempts) {
+            attempts++;
             try {
                 Doctor doctor = doctors.get(random.nextInt(doctors.size()));
+                Room room = findCompatibleRoom(doctor, rooms);
+
+                if (room == null) {
+                    System.out.println("Nie znaleziono kompatybilnej sali dla lekarza: " + doctor.getFirstName() + " " + doctor.getLastName() +
+                            " (specjalizacja: " + doctor.getSpecialization().getDescription() + ")");
+                    continue;
+                }
+
+                LocalDateTime appointmentTime = generateNonConflictingAppointmentTime(doctor);
+
                 Appointment appt = new Appointment();
                 appt.setDoctorId(doctor.getId());
                 appt.setPatientId(patients.get(random.nextInt(patients.size())).getId());
-                appt.setRoom(rooms.get(i).getId());
-                appt.setDate(generateRandomAppointmentDateTime());
+                appt.setRoom(room.getId());
+                appt.setDate(appointmentTime);
                 appt.setStatus(statuses[random.nextInt(statuses.length)]);
+                appt.setDescription("Wizyta u " + doctor.getSpecialization().getDescription());
+
                 appointmentRepository.createAppointment(appt);
+                doctorAppointmentTimes.get(doctor.getId()).add(appointmentTime);
+
+                successfulAppointments++;
+                System.out.println("Utworzono wizytę #" + successfulAppointments + " dla lekarza: " +
+                        doctor.getFirstName() + " " + doctor.getLastName() +
+                        " w sali typu: " + room.getType().getDescription());
+
             } catch (Exception e) {
-                System.out.println("Błąd podczas tworzenia wizyty: " + e.getMessage());
-                e.printStackTrace();
+                System.out.println("Błąd podczas tworzenia wizyty (próba " + attempts + "): " + e.getMessage());
             }
+        }
+
+        System.out.println("Utworzono " + successfulAppointments + " wizyt po " + attempts + " próbach.");
+    }
+
+    private Room findCompatibleRoom(Doctor doctor, List<Room> rooms) {
+        TypeOfRoom compatibleRoomType = doctor.getSpecialization().getCompatibleRoomType();
+        List<Room> compatibleRooms = rooms.stream()
+                .filter(room -> room.getType() == compatibleRoomType)
+                .collect(Collectors.toList());
+
+        if (compatibleRooms.isEmpty()) {
+            return null;
+        }
+
+        return compatibleRooms.get(random.nextInt(compatibleRooms.size()));
+    }
+
+    private LocalDateTime generateNonConflictingAppointmentTime(Doctor doctor) {
+        Set<LocalDateTime> occupiedTimes = doctorAppointmentTimes.get(doctor.getId());
+        LocalDateTime appointmentTime;
+        boolean isConflict;
+        int attempts = 0;
+        int maxAttempts = 50;
+
+        do {
+            isConflict = false;
+            appointmentTime = generateRandomAppointmentDateTime();
+            Day appointmentDay = convertToDayEnum(appointmentTime.getDayOfWeek());
+            if (!doctor.getAvailableDays().contains(appointmentDay)) {
+                isConflict = true;
+                continue;
+            }
+
+            for (LocalDateTime occupiedTime : occupiedTimes) {
+                long minutesBetween = Math.abs(java.time.Duration.between(appointmentTime, occupiedTime).toMinutes());
+                if (minutesBetween < 30) {
+                    isConflict = true;
+                    break;
+                }
+            }
+
+            attempts++;
+        } while (isConflict && attempts < maxAttempts);
+
+        if (attempts >= maxAttempts) {
+            System.out.println("Ostrzeżenie: Nie udało się znaleźć niekolidującego terminu dla lekarza po " + maxAttempts + " próbach.");
+        }
+
+        return appointmentTime;
+    }
+
+    private Day convertToDayEnum(java.time.DayOfWeek dayOfWeek) {
+        switch (dayOfWeek) {
+            case MONDAY:
+                return Day.MONDAY;
+            case TUESDAY:
+                return Day.TUESDAY;
+            case WEDNESDAY:
+                return Day.WEDNESDAY;
+            case THURSDAY:
+                return Day.THURSDAY;
+            case FRIDAY:
+                return Day.FRIDAY;
+            case SATURDAY:
+                return Day.SATURDAY;
+            case SUNDAY:
+                return Day.SUNDAY;
+            default:
+                throw new IllegalArgumentException("Nieznany dzień tygodnia: " + dayOfWeek);
         }
     }
 
@@ -212,8 +334,8 @@ public class DataLoader {
         int year = 2025;
         int month = random.nextInt(12) + 1;
         int day = random.nextInt(28) + 1;
-        int hour = 8 + random.nextInt(9);
-        int minute = random.nextInt(60);
+        int hour = 8 + random.nextInt(9); // Godziny 8-17
+        int minute = (random.nextInt(4) * 15); // Minuty: 0, 15, 30, 45
         return LocalDateTime.of(year, month, day, hour, minute);
     }
 

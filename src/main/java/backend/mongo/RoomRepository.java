@@ -135,6 +135,7 @@ public class RoomRepository {
         }
     }
 
+    // musimy się zastanowić czy ten konstruktor jest potrzebny czy nie jest zbędny
     /**
      * Znajduje sale po ich adresie.
      *
@@ -154,7 +155,7 @@ public class RoomRepository {
      * @param room konkretny pokój
      * @return zwraca treu jeśli pokój jest pełny lub false jeśli w pokoju są jeszcze miejsca*/
     public boolean isRoomNotFull(Room room) {
-        return room.getCurrentPatients() < room.getMaxPatients();
+        return room.getCurrentPatientCount() < room.getMaxPatients();
     }
 
     /**
@@ -167,10 +168,12 @@ public class RoomRepository {
                 .collect(Collectors.toList());
     }
 
-    public Optional<Room> findRoomById(ObjectId id) {
-        return Optional.ofNullable(
-                collection.find(eq("_id", id)).first()
-        );
+    public List<Room> findRoomByType(TypeOfRoom type) {
+        return collection.find(eq("type", type)).into(new ArrayList<>());
+    }
+
+    public List<Room> findRoomsById(ObjectId id) {
+        return collection.find(eq("_id", id)).into(new ArrayList<>());
     }
     /**
      * Znajduje wszystkie pokoje przypisane do danego oddziału (departamentu).

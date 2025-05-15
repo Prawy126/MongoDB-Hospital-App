@@ -7,6 +7,7 @@ import backend.wyjatki.PeselException;
 import org.bson.types.ObjectId;
 
 import java.time.LocalDate;
+import java.time.Period;
 
 public class Patient extends Person {
 
@@ -105,6 +106,18 @@ public class Patient extends Person {
     public void setDiagnosis(Diagnosis diagnosis) {
         this.diagnosis = diagnosis;
 
+    }
+
+    /**
+     * Oblicza wiek na podstawie daty urodzenia.
+     * @param birthDate data urodzenia
+     * @return wiek w latach
+     */
+    public static int calculateAge(LocalDate birthDate) {
+        if (birthDate == null) {
+            return 0;
+        }
+        return Period.between(birthDate, LocalDate.now()).getYears();
     }
 
     @Override

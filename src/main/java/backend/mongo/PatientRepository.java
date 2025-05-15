@@ -7,7 +7,6 @@ import org.bson.types.ObjectId;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import static com.mongodb.client.model.Filters.eq;
 
 /**
@@ -44,10 +43,10 @@ public class PatientRepository {
      * Znajduje pacjenta po jego ID.
      *
      * @param id ID pacjenta
-     * @return Optional zawierający znalezionego pacjenta lub pusty, jeśli pacjent nie został znaleziony
+     * @return List zawierający znalezionego pacjenta lub pusty, jeśli pacjent nie został znaleziony
      */
-    public Optional<Patient> findPatientById(ObjectId id) {
-        return Optional.ofNullable(collection.find(eq("_id", id)).first());
+    public List<Patient> findPatientById(ObjectId id) {
+        return collection.find(eq("_id", id)).into(new ArrayList<>());
     }
 
     /**

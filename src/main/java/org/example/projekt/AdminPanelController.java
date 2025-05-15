@@ -2,6 +2,9 @@ package org.example.projekt;
 
 import backend.klasy.*;
 import backend.mongo.*;
+import backend.wyjatki.DoctorIsNotAvailableException;
+import backend.wyjatki.InappropriateRoomException;
+import backend.wyjatki.PatientIsNotAvailableException;
 import com.mongodb.client.MongoDatabase;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -206,7 +209,7 @@ public class AdminPanelController {
         TableColumn<Appointment, String> roomCol = new TableColumn<>("Sala");
         roomCol.setCellValueFactory(cellData -> {
             ObjectId roomId = cellData.getValue().getRoom();
-            Room room = roomRepo.findRoomById(roomId).orElse(null);
+            Room room = roomRepo.findRoomsById(roomId).getFirst();
             return new ReadOnlyStringWrapper(room != null ? room.toString2() : "Nieznana sala");
         });
 
@@ -226,7 +229,7 @@ public class AdminPanelController {
         TableColumn<Appointment, String> patientCol = new TableColumn<>("Pacjent");
         patientCol.setCellValueFactory(cellData -> {
             ObjectId patId = cellData.getValue().getPatientId();
-            Patient pat = patientRepo.findPatientById(patId).orElse(new Patient());
+            Patient pat = patientRepo.findPatientById(patId).getFirst();
             return new ReadOnlyStringWrapper(pat.getFirstName() + " " + pat.getLastName());
         });
 
@@ -250,8 +253,28 @@ public class AdminPanelController {
                     roomRepo.getAllRooms()
             );
             form.showForm(null, appointment -> {
-                appointmentRepo.createAppointment(appointment);
-                refreshAppointments(tableView);
+                try {
+                    appointmentRepo.createAppointment(appointment);
+                    refreshAppointments(tableView);
+                } catch (DoctorIsNotAvailableException ex) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Błąd dostępności lekarza");
+                    alert.setHeaderText("Lekarz jest niedostępny w wybranym terminie");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
+                } catch (PatientIsNotAvailableException ex) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Błąd dostępności pacjenta");
+                    alert.setHeaderText("Pacjent jest niedostępny w wybranym terminie");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
+                } catch (InappropriateRoomException ex) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Błąd przypisania sali");
+                    alert.setHeaderText("Sala nie jest odpowiednia dla specjalizacji lekarza");
+                    alert.setContentText(ex.getMessage());
+                    alert.showAndWait();
+                }
             });
         });
 
@@ -264,8 +287,28 @@ public class AdminPanelController {
                         roomRepo.getAllRooms()
                 );
                 form.showForm(selected, appointment -> {
-                    appointmentRepo.updateAppointment(appointment);
-                    refreshAppointments(tableView);
+                    try {
+                        appointmentRepo.updateAppointment(appointment);
+                        refreshAppointments(tableView);
+                    } catch (DoctorIsNotAvailableException ex) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Błąd dostępności lekarza");
+                        alert.setHeaderText("Lekarz jest niedostępny w wybranym terminie");
+                        alert.setContentText(ex.getMessage());
+                        alert.showAndWait();
+                    } catch (PatientIsNotAvailableException ex) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Błąd dostępności pacjenta");
+                        alert.setHeaderText("Pacjent jest niedostępny w wybranym terminie");
+                        alert.setContentText(ex.getMessage());
+                        alert.showAndWait();
+                    } catch (InappropriateRoomException ex) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Błąd przypisania sali");
+                        alert.setHeaderText("Sala nie jest odpowiednia dla specjalizacji lekarza");
+                        alert.setContentText(ex.getMessage());
+                        alert.showAndWait();
+                    }
                 });
             }
         });
