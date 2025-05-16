@@ -3,12 +3,11 @@ package backend.status;
 import backend.status.TypeOfRoom;
 
 public enum Specialization {
-    CARDIOLOGY("Kardiologia"),
-    NEUROLOGY("Neurologia"),
-    PEDIATRICS("Pediatria"),
-    SURGERY("Chirurgia"),
-    INTERNAL_MEDICINE("Medycyna wewnętrzna"),
-    FIRST_CONTACT("Lekarz pierwszego kontaktu");
+    CARDIOLOGY("Kardiolog"),
+    NEUROLOGY("Neurolog"),
+    PEDIATRICS("Pediatra"),
+    SURGERY("Chirurg"),
+    FIRST_CONTACT("pierwszego kontaktu");
 
     private final String description;
 
@@ -43,9 +42,6 @@ public enum Specialization {
                 break;
             case SURGERY:
                 result = TypeOfRoom.SURGICAL;
-                break;
-            case INTERNAL_MEDICINE:
-                result = TypeOfRoom.INTERNAL;
                 break;
             case FIRST_CONTACT:
                 result = TypeOfRoom.ADMISSION;

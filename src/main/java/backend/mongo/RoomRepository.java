@@ -172,16 +172,18 @@ public class RoomRepository {
         return collection.find(eq("type", type)).into(new ArrayList<>());
     }
 
+
+
     public List<Room> findRoomsById(ObjectId id) {
         return collection.find(eq("_id", id)).into(new ArrayList<>());
     }
     /**
-     * Znajduje wszystkie pokoje przypisane do danego oddziału (departamentu).
-     *
-     * @param department typ oddziału (np. TypeOfRoom.CARDIOLOGY)
-     * @return lista pokoi przypisanych do tego oddziału
-     */
+        Znajduje wszystkie pokoje przypisane do danego oddziału (departamentu).*,
+        @param department typ oddziału (np. TypeOfRoom.CARDIOLOGY),
+        @return lista pokoi przypisanych do tego oddziału
+    */
+
     public List<Room> findRoomsByDepartment(TypeOfRoom department) {
-        return collection.find(eq("department", department)).into(new ArrayList<>());
+        return collection.find(eq("type", department)).into(new ArrayList<>());
     }
 }

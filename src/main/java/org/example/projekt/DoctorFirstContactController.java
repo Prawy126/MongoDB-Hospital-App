@@ -151,38 +151,47 @@ public class DoctorFirstContactController implements Initializable {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
                 Diagnosis selectedDiagnosis = diagnosisBox.getValue();
-
-                // Ustawienie diagnozy i notatek
                 patient.setDiagnosis(selectedDiagnosis);
 
-                // Pobranie oddziału z diagnozy
+                // 1. Pobierz odpowiedni oddział z diagnozy
                 TypeOfRoom department = selectedDiagnosis.getDepartment();
+                System.out.println("Szukany oddział: " + department.name());
 
-                // Znajdź pokoje na tym oddziale
-                List<Room> roomsInDepartment = room.findRoomsByDepartment(department);
+                // 2. Znajdź dostępne pokoje na oddziale
+                List<Room> availableRooms = room.findRoomsByDepartment(department).stream()
+                        .filter(r -> r.getPatientIds().size() < r.getMaxPatients())
+                        .toList();
 
-                if (roomsInDepartment != null && !roomsInDepartment.isEmpty()) {
-                    TypeOfRoom roomType;
-                    roomType = TypeOfRoom.determineDepartment(patient);
-                    Room roomP= room.findRoomByType(roomType).getFirst();
-                    roomP.addPatientId(patient.getId());
-                    room.updateRoom(roomP.getId(),roomP);
+                // 3. Logowanie diagnostyczne
+                System.out.println("Znalezione pokoje: " + availableRooms.size());
+                availableRooms.forEach(r -> System.out.println(
+                        r.getId() + " - " + r.getType() + " (" + r.getPatientIds().size() + "/" + r.getMaxPatients() + ")"
+                ));
 
+                if (!availableRooms.isEmpty()) {
+                    Room selectedRoom = availableRooms.get(0);
+
+                    // 4. Przypisz pacjenta do pokoju
+                    selectedRoom.addPatientId(patient.getId());
+                    room.updateRoom(selectedRoom.getId(), selectedRoom);
+
+
+                    showAlert(Alert.AlertType.INFORMATION, "Sukces",
+                            "Przypisano do pokoju: " + selectedRoom.getNumber());
                 } else {
-                    showAlert(Alert.AlertType.WARNING, "Brak pokoi", "Nie ma żadnych pokoi przypisanych do tego oddziału.");
+                    showAlert(Alert.AlertType.WARNING, "Brak miejsc",
+                            "Brak wolnych łóżek na oddziale " + department.getDescription());
                 }
 
-                patientRepository.updatePatient(patient);
-                showAlert(Alert.AlertType.INFORMATION, "Sukces", "Diagnoza oraz pokój zostały przypisane");
                 panel.setCenterPane(new VBox());
                 showPatientsList();
+
             } catch (Exception e) {
-                showAlert(Alert.AlertType.ERROR, "Błąd", "Nie można zapisać diagnozy i pokoju");
+                showAlert(Alert.AlertType.ERROR, "Błąd", "Nie można zapisać zmian: " + e.getMessage());
                 e.printStackTrace();
             }
         }
     }
-
     public VBox showAvailabilityCalendar() {
         VBox layout = new VBox(20);
         layout.setPadding(new Insets(20));
