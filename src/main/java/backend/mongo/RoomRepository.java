@@ -184,5 +184,4 @@ public class RoomRepository {
     public List<Room> findRoomsByDepartment(TypeOfRoom department) {
         return collection.find(eq("department", department)).into(new ArrayList<>());
     }
-
 }
