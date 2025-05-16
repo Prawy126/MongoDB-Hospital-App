@@ -7,6 +7,7 @@ import backend.wyjatki.InappropriateRoomException;
 import backend.wyjatki.PatientIsNotAvailableException;
 import com.mongodb.client.MongoDatabase;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -370,8 +371,10 @@ public class AdminPanelController {
         TableColumn<Room, Integer> maxCol = new TableColumn<>("Max pacjenci");
         maxCol.setCellValueFactory(new PropertyValueFactory<>("maxPatients"));
 
+        // Naprawiona kolumna - używamy niestandardowej fabryki wartości komórki
         TableColumn<Room, Integer> currentCol = new TableColumn<>("Obecni pacjenci");
-        currentCol.setCellValueFactory(new PropertyValueFactory<>("currentPatients"));
+        currentCol.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(cellData.getValue().getCurrentPatientCount()).asObject());
 
         tableView.getColumns().addAll(addressCol, floorCol, numberCol, maxCol, currentCol);
         roomData.setAll(roomRepo.getAllRooms());

@@ -3,9 +3,11 @@ package org.example.projekt;
 import backend.klasy.Doctor;
 import backend.klasy.Patient;
 import backend.klasy.Room;
+import backend.mongo.DoctorRepository;
 import backend.mongo.MongoDatabaseConnector;
 import backend.mongo.PatientRepository;
 import backend.mongo.RoomRepository;
+import backend.status.Day;
 import backend.status.Diagnosis;
 import backend.status.TypeOfRoom;
 import javafx.animation.ScaleTransition;
@@ -13,38 +15,37 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.geometry.Pos;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class DoctorFirstContactController implements Initializable {
     private final DoctorFirstContactPanel panel;
-    private final Doctor doctor;
+    private Doctor doctor;
     private final PatientRepository patientRepository;
     private final RoomRepository room;
+    private final DoctorRepository doctorRepo;
 
     public DoctorFirstContactController(DoctorFirstContactPanel panel, Doctor doctor) {
         this.panel = panel;
         this.doctor = doctor;
         this.patientRepository = new PatientRepository(MongoDatabaseConnector.connectToDatabase());
         this.room = new RoomRepository(MongoDatabaseConnector.connectToDatabase());
-
+        this.doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
     }
 
     @Override
@@ -182,6 +183,102 @@ public class DoctorFirstContactController implements Initializable {
         }
     }
 
+    public VBox showAvailabilityCalendar() {
+        VBox layout = new VBox(20);
+        layout.setPadding(new Insets(20));
+        layout.setAlignment(Pos.TOP_CENTER);
+
+        Label titleLabel = new Label("Moja dostępność");
+        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        Label instructionLabel = new Label("Zaznacz dni, w których jesteś dostępny/a do pracy:");
+        instructionLabel.setStyle("-fx-font-size: 14px;");
+
+        List<Day> availableDays = doctor.getAvailableDays();
+
+        GridPane daysGrid = new GridPane();
+        daysGrid.setHgap(10);
+        daysGrid.setVgap(10);
+        daysGrid.setPadding(new Insets(20));
+        daysGrid.setAlignment(Pos.CENTER);
+
+        List<CheckBox> dayCheckboxes = new ArrayList<>();
+
+        int row = 0;
+        for (Day day : Day.values()) {
+            CheckBox checkbox = new CheckBox(day.getDescription());
+            checkbox.setSelected(availableDays.contains(day));
+            checkbox.setUserData(day);
+            checkbox.setStyle("-fx-font-size: 14px;");
+
+            dayCheckboxes.add(checkbox);
+            daysGrid.add(checkbox, 0, row++);
+        }
+
+        Button saveButton = new Button("Zapisz zmiany");
+        saveButton.setStyle("-fx-background-color: #2ECC71; -fx-text-fill: white; -fx-font-weight: bold;");
+
+        saveButton.setOnAction(e -> {
+            List<Day> selectedDays = new ArrayList<>();
+            for (CheckBox cb : dayCheckboxes) {
+                if (cb.isSelected()) {
+                    selectedDays.add((Day) cb.getUserData());
+                }
+            }
+
+            try {
+                Doctor updatedDoctor = new Doctor.Builder()
+                        .withId(doctor.getId())
+                        .firstName(doctor.getFirstName())
+                        .lastName(doctor.getLastName())
+                        .specialization(doctor.getSpecialization())
+                        .room(doctor.getRoom())
+                        .contactInformation(doctor.getContactInformation())
+                        .age(doctor.getAge())
+                        .pesel(doctor.getPesel())
+                        .passwordHash(doctor.getPasswordHash())
+                        .passwordSalt(doctor.getPasswordSalt())
+                        .availableDays(selectedDays)
+                        .build();
+
+                boolean success = doctorRepo.updateDoctor(updatedDoctor) != null;
+
+                if (success) {
+                    showSuccessAlert("Dostępność została zaktualizowana pomyślnie!");
+
+                    Optional<Doctor> refreshedDoctorOpt = Optional.ofNullable(doctorRepo.findDoctorById(doctor.getId()));
+                    if (refreshedDoctorOpt.isPresent()) {
+                        refreshDoctor(refreshedDoctorOpt.get());
+                    }
+                } else {
+                    showErrorAlert("Nie udało się zaktualizować dostępności. Spróbuj ponownie.");
+                }
+            } catch (Exception ex) {
+                showErrorAlert("Błąd podczas aktualizacji: " + ex.getMessage());
+            }
+        });
+
+        Button selectAllButton = new Button("Zaznacz wszystkie");
+        selectAllButton.setStyle("-fx-background-color: #3498DB; -fx-text-fill: white;");
+        selectAllButton.setOnAction(e -> {
+            dayCheckboxes.forEach(cb -> cb.setSelected(true));
+        });
+
+        Button deselectAllButton = new Button("Odznacz wszystkie");
+        deselectAllButton.setStyle("-fx-background-color: #95A5A6; -fx-text-fill: white;");
+        deselectAllButton.setOnAction(e -> {
+            dayCheckboxes.forEach(cb -> cb.setSelected(false));
+        });
+
+        HBox buttonBox = new HBox(10);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.getChildren().addAll(selectAllButton, deselectAllButton, saveButton);
+        layout.getChildren().addAll(titleLabel, instructionLabel, daysGrid, buttonBox);
+
+        panel.setCenterPane(layout);
+        return layout;
+    }
+
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -213,6 +310,24 @@ public class DoctorFirstContactController implements Initializable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void showSuccessAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Sukces");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showErrorAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Błąd");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void refreshDoctor(Doctor updatedDoctor) {
+        this.doctor = updatedDoctor;
     }
 
     private int getTodayAppointmentsCount() {

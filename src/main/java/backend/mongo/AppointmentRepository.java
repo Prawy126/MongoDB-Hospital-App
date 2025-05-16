@@ -32,6 +32,7 @@ public class AppointmentRepository {
     private final MongoCollection<Appointment> collection;
     private final RoomRepository roomRepository;
     private final DoctorRepository doctorRepository;
+    private final PatientRepository patientRepository;
 
     /**
      * Konstruktor inicjalizujący kolekcję wizyt.
@@ -42,6 +43,7 @@ public class AppointmentRepository {
         this.collection = database.getCollection("appointments", Appointment.class);
         this.roomRepository = new RoomRepository(database);
         this.doctorRepository = new DoctorRepository(database);
+        this.patientRepository = new PatientRepository(database);
     }
 
     /**
@@ -142,15 +144,23 @@ public class AppointmentRepository {
      */
     private boolean isRoomAppropriateForDoctor(ObjectId doctorId, ObjectId roomId) {
         Doctor doctor = doctorRepository.findDoctorById(doctorId);
-        List<Room> roomOpt = roomRepository.findRoomsById(roomId);
+        List<Room> roomList = roomRepository.findRoomsById(roomId);
 
-        if (doctor == null || !roomOpt.isEmpty()) {
+        if (doctor == null || roomList.isEmpty()) {
             return false;
         }
 
-        Room room = roomOpt.getFirst();
+        Room room = roomList.getFirst();
         TypeOfRoom compatibleRoomType = doctor.getSpecialization().getCompatibleRoomType();
         TypeOfRoom roomType = room.getType();
+
+        System.out.println("Sprawdzam kompatybilność:");
+        System.out.println("- Lekarz: " + doctor.getFirstName() + " " + doctor.getLastName());
+        System.out.println("- Specjalizacja: " + doctor.getSpecialization().getDescription());
+        System.out.println("- Kompatybilny typ sali: " + compatibleRoomType.getDescription());
+        System.out.println("- Wybrana sala: " + room.getNumber() + " - " + room.getAddress());
+        System.out.println("- Typ wybranej sali: " + room.getType().getDescription());
+        System.out.println("- Wynik porównania: " + (compatibleRoomType == roomType));
 
         return compatibleRoomType == roomType;
     }
@@ -214,15 +224,20 @@ public class AppointmentRepository {
             List<Room> room = roomRepository.findRoomsById(appointment.getRoom());
 
             String doctorSpec = doctor != null ? doctor.getSpecialization().getDescription() : "nieznana";
-            String roomType = room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
+            String roomType = !room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
 
             throw new InappropriateRoomException(
                     "Lekarz o specjalizacji " + doctorSpec + " nie może przeprowadzać zabiegu w sali typu " + roomType
             );
         }
 
+        // Najpierw zapisz zabieg, aby uzyskać jego ID
         collection.insertOne(appointment);
+
+        // Następnie dodaj pacjenta do sali
+        updateRoomAfterAppointmentCreation(appointment);
     }
+
 
     /**
      * Znajduje wizytę po jej ID.
@@ -286,6 +301,13 @@ public class AppointmentRepository {
             throw new IllegalArgumentException("Zabieg nie może być nullem!!");
         }
 
+        // Pobierz stary zabieg, aby porównać sale i pacjentów
+        Optional<Appointment> oldAppointmentOpt = findAppointmentById(appointment.getId());
+        if (oldAppointmentOpt.isEmpty()) {
+            throw new IllegalArgumentException("Nie znaleziono zabiegu o ID: " + appointment.getId());
+        }
+        Appointment oldAppointment = oldAppointmentOpt.get();
+
         if (!isDoctorAvailable(appointment.getDoctorId(), appointment.getDate(), appointment.getId())) {
             throw new DoctorIsNotAvailableException(
                     "Lekarz jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
@@ -303,15 +325,171 @@ public class AppointmentRepository {
             List<Room> room = roomRepository.findRoomsById(appointment.getRoom());
 
             String doctorSpec = doctor != null ? doctor.getSpecialization().getDescription() : "nieznana";
-            String roomType = room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
+            String roomType = !room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
 
             throw new InappropriateRoomException(
                     "Lekarz o specjalizacji " + doctorSpec + " nie może przeprowadzać zabiegu w sali typu " + roomType
             );
         }
 
+        // Najpierw zaktualizuj zabieg w bazie danych
         collection.replaceOne(eq("_id", appointment.getId()), appointment);
+
+        // Następnie zaktualizuj sale
+        updateRoomAfterAppointmentUpdate(oldAppointment, appointment);
+
         return appointment;
+    }
+
+    /**
+     * Aktualizuje listę pacjentów w sali po utworzeniu zabiegu.
+     * Dodaje ID pacjenta do listy pacjentów w sali.
+     *
+     * @param appointment utworzony zabieg
+     */
+    private void updateRoomAfterAppointmentCreation(Appointment appointment) {
+        try {
+            ObjectId roomId = appointment.getRoom();
+            ObjectId patientId = appointment.getPatientId();
+
+            List<Room> roomList = roomRepository.findRoomsById(roomId);
+            if (roomList.isEmpty()) {
+                System.err.println("Ostrzeżenie: Nie znaleziono sali o ID: " + roomId);
+                return;
+            }
+
+            Room room = roomList.getFirst();
+
+            // Sprawdź, czy sala nie jest pełna
+            if (room.isFull()) {
+                throw new IllegalStateException("Sala " + room.getNumber() + " jest pełna, nie można dodać więcej pacjentów");
+            }
+
+            // Dodaj pacjenta do sali tylko jeśli jeszcze go tam nie ma
+            List<ObjectId> patientIds = room.getPatientIds();
+            if (!patientIds.contains(patientId)) {
+                // Dodaj ID pacjenta do listy
+                patientIds.add(patientId);
+                room.setPatientIds(patientIds);
+
+                // Zaktualizuj salę w bazie danych
+                roomRepository.updateRoom(roomId, room);
+
+                // Pobierz dane pacjenta dla lepszego logowania
+                Patient patient = patientRepository.findPatientById(patientId).getFirst();
+                String patientName = patient != null ?
+                        patient.getFirstName() + " " + patient.getLastName() :
+                        patientId.toString();
+
+                System.out.println("Dodano pacjenta " + patientName + " do sali " + room.getNumber());
+                System.out.println("Aktualna liczba pacjentów w sali: " + room.getCurrentPatientCount() + "/" + room.getMaxPatients());
+            }
+        } catch (Exception e) {
+            System.err.println("Błąd podczas aktualizacji sali: " + e.getMessage());
+            throw new RuntimeException("Nie udało się zaktualizować sali: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Aktualizuje listę pacjentów w sali po usunięciu zabiegu.
+     * Usuwa ID pacjenta z listy pacjentów w sali.
+     *
+     * @param appointment usunięty zabieg
+     */
+    private void updateRoomAfterAppointmentDeletion(Appointment appointment) {
+        try {
+            ObjectId roomId = appointment.getRoom();
+            ObjectId patientId = appointment.getPatientId();
+
+            List<Room> roomList = roomRepository.findRoomsById(roomId);
+            if (roomList.isEmpty()) {
+                System.err.println("Ostrzeżenie: Nie znaleziono sali o ID: " + roomId);
+                return;
+            }
+
+            Room room = roomList.getFirst();
+
+            // Usuń pacjenta z sali
+            List<ObjectId> patientIds = room.getPatientIds();
+            if (patientIds.contains(patientId)) {
+                // Usuń ID pacjenta z listy
+                patientIds.remove(patientId);
+                room.setPatientIds(patientIds);
+
+                // Zaktualizuj salę w bazie danych
+                roomRepository.updateRoom(roomId, room);
+
+                // Pobierz dane pacjenta dla lepszego logowania
+                Patient patient = patientRepository.findPatientById(patientId).getFirst();
+                String patientName = patient != null ?
+                        patient.getFirstName() + " " + patient.getLastName() :
+                        patientId.toString();
+
+                System.out.println("Usunięto pacjenta " + patientName + " z sali " + room.getNumber());
+                System.out.println("Aktualna liczba pacjentów w sali: " + room.getCurrentPatientCount() + "/" + room.getMaxPatients());
+            }
+        } catch (Exception e) {
+            System.err.println("Błąd podczas aktualizacji sali: " + e.getMessage());
+            throw new RuntimeException("Nie udało się zaktualizować sali: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Aktualizuje listę pacjentów w salach po aktualizacji zabiegu.
+     * Jeśli sala się zmieniła, usuwa ID pacjenta z listy pacjentów w starej sali
+     * i dodaje do listy w nowej sali.
+     *
+     * @param oldAppointment stary zabieg
+     * @param newAppointment nowy zabieg
+     */
+    private void updateRoomAfterAppointmentUpdate(Appointment oldAppointment, Appointment newAppointment) {
+        try {
+            // Jeśli sala się zmieniła, zaktualizuj obie sale
+            if (!oldAppointment.getRoom().equals(newAppointment.getRoom())) {
+                // Usuń pacjenta ze starej sali
+                updateRoomAfterAppointmentDeletion(oldAppointment);
+
+                // Dodaj pacjenta do nowej sali
+                updateRoomAfterAppointmentCreation(newAppointment);
+            }
+            // Jeśli pacjent się zmienił, ale sala pozostała ta sama
+            else if (!oldAppointment.getPatientId().equals(newAppointment.getPatientId())) {
+                // Usuń starego pacjenta
+                updateRoomAfterAppointmentDeletion(oldAppointment);
+
+                // Dodaj nowego pacjenta
+                updateRoomAfterAppointmentCreation(newAppointment);
+            }
+        } catch (Exception e) {
+            System.err.println("Błąd podczas aktualizacji sal: " + e.getMessage());
+            throw new RuntimeException("Nie udało się zaktualizować sal: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Pobiera listę pacjentów znajdujących się w danej sali.
+     *
+     * @param roomId ID sali
+     * @return lista pacjentów w sali
+     */
+    public List<Patient> getPatientsInRoom(ObjectId roomId) {
+        List<Room> roomList = roomRepository.findRoomsById(roomId);
+        if (roomList.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Room room = roomList.getFirst();
+        List<ObjectId> patientIds = room.getPatientIds();
+
+        List<Patient> patients = new ArrayList<>();
+        for (ObjectId patientId : patientIds) {
+            List<Patient> patientList = patientRepository.findPatientById(patientId);
+            if (!patientList.isEmpty()) {
+                patients.add(patientList.getFirst());
+            }
+        }
+
+        return patients;
     }
 
     /**
@@ -320,6 +498,19 @@ public class AppointmentRepository {
      * @param id ID wizyty do usunięcia
      */
     public void deleteAppointment(ObjectId id) {
-        collection.deleteOne(eq("_id", id));
+        // Pobierz zabieg przed usunięciem, aby zaktualizować salę
+        Optional<Appointment> appointmentOpt = findAppointmentById(id);
+        if (appointmentOpt.isPresent()) {
+            Appointment appointment = appointmentOpt.get();
+
+            // Najpierw usuń zabieg z bazy danych
+            collection.deleteOne(eq("_id", id));
+
+            // Następnie usuń pacjenta z sali
+            updateRoomAfterAppointmentDeletion(appointment);
+        } else {
+            // Jeśli nie znaleziono zabiegu, po prostu usuń go z bazy
+            collection.deleteOne(eq("_id", id));
+        }
     }
 }
