@@ -242,11 +242,18 @@ public class DataLoader {
 
     private Room findCompatibleRoom(Doctor doctor, List<Room> rooms) {
         TypeOfRoom compatibleRoomType = doctor.getSpecialization().getCompatibleRoomType();
+        System.out.println("Szukam sali typu " + compatibleRoomType.getDescription() +
+                " dla lekarza specjalizacji " + doctor.getSpecialization().getDescription());
+
         List<Room> compatibleRooms = rooms.stream()
                 .filter(room -> room.getType() == compatibleRoomType)
                 .collect(Collectors.toList());
 
         if (compatibleRooms.isEmpty()) {
+            System.out.println("Nie znaleziono żadnej sali typu " + compatibleRoomType.getDescription());
+            // Wypisz wszystkie dostępne typy sal
+            System.out.println("Dostępne typy sal:");
+            rooms.forEach(room -> System.out.println("- " + room.getType().getDescription()));
             return null;
         }
 

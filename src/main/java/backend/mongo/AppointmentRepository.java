@@ -142,15 +142,23 @@ public class AppointmentRepository {
      */
     private boolean isRoomAppropriateForDoctor(ObjectId doctorId, ObjectId roomId) {
         Doctor doctor = doctorRepository.findDoctorById(doctorId);
-        List<Room> roomOpt = roomRepository.findRoomsById(roomId);
+        List<Room> roomList = roomRepository.findRoomsById(roomId);
 
-        if (doctor == null || !roomOpt.isEmpty()) {
+        if (doctor == null || roomList.isEmpty()) {
             return false;
         }
 
-        Room room = roomOpt.getFirst();
+        Room room = roomList.getFirst();
         TypeOfRoom compatibleRoomType = doctor.getSpecialization().getCompatibleRoomType();
         TypeOfRoom roomType = room.getType();
+
+        System.out.println("Sprawdzam kompatybilność:");
+        System.out.println("- Lekarz: " + doctor.getFirstName() + " " + doctor.getLastName());
+        System.out.println("- Specjalizacja: " + doctor.getSpecialization().getDescription());
+        System.out.println("- Kompatybilny typ sali: " + compatibleRoomType.getDescription());
+        System.out.println("- Wybrana sala: " + room.getNumber() + " - " + room.getAddress());
+        System.out.println("- Typ wybranej sali: " + room.getType().getDescription());
+        System.out.println("- Wynik porównania: " + (compatibleRoomType == roomType));
 
         return compatibleRoomType == roomType;
     }
@@ -214,7 +222,7 @@ public class AppointmentRepository {
             List<Room> room = roomRepository.findRoomsById(appointment.getRoom());
 
             String doctorSpec = doctor != null ? doctor.getSpecialization().getDescription() : "nieznana";
-            String roomType = room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
+            String roomType = !room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
 
             throw new InappropriateRoomException(
                     "Lekarz o specjalizacji " + doctorSpec + " nie może przeprowadzać zabiegu w sali typu " + roomType
@@ -303,7 +311,7 @@ public class AppointmentRepository {
             List<Room> room = roomRepository.findRoomsById(appointment.getRoom());
 
             String doctorSpec = doctor != null ? doctor.getSpecialization().getDescription() : "nieznana";
-            String roomType = room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
+            String roomType = !room.isEmpty() ? room.getFirst().getType().getDescription() : "nieznana";
 
             throw new InappropriateRoomException(
                     "Lekarz o specjalizacji " + doctorSpec + " nie może przeprowadzać zabiegu w sali typu " + roomType

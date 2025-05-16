@@ -3,6 +3,7 @@ package org.example.projekt;
 import backend.klasy.Doctor;
 import backend.klasy.Login;
 import backend.klasy.Patient;
+import backend.mongo.DoctorRepository;
 import backend.mongo.MongoDatabaseConnector;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
@@ -136,7 +137,8 @@ public class LoginPanel extends Application {
 
     private void openDoctorFirstContactPanel(Doctor doctor) {
         Stage doctorStage = new Stage();
-        new DoctorFirstContactPanel(doctorStage, doctor);
+        DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
+        new DoctorFirstContactPanel(doctorStage, doctor, doctorRepo);
         closeLoginWindow();
     }
 
