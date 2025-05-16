@@ -229,6 +229,9 @@ public class AppointmentRepository {
             );
         }
 
+        // Dodaj pacjenta do sali przed zapisaniem zabiegu
+        updateRoomAfterAppointmentCreation(appointment);
+
         collection.insertOne(appointment);
     }
 
@@ -294,6 +297,13 @@ public class AppointmentRepository {
             throw new IllegalArgumentException("Zabieg nie może być nullem!!");
         }
 
+        // Pobierz stary zabieg, aby porównać sale
+        Optional<Appointment> oldAppointmentOpt = findAppointmentById(appointment.getId());
+        if (oldAppointmentOpt.isEmpty()) {
+            throw new IllegalArgumentException("Nie znaleziono zabiegu o ID: " + appointment.getId());
+        }
+        Appointment oldAppointment = oldAppointmentOpt.get();
+
         if (!isDoctorAvailable(appointment.getDoctorId(), appointment.getDate(), appointment.getId())) {
             throw new DoctorIsNotAvailableException(
                     "Lekarz jest już przypisany do innego zabiegu w tym terminie lub w ciągu 30 minut od tego terminu."
@@ -318,8 +328,82 @@ public class AppointmentRepository {
             );
         }
 
+        updateRoomAfterAppointmentUpdate(oldAppointment, appointment);
+
         collection.replaceOne(eq("_id", appointment.getId()), appointment);
         return appointment;
+    }
+
+    /**
+     * Aktualizuje listę pacjentów w sali po utworzeniu zabiegu.
+     *
+     * @param appointment utworzony zabieg
+     */
+    private void updateRoomAfterAppointmentCreation(Appointment appointment) {
+        try {
+            ObjectId roomId = appointment.getRoom();
+            ObjectId patientId = appointment.getPatientId();
+
+            List<Room> roomList = roomRepository.findRoomsById(roomId);
+            if (roomList.isEmpty()) {
+                System.err.println("Ostrzeżenie: Nie znaleziono sali o ID: " + roomId);
+                return;
+            }
+
+            Room room = roomList.getFirst();
+
+            if (room.isFull()) {
+                throw new IllegalStateException("Sala " + room.getNumber() + " jest pełna, nie można dodać więcej pacjentów");
+            }
+
+            if (!room.getPatientIds().contains(patientId)) {
+                room.addPatientId(patientId);
+                roomRepository.updateRoom(roomId, room);
+                System.out.println("Dodano pacjenta " + patientId + " do sali " + room.getNumber());
+            }
+        } catch (Exception e) {
+            System.err.println("Błąd podczas aktualizacji sali: " + e.getMessage());
+            throw new RuntimeException("Nie udało się zaktualizować sali: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Aktualizuje listę pacjentów w sali po usunięciu zabiegu.
+     *
+     * @param appointment usunięty zabieg
+     */
+    private void updateRoomAfterAppointmentDeletion(Appointment appointment) {
+        ObjectId roomId = appointment.getRoom();
+        ObjectId patientId = appointment.getPatientId();
+
+        List<Room> roomList = roomRepository.findRoomsById(roomId);
+        if (roomList.isEmpty()) {
+            return;
+        }
+
+        Room room = roomList.getFirst();
+
+        // Usuń pacjenta z sali
+        List<ObjectId> patientIds = room.getPatientIds();
+        if (patientIds.contains(patientId)) {
+            patientIds.remove(patientId);
+            room.setPatientIds(patientIds);
+            roomRepository.updateRoom(roomId, room);
+            System.out.println("Usunięto pacjenta " + patientId + " z sali " + room.getNumber());
+        }
+    }
+
+    /**
+     * Aktualizuje listę pacjentów w salach po aktualizacji zabiegu.
+     *
+     * @param oldAppointment stary zabieg
+     * @param newAppointment nowy zabieg
+     */
+    private void updateRoomAfterAppointmentUpdate(Appointment oldAppointment, Appointment newAppointment) {
+        if (!oldAppointment.getRoom().equals(newAppointment.getRoom())) {
+            updateRoomAfterAppointmentDeletion(oldAppointment);
+            updateRoomAfterAppointmentCreation(newAppointment);
+        }
     }
 
     /**
@@ -328,6 +412,12 @@ public class AppointmentRepository {
      * @param id ID wizyty do usunięcia
      */
     public void deleteAppointment(ObjectId id) {
+        Optional<Appointment> appointmentOpt = findAppointmentById(id);
+        if (appointmentOpt.isPresent()) {
+            Appointment appointment = appointmentOpt.get();
+            updateRoomAfterAppointmentDeletion(appointment);
+        }
+
         collection.deleteOne(eq("_id", id));
     }
 }
