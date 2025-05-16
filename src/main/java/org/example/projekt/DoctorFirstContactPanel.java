@@ -67,8 +67,7 @@ public class DoctorFirstContactPanel {
         Button patientsButton = createStyledButton("Lista pacjentów");
         patientsButton.setOnAction(e -> controller.showPatientsList());
 
-        Button availabilityButton = createStyledButton("Moja dostępność");
-        availabilityButton.setOnAction(e -> controller.showAvailabilityCalendar());
+
 
         Button logoutButton = createStyledButton("Wyloguj", "#E74C3C");
         logoutButton.setOnAction(e -> controller.logout());
@@ -76,7 +75,6 @@ public class DoctorFirstContactPanel {
         menu.getChildren().addAll(
                 dashboardButton,
                 patientsButton,
-                availabilityButton,
                 logoutButton
         );
 

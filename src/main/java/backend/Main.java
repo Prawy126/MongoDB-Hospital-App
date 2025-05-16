@@ -30,10 +30,6 @@ import static com.mongodb.client.model.Filters.eq;
 public class Main {
     public static void main(String[] args) throws NullNameException, AgeException, PeselException {
         MongoDatabase database = MongoDatabaseConnector.connectToDatabase();
-        RoomRepository room = new RoomRepository(database);
-        List<Room> rooms = room.findRoomByType(TypeOfRoom.PEDIATRIC);
-        for(Room r : rooms) {
-            System.out.println(r.getAddress() + " " + r.getFloor() + " " + r.getNumber() + " " + r.getMaxPatients() + " " + r.getType());
-        }
+        DoctorRepository doctorRepo = new DoctorRepository(database);
     }
 }

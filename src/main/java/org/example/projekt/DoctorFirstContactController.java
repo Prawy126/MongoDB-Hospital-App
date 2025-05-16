@@ -161,17 +161,12 @@ public class DoctorFirstContactController implements Initializable {
                 List<Room> roomsInDepartment = room.findRoomsByDepartment(department);
 
                 if (roomsInDepartment != null && !roomsInDepartment.isEmpty()) {
-                    Optional<Room> availableRoomOpt = roomsInDepartment.stream()
-                            .filter(r -> !r.isFull()) // ✅ Sprawdzenie pełności
-                            .findFirst();
+                    TypeOfRoom roomType;
+                    roomType = TypeOfRoom.determineDepartment(patient);
+                    Room roomP= room.findRoomByType(roomType).getFirst();
+                    roomP.addPatientId(patient.getId());
+                    room.updateRoom(roomP.getId(),roomP);
 
-                    if (availableRoomOpt.isPresent()) {
-                        Room availableRoom = availableRoomOpt.get();
-                        availableRoom.addPatientId(patient.getId());
-                        room.updateRoom(availableRoom.getId(), availableRoom); // ✅ Zapisz zmiany
-                    } else {
-                        showAlert(Alert.AlertType.WARNING, "Brak wolnych pokoi", "Nie znaleziono wolnego pokoju dla wybranej diagnozy.");
-                    }
                 } else {
                     showAlert(Alert.AlertType.WARNING, "Brak pokoi", "Nie ma żadnych pokoi przypisanych do tego oddziału.");
                 }
