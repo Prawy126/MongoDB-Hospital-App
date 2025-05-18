@@ -150,8 +150,10 @@ public class AppointmentForm {
             grid.getColumnConstraints().add(col);
         }
 
-        Scene scene = new Scene(grid, 600, 350);
+        Scene scene = new Scene(grid, 800, 550);
         stage.setScene(scene);
+        stage.setMinWidth(700);
+        stage.setMinHeight(500);
         stage.showAndWait();
     }
 

@@ -48,6 +48,8 @@ public class AdminPanel {
         Scene scene = new Scene(root, 700, 450);
         primaryStage.setScene(scene);
         primaryStage.show();
+        primaryStage.setMinWidth(1000);
+        primaryStage.setMinHeight(600);
     }
 
     /**

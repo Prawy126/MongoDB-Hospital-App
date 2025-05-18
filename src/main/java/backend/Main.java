@@ -29,7 +29,6 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class Main {
     public static void main(String[] args) throws NullNameException, AgeException, PeselException {
-        MongoDatabase database = MongoDatabaseConnector.connectToDatabase();
-        DoctorRepository doctorRepo = new DoctorRepository(database);
+
     }
 }

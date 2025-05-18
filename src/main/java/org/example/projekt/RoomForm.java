@@ -90,6 +90,8 @@ public class RoomForm {
 
         Scene scene = new Scene(grid, 400, 300);
         stage.setScene(scene);
+        stage.setMinWidth(700);
+        stage.setMinHeight(500);
         stage.showAndWait();
     }
 }

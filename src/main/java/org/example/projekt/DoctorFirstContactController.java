@@ -196,7 +196,7 @@ public class DoctorFirstContactController implements Initializable {
                     // 4. Przypisz pacjenta do pokoju
                     selectedRoom.addPatientId(patient.getId());
                     room.updateRoom(selectedRoom.getId(), selectedRoom);
-
+                    patientRepository.updatePatient(patient);
 
                     showAlert(Alert.AlertType.INFORMATION, "Sukces",
                             "Przypisano do pokoju: " + selectedRoom.getNumber());

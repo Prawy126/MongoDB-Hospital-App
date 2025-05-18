@@ -110,7 +110,8 @@ public class DoctorForm {
                 return null;
             }
         });
-
+        dialog.getDialogPane().setMinHeight(700);
+        dialog.getDialogPane().setMinWidth(500);
         dialog.showAndWait().ifPresent(onSave);
     }
 

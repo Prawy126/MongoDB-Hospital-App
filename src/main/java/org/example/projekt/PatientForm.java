@@ -116,6 +116,8 @@ public class PatientForm {
 
         Scene scene = new Scene(grid, 400, 350);
         stage.setScene(scene);
+        stage.setMinWidth(700);
+        stage.setMinHeight(500);
         stage.showAndWait();
     }
 }

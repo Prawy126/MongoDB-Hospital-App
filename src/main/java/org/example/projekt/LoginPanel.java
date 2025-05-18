@@ -76,7 +76,7 @@ public class LoginPanel extends Application {
 
         Button registerBtn = new Button("Zarejestruj się");
         registerBtn.setPrefWidth(100);
-        registerBtn.setMinSize(100, 30);
+        registerBtn.setMinSize(120, 30);
         registerBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
 
         Button exitBtn = new Button("Wyjście");
