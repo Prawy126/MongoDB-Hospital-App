@@ -6,7 +6,8 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
- * Klasa odpowiedzialna za hashowanie haseł i generowanie soli.
+ * Klasa {@code Password} odpowiada za bezpieczne przechowywanie haseł
+ * przy użyciu hashowania i losowej soli. Umożliwia również ich weryfikację.
  */
 public class Password {
 
@@ -14,9 +15,10 @@ public class Password {
     private String hashedPassword;
 
     /**
-     * Konstruktor tworzący nowe hasło z automatycznie wygenerowaną solą.
+     * Tworzy nowy obiekt {@code Password} z hasła w postaci zwykłego tekstu.
+     * Generuje nową losową sól i hashuje hasło.
      *
-     * @param plainTextPassword hasło w postaci zwykłego tekstu
+     * @param plainTextPassword hasło użytkownika w formie jawnej
      */
     public Password(String plainTextPassword) {
         this.salt = generateSalt();
@@ -24,10 +26,11 @@ public class Password {
     }
 
     /**
-     * Konstruktor używany przy wczytywaniu zahashowanego hasła i soli z bazy danych.
+     * Tworzy obiekt {@code Password} na podstawie istniejących danych:
+     * soli i zahashowanego hasła (np. z bazy danych).
      *
-     * @param salt           wcześniej wygenerowana sól
-     * @param hashedPassword wcześniej zahashowane hasło
+     * @param salt           sól w formacie Base64
+     * @param hashedPassword hasło zahashowane i zakodowane w Base64
      */
     public Password(String salt, String hashedPassword) {
         this.salt = salt;
@@ -35,7 +38,7 @@ public class Password {
     }
 
     /**
-     * Generuje losową sól.
+     * Generuje losową sól o długości 16 bajtów i koduje ją w Base64.
      *
      * @return sól zakodowana w Base64
      */
@@ -47,9 +50,9 @@ public class Password {
     }
 
     /**
-     * Hashuje hasło z podaną solą.
+     * Hashuje podane hasło z użyciem podanej soli, stosując algorytm SHA-256.
      *
-     * @param password hasło w postaci zwykłego tekstu
+     * @param password hasło w postaci jawnej
      * @param salt     sól zakodowana w Base64
      * @return zahashowane hasło zakodowane w Base64
      */
@@ -65,10 +68,10 @@ public class Password {
     }
 
     /**
-     * Weryfikuje poprawność hasła na podstawie przechowywanego hasha i soli.
+     * Weryfikuje poprawność podanego hasła względem przechowywanego hash'a i soli.
      *
      * @param plainTextPassword hasło do sprawdzenia
-     * @return true jeśli hasło jest poprawne, false w przeciwnym razie
+     * @return {@code true} jeśli hasło jest poprawne, {@code false} w przeciwnym razie
      */
     public boolean verify(String plainTextPassword) {
         String inputHash = hashPassword(plainTextPassword, this.salt);
@@ -78,7 +81,7 @@ public class Password {
     /**
      * Zwraca sól hasła.
      *
-     * @return sól zakodowana w Base64
+     * @return sól w formacie Base64
      */
     public String getSalt() {
         return salt;
@@ -87,16 +90,20 @@ public class Password {
     /**
      * Zwraca zahashowane hasło.
      *
-     * @return hash zakodowany w Base64
+     * @return hash hasła zakodowany w Base64
      */
     public String getHashedPassword() {
         return hashedPassword;
     }
 
+    /**
+     * Przykładowe użycie klasy {@code Password}.
+     *
+     * @param args argumenty wejściowe (nieużywane)
+     */
     public static void main(String[] args) {
         Password password = new Password("haslo");
         System.out.println("Hashed Password: " + password.getHashedPassword());
         System.out.println("Salt: " + password.getSalt());
-
     }
 }

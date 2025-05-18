@@ -16,6 +16,9 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Klasa odpowiedzialna za generowanie danych demo w bazie MongoDB.
+ */
 public class DataLoader {
 
     private static final String[] FIRST_NAMES = {"Jan", "Anna", "Piotr", "Maria", "Krzysztof", "Agnieszka", "Andrzej", "Małgorzata", "Grzegorz", "Ewa"};
@@ -23,7 +26,6 @@ public class DataLoader {
     private static final String[] STREET_NAMES = {"Polna", "Leśna", "Słoneczna", "Krótka", "Długa", "Warszawska", "Krakowska", "Gdańska", "Poznańska", "Łódzka", "Akacjowa", "Jesionowa", "Brzozowa", "Klonowa", "Dębowa", "Spacerowa", "Ogrodowa", "Parkowa", "Szkolna", "Mickiewicza"};
     private static final Random random = new Random();
 
-    // Ścieżka do katalogu z plikami JS
     private final String jsScriptsDirectory = "src/Walidacja/automatyczna";
 
     private final MongoDatabase database;
@@ -31,6 +33,9 @@ public class DataLoader {
     private final DoctorRepository doctorRepository;
     private final RoomRepository roomRepository;
 
+    /**
+     * Inicjalizuje repozytoria i bazę danych.
+     */
     public DataLoader(MongoDatabase database) {
         this.database = database;
         this.patientRepository = new PatientRepository(database);
@@ -38,8 +43,11 @@ public class DataLoader {
         this.roomRepository = new RoomRepository(database);
     }
 
+    /**
+     * Główna metoda ładująca dane do bazy.
+     */
     public void loadData() {
-        String salt         = "iQnPQNj6A7VvqJCn4KJNiw==";
+        String salt = "iQnPQNj6A7VvqJCn4KJNiw==";
         String passwordHash = "ozTwnrhZJjD5vdCP5iG5G6XfC0Pp/3AU6B2iBaXOzk8=";
 
         createDemoPatients(passwordHash, salt);
@@ -48,46 +56,36 @@ public class DataLoader {
 
         try {
             applyValidationSchemas();
-        } catch (Exception e) {
-            System.out.println("Uwaga: Walidacja schematów nie powiodła się. To normalne dla nowej bazy danych.");
-            System.out.println("Szczegóły: " + e.getMessage());
+        } catch (Exception ignored) {
         }
-        System.out.println("Dane załadowane pomyślnie!");
     }
 
+    /**
+     * Wczytuje schematy walidacyjne JSON z plików.
+     */
     private void applyValidationSchemas() {
-        try {
-            File jsDirectory = new File(jsScriptsDirectory);
-            if (!jsDirectory.exists() || !jsDirectory.isDirectory()) {
-                System.err.println("Katalog z plikami JSON nie istnieje: " + jsScriptsDirectory);
-                return;
-            }
-            File[] jsonFiles = jsDirectory.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
-            if (jsonFiles == null || jsonFiles.length == 0) {
-                System.err.println("Brak plików JSON w katalogu: " + jsScriptsDirectory);
-                return;
-            }
-            for (File jsonFile : jsonFiles) {
-                try {
-                    String jsonContent = new String(Files.readAllBytes(Paths.get(jsonFile.getAbsolutePath())));
-                    Document command = Document.parse(jsonContent);
-                    database.runCommand(command);
-                    System.out.println("Wykonano walidację: " + jsonFile.getName());
-                } catch (IOException e) {
-                    System.err.println("Błąd odczytu JSON: " + jsonFile.getName() + " - " + e.getMessage());
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Błąd walidacji schematów: " + e.getMessage());
-            throw e;
+        File jsDirectory = new File(jsScriptsDirectory);
+        if (!jsDirectory.exists() || !jsDirectory.isDirectory()) return;
+
+        File[] jsonFiles = jsDirectory.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
+        if (jsonFiles == null || jsonFiles.length == 0) return;
+
+        for (File jsonFile : jsonFiles) {
+            try {
+                String jsonContent = new String(Files.readAllBytes(Paths.get(jsonFile.getAbsolutePath())));
+                Document command = Document.parse(jsonContent);
+                database.runCommand(command);
+            } catch (IOException ignored) {}
         }
     }
 
+    /**
+     * Tworzy przykładowych pacjentów.
+     */
     private void createDemoPatients(String passwordHash, String salt) {
         for (int i = 1; i <= 10; i++) {
             try {
                 LocalDate birthDate = generateRandomBirthDate();
-
                 int age = Patient.calculateAge(birthDate);
 
                 Patient patient = new Patient.Builder()
@@ -102,13 +100,13 @@ public class DataLoader {
                         .diagnosis(Diagnosis.AWAITING)
                         .build();
                 patientRepository.createPatient(patient);
-            } catch (Exception e) {
-                System.out.println("Błąd podczas tworzenia pacjenta: " + e.getMessage());
-                e.printStackTrace();
-            }
+            } catch (Exception ignored) {}
         }
     }
 
+    /**
+     * Tworzy pokoje dla wszystkich typów.
+     */
     private void createRoomsForAllTypes() {
         TypeOfRoom[] roomTypes = TypeOfRoom.values();
 
@@ -122,11 +120,7 @@ public class DataLoader {
                         type
                 );
                 roomRepository.createRoom(room);
-                System.out.println("Utworzono pokój typu: " + type.getDescription());
-            } catch (Exception e) {
-                System.out.println("Błąd tworzenia pokoju typu " + type + ": " + e.getMessage());
-                e.printStackTrace();
-            }
+            } catch (Exception ignored) {}
         }
 
         for (int i = 0; i < 10; i++) {
@@ -139,13 +133,13 @@ public class DataLoader {
                         roomTypes[random.nextInt(roomTypes.length)]
                 );
                 roomRepository.createRoom(room);
-            } catch (Exception e) {
-                System.out.println("Błąd tworzenia dodatkowego pokoju: " + e.getMessage());
-                e.printStackTrace();
-            }
+            } catch (Exception ignored) {}
         }
     }
 
+    /**
+     * Tworzy przykładowych lekarzy.
+     */
     private void createDemoDoctors(String passwordHash, String salt) {
         String[] days = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"};
         Specialization[] specializations = Specialization.values();
@@ -162,7 +156,7 @@ public class DataLoader {
                         .lastName(getRandomLastName())
                         .age(30 + random.nextInt(35))
                         .pesel(generateRandomPesel(birthDate))
-                        .specialization(specializations[random.nextInt(specializations.length)]) // Używamy enuma
+                        .specialization(specializations[random.nextInt(specializations.length)])
                         .availableDays(Arrays.stream(selectedDays).map(Day::valueOf).collect(Collectors.toList()))
                         .room(String.format("%03d", random.nextInt(500) + 1))
                         .contactInformation(generateRandomPhoneNumber())
@@ -170,17 +164,34 @@ public class DataLoader {
                         .passwordSalt(salt)
                         .build();
                 doctorRepository.createDoctor(doctor);
-            } catch (Exception e) {
-                System.out.println("Błąd podczas tworzenia lekarza: " + e.getMessage());
-                e.printStackTrace();
-            }
+            } catch (Exception ignored) {}
         }
     }
 
-    private String getRandomFirstName()   { return FIRST_NAMES[random.nextInt(FIRST_NAMES.length)]; }
-    private String getRandomLastName()    { return LAST_NAMES[random.nextInt(LAST_NAMES.length)]; }
-    private String getRandomStreet()      { return STREET_NAMES[random.nextInt(STREET_NAMES.length)]; }
+    /**
+     * Zwraca losowe imię.
+     */
+    private String getRandomFirstName() {
+        return FIRST_NAMES[random.nextInt(FIRST_NAMES.length)];
+    }
 
+    /**
+     * Zwraca losowe nazwisko.
+     */
+    private String getRandomLastName() {
+        return LAST_NAMES[random.nextInt(LAST_NAMES.length)];
+    }
+
+    /**
+     * Zwraca losową nazwę ulicy.
+     */
+    private String getRandomStreet() {
+        return STREET_NAMES[random.nextInt(STREET_NAMES.length)];
+    }
+
+    /**
+     * Generuje losowy adres.
+     */
     private String generateRandomAddress() {
         String street = getRandomStreet();
         String bnr = String.valueOf(random.nextInt(200) + 1);
@@ -188,40 +199,44 @@ public class DataLoader {
         return "ul. " + street + " " + bnr + apt;
     }
 
+    /**
+     * Generuje losową datę urodzenia.
+     */
     private LocalDate generateRandomBirthDate() {
         int year = 1950 + random.nextInt(70);
         int month = random.nextInt(12) + 1;
-        int day   = random.nextInt(28) + 1;
+        int day = random.nextInt(28) + 1;
         return LocalDate.of(year, month, day);
     }
 
+    /**
+     * Generuje losowy numer telefonu.
+     */
     private String generateRandomPhoneNumber() {
-        return String.format("%03d-%03d-%03d", random.nextInt(900) + 100, random.nextInt(900) + 100, random.nextInt(900) + 100);
+        return String.format("%03d-%03d-%03d",
+                random.nextInt(900) + 100,
+                random.nextInt(900) + 100,
+                random.nextInt(900) + 100);
     }
 
+    /**
+     * Generuje losowy PESEL na podstawie daty urodzenia.
+     */
     private long generateRandomPesel(LocalDate birthDate) {
         int year = birthDate.getYear();
         int month = birthDate.getMonthValue();
         int day = birthDate.getDayOfMonth();
 
         int yy = year % 100;
-        int mm;
-        if (year >= 1900 && year < 2000) {
-            mm = month;
-        } else if (year >= 2000 && year < 2100) {
-            mm = month + 20;
-        } else {
-            throw new IllegalArgumentException("Rok poza obsługiwanym zakresem (1900-2100)");
-        }
+        int mm = year >= 2000 ? month + 20 : month;
         int serial = random.nextInt(10000);
+
         String datePart = String.format("%02d%02d%02d", yy, mm, day);
         String serialPart = String.format("%04d", serial);
         String firstTen = datePart + serialPart;
 
         char[] firstTenChars = firstTen.toCharArray();
-        if (firstTenChars[0] == '0') {
-            firstTenChars[0] = (char)('1' + random.nextInt(9));
-        }
+        if (firstTenChars[0] == '0') firstTenChars[0] = (char) ('1' + random.nextInt(9));
         firstTen = new String(firstTenChars);
 
         int[] weights = {1, 3, 7, 9, 1, 3, 7, 9, 1, 3};
@@ -231,11 +246,12 @@ public class DataLoader {
             sum += digit * weights[i];
         }
         int checkDigit = (10 - sum % 10) % 10;
-        String fullPesel = firstTen + checkDigit;
-
-        return Long.parseLong(fullPesel);
+        return Long.parseLong(firstTen + checkDigit);
     }
 
+    /**
+     * Uruchamia ładowanie danych do bazy.
+     */
     public static void main(String[] args) {
         MongoDatabase db = MongoDatabaseConnector.connectToDatabase();
         new DataLoader(db).loadData();

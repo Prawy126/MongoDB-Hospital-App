@@ -33,6 +33,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+/**
+ * Kontroler widoku dla lekarza pierwszego kontaktu.
+ * Obsługuje panel główny, przypisywanie diagnoz, kalendarz dostępności i inne widoki interfejsu.
+ */
 public class DoctorFirstContactController implements Initializable {
     private final DoctorFirstContactPanel panel;
     private Doctor doctor;
@@ -40,6 +44,11 @@ public class DoctorFirstContactController implements Initializable {
     private final RoomRepository room;
     private final DoctorRepository doctorRepo;
 
+    /**
+     * Tworzy instancję kontrolera dla danego lekarza i panelu GUI.
+     * @param panel panel GUI przypisany do kontrolera
+     * @param doctor lekarz zalogowany do systemu
+     */
     public DoctorFirstContactController(DoctorFirstContactPanel panel, Doctor doctor) {
         this.panel = panel;
         this.doctor = doctor;
@@ -48,11 +57,17 @@ public class DoctorFirstContactController implements Initializable {
         this.doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
     }
 
+    /**
+     * Inicjalizuje komponenty kontrolera (obowiązkowe dla Initializable).
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         // Inicjalizacja komponentów
     }
 
+    /**
+     * Wyświetla ekran powitalny dla lekarza z informacją o liczbie pacjentów oczekujących na diagnozę.
+     */
     public void showDashboard() {
         VBox dashboard = new VBox(10);
         dashboard.setPadding(new Insets(10));
@@ -68,6 +83,9 @@ public class DoctorFirstContactController implements Initializable {
         panel.setCenterPane(dashboard);
     }
 
+    /**
+     * Wyświetla listę pacjentów z możliwością przypisania diagnozy.
+     */
     public void showPatientsList() {
         VBox patientsList = new VBox(10);
         patientsList.setPadding(new Insets(10));
@@ -121,6 +139,10 @@ public class DoctorFirstContactController implements Initializable {
         panel.setCenterPane(patientsList);
     }
 
+    /**
+     * Pokazuje dialog umożliwiający przypisanie diagnozy pacjentowi.
+     * @param patient pacjent, dla którego przypisywana jest diagnoza
+     */
     private void showDiagnosisDialog(Patient patient) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Przypisz diagnozę");
@@ -192,6 +214,11 @@ public class DoctorFirstContactController implements Initializable {
             }
         }
     }
+
+    /**
+     * Wyświetla kalendarz dostępności lekarza w formie interaktywnego formularza.
+     * @return komponent VBox z kalendarzem dostępności
+     */
     public VBox showAvailabilityCalendar() {
         VBox layout = new VBox(20);
         layout.setPadding(new Insets(20));
@@ -288,6 +315,12 @@ public class DoctorFirstContactController implements Initializable {
         return layout;
     }
 
+    /**
+     * Pokazuje alert informacyjny, ostrzegawczy lub błędu.
+     * @param type typ alertu
+     * @param title tytuł okna alertu
+     * @param message treść wiadomości
+     */
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -295,6 +328,9 @@ public class DoctorFirstContactController implements Initializable {
         alert.showAndWait();
     }
 
+    /**
+     * Wyświetla sekcję historii medycznej (widok placeholder).
+     */
     public void showMedicalHistory() {
         VBox history = new VBox(10);
         history.setPadding(new Insets(10));
@@ -303,6 +339,9 @@ public class DoctorFirstContactController implements Initializable {
         panel.setCenterPane(history);
     }
 
+    /**
+     * Wyświetla sekcję skierowań (widok placeholder).
+     */
     public void showReferrals() {
         VBox referrals = new VBox(10);
         referrals.setPadding(new Insets(10));
@@ -311,6 +350,9 @@ public class DoctorFirstContactController implements Initializable {
         panel.setCenterPane(referrals);
     }
 
+    /**
+     * Wylogowuje użytkownika i przełącza widok do panelu logowania.
+     */
     public void logout() {
         panel.getPrimaryStage().close();
         Stage loginStage = new Stage();
@@ -321,6 +363,10 @@ public class DoctorFirstContactController implements Initializable {
         }
     }
 
+    /**
+     * Pokazuje alert informujący o sukcesie.
+     * @param message treść wiadomości
+     */
     private void showSuccessAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Sukces");
@@ -328,6 +374,10 @@ public class DoctorFirstContactController implements Initializable {
         alert.showAndWait();
     }
 
+    /**
+     * Pokazuje alert informujący o błędzie.
+     * @param message treść wiadomości
+     */
     private void showErrorAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Błąd");
@@ -335,15 +385,29 @@ public class DoctorFirstContactController implements Initializable {
         alert.showAndWait();
     }
 
+    /**
+     * Odświeża obiekt lekarza w kontrolerze po aktualizacji danych.
+     * @param updatedDoctor zaktualizowany obiekt lekarza
+     */
     private void refreshDoctor(Doctor updatedDoctor) {
         this.doctor = updatedDoctor;
     }
 
+    /**
+     * Zwraca liczbę dzisiejszych wizyt (obecnie placeholder).
+     * @return liczba wizyt (0)
+     */
+    //TODO: Sprawdzić tą metodę i poprawić
     private int getTodayAppointmentsCount() {
         return 0;
     }
 
-    // Dodana metoda do tworzenia stylizowanego przycisku
+    /**
+     * Tworzy stylizowany przycisk z efektem powiększania po najechaniu.
+     * @param text tekst na przycisku
+     * @param color kolor tła przycisku
+     * @return stylizowany przycisk
+     */
     private Button createStyledButton(String text, String color) {
         Button button = new Button(text);
         button.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold;");

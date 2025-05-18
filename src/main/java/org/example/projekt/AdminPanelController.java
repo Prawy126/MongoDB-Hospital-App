@@ -51,7 +51,6 @@ public class AdminPanelController {
         this.adminPanel = adminPanel;
         this.primaryStage = adminPanel.getPrimaryStage();
 
-        // Użyj jednego połączenia dla wszystkich repozytoriów
         MongoDatabase db = MongoDatabaseConnector.connectToDatabase();
         this.appointmentRepo = new AppointmentRepository(db);
         this.doctorRepo = new DoctorRepository(db);
@@ -371,7 +370,6 @@ public class AdminPanelController {
         TableColumn<Room, Integer> maxCol = new TableColumn<>("Max pacjenci");
         maxCol.setCellValueFactory(new PropertyValueFactory<>("maxPatients"));
 
-        // Naprawiona kolumna - używamy niestandardowej fabryki wartości komórki
         TableColumn<Room, Integer> currentCol = new TableColumn<>("Obecni pacjenci");
         currentCol.setCellValueFactory(cellData ->
                 new SimpleIntegerProperty(cellData.getValue().getCurrentPatientCount()).asObject());

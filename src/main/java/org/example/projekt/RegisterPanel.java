@@ -17,7 +17,6 @@ public class RegisterPanel {
     private RegisterPanelController controller;
 
     public RegisterPanel() {
-        // Pobierz repozytorium pacjentów z połączenia MongoDB
         this.patientRepository = new PatientRepository(MongoDatabaseConnector.connectToDatabase());
     }
 

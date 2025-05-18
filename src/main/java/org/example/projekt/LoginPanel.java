@@ -17,13 +17,20 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-// lekarz do testowania czyli pierwszego konatktu
-//90030224046
+
+/**
+ * Klasa reprezentująca panel logowania użytkownika do systemu szpitalnego.
+ * Obsługuje logowanie, rejestrację oraz przekierowania do odpowiednich paneli.
+ */
 public class LoginPanel extends Application {
 
     private Button loginBtn;
     private final Login loginService = new Login();
-// Upewnij się, że robisz notatki w kodzie
+
+    /**
+     * Główna metoda inicjalizacji interfejsu logowania.
+     * @param primaryStage główna scena aplikacji
+     */
     @Override
     public void start(Stage primaryStage) {
 
@@ -33,25 +40,25 @@ public class LoginPanel extends Application {
         grid.setVgap(15);
         grid.setHgap(10);
         grid.setStyle("-fx-background-color: lightblue;");
-        grid.setAlignment(Pos.CENTER);  // Centrowanie całego gridu
+        grid.setAlignment(Pos.CENTER);
 
         // Nagłówek
         Label header = new Label("Szpital");
         header.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
         GridPane.setConstraints(header, 0, 0, 3, 1);
         GridPane.setMargin(header, new Insets(0, 0, 20, 0));
-        GridPane.setHalignment(header, HPos.CENTER);  // Centrowanie nagłówka
+        GridPane.setHalignment(header, HPos.CENTER);
 
         // Pola wprowadzania danych
         Label userLabel = new Label("PESEL:");
-        GridPane.setHalignment(userLabel, HPos.RIGHT);  // Wyrównanie etykiety w prawo
+        GridPane.setHalignment(userLabel, HPos.RIGHT);
         TextField userField = new TextField();
-        GridPane.setHalignment(userField, HPos.CENTER);  // Centrowanie pola tekstowego
+        GridPane.setHalignment(userField, HPos.CENTER);
 
         Label passLabel = new Label("Hasło:");
-        GridPane.setHalignment(passLabel, HPos.RIGHT);  // Wyrównanie etykiety w prawo
+        GridPane.setHalignment(passLabel, HPos.RIGHT);
         PasswordField passField = new PasswordField();
-        GridPane.setHalignment(passField, HPos.CENTER);  // Centrowanie pola hasła
+        GridPane.setHalignment(passField, HPos.CENTER);
 
         // Kontener na przyciski (główny)
         VBox buttonsContainer = new VBox(10);
@@ -135,6 +142,10 @@ public class LoginPanel extends Application {
         primaryStage.show();
     }
 
+    /**
+     * Otwiera panel lekarza pierwszego kontaktu po pomyślnym logowaniu.
+     * @param doctor obiekt zalogowanego lekarza
+     */
     private void openDoctorFirstContactPanel(Doctor doctor) {
         Stage doctorStage = new Stage();
         DoctorRepository doctorRepo = new DoctorRepository(MongoDatabaseConnector.connectToDatabase());
@@ -142,31 +153,66 @@ public class LoginPanel extends Application {
         closeLoginWindow();
     }
 
-    private void openAdminPanel()  { new AdminPanel(new Stage());  closeLoginWindow(); }
+    /**
+     * Otwiera panel administratora.
+     */
+    private void openAdminPanel()  {
+        new AdminPanel(new Stage());
+        closeLoginWindow();
+    }
+
+    /**
+     * Otwiera panel lekarza po zalogowaniu.
+     * @param doctor obiekt lekarza
+     */
     private void openDoctorPanel(Doctor doctor) {
         Stage doctorStage = new Stage();
         new DoctorPanel(doctorStage, doctor);
         closeLoginWindow();
     }
 
+    /**
+     * Otwiera panel pacjenta po zalogowaniu.
+     * @param patient obiekt pacjenta
+     */
     private void openPatientPanel(Patient patient) {
         Stage patientStage = new Stage();
         new PatientPanel(patientStage, patient);
         closeLoginWindow();
     }
 
+    /**
+     * Zamyka bieżące okno logowania.
+     */
     private void closeLoginWindow() {
         ((Stage) loginBtn.getScene().getWindow()).close();
     }
 
+    /**
+     * Uruchamia animację stopniowego pojawienia się komponentu.
+     * @param pane komponent do animacji
+     * @param ms czas trwania animacji w milisekundach
+     */
     private void animateFadeIn(GridPane pane, int ms) {
         FadeTransition ft = new FadeTransition(Duration.millis(ms), pane);
         ft.setFromValue(0); ft.setToValue(1); ft.play();
     }
 
+    /**
+     * Wyświetla okno dialogowe z komunikatem.
+     * @param type typ alertu
+     * @param title tytuł okna
+     * @param msg treść wiadomości
+     */
     private void showAlert(Alert.AlertType type, String title, String msg) {
         Alert a = new Alert(type); a.setTitle(title); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
     }
 
-    public static void main(String[] args) { launch(args); }
+    /**
+     * Główna metoda uruchamiająca aplikację.
+     * @param args argumenty wiersza poleceń
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
 }

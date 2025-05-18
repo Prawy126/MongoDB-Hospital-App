@@ -6,7 +6,8 @@ import org.bson.types.ObjectId;
 import java.time.LocalDateTime;
 
 /**
- * Klasa Appointment reprezentuje wizytę pacjenta u lekarza.
+ * Klasa {@code Appointment} reprezentuje wizytę pacjenta u lekarza.
+ * Zawiera informacje o pacjencie, lekarzu, dacie, sali, opisie oraz statusie wizyty.
  */
 public class Appointment {
 
@@ -19,13 +20,20 @@ public class Appointment {
     private AppointmentStatus status;
 
     /**
-     * Domyślny konstruktor.
+     * Domyślny konstruktor bez parametrów.
      */
     public Appointment() {
     }
 
     /**
-     * Konstruktor tworzący pełną wizytę.
+     * Konstruktor tworzący wizytę z podstawowymi informacjami.
+     *
+     * @param patientId   identyfikator pacjenta
+     * @param doctorId    identyfikator lekarza
+     * @param date        data i godzina wizyty
+     * @param room        identyfikator sali
+     * @param description opis wizyty
+     * @param status      status wizyty
      */
     public Appointment(ObjectId patientId, ObjectId doctorId, LocalDateTime date,
                        ObjectId room, String description, AppointmentStatus status) {
@@ -38,7 +46,15 @@ public class Appointment {
     }
 
     /**
-     * Konstruktor tworzący pełną wizytę.
+     * Konstruktor tworzący wizytę z dodatkowymi parametrami (uwaga: roomId jest zbędny).
+     *
+     * @param patientId   identyfikator pacjenta
+     * @param doctorId    identyfikator lekarza
+     * @param roomId      nieużywany parametr (możliwy do usunięcia)
+     * @param date        data i godzina wizyty
+     * @param room        identyfikator sali
+     * @param description opis wizyty
+     * @param status      status wizyty
      */
     public Appointment(ObjectId patientId, ObjectId doctorId, ObjectId roomId, LocalDateTime date,
                        ObjectId room, String description, AppointmentStatus status) {
@@ -48,7 +64,6 @@ public class Appointment {
         this.room = room;
         this.description = description;
         this.status = status;
-
     }
 
     public ObjectId getId() {
@@ -108,7 +123,7 @@ public class Appointment {
     }
 
     /**
-     * Klasa pomocnicza do budowania obiektów typu Appointment.
+     * Klasa pomocnicza do tworzenia obiektów typu {@link Appointment} przy użyciu wzorca builder.
      */
     public static class Builder {
         private ObjectId id;
@@ -158,7 +173,7 @@ public class Appointment {
         }
 
         /**
-         * Tworzy instancję klasy Appointment.
+         * Buduje i zwraca obiekt {@link Appointment}.
          */
         public Appointment build() {
             Appointment appointment = new Appointment();
@@ -173,6 +188,9 @@ public class Appointment {
         }
     }
 
+    /**
+     * Porównuje dwa obiekty typu {@link Appointment} na podstawie ich identyfikatora.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -181,11 +199,17 @@ public class Appointment {
         return getId().equals(appointment.getId());
     }
 
+    /**
+     * Zwraca kod haszujący oparty na identyfikatorze.
+     */
     @Override
     public int hashCode() {
         return getId().hashCode();
     }
 
+    /**
+     * Zwraca reprezentację tekstową obiektu {@link Appointment}.
+     */
     @Override
     public String toString() {
         return "Appointment{" +

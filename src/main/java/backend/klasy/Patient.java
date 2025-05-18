@@ -9,6 +9,11 @@ import org.bson.types.ObjectId;
 import java.time.LocalDate;
 import java.time.Period;
 
+/**
+ * Klasa {@code Patient} reprezentuje pacjenta w systemie.
+ * Dziedziczy po klasie {@link Person} i zawiera dodatkowe informacje takie jak data urodzenia,
+ * adres zamieszkania oraz diagnoza.
+ */
 public class Patient extends Person {
 
     private ObjectId id;
@@ -16,61 +21,59 @@ public class Patient extends Person {
     private String address;
     private Diagnosis diagnosis;
 
+    /**
+     * Domyślny konstruktor.
+     */
     public Patient() {}
 
-    public Patient(
-            String firstName,
-            String lastName,
-            long pesel,
-            LocalDate birthDate,
-            String address,
-            int age
-    ) throws PeselException, NullNameException, AgeException {
+    /**
+     * Konstruktor tworzący pacjenta bez hasła.
+     *
+     * @param firstName  imię pacjenta
+     * @param lastName   nazwisko pacjenta
+     * @param pesel      numer PESEL
+     * @param birthDate  data urodzenia
+     * @param address    adres pacjenta
+     * @param age        wiek pacjenta
+     * @throws PeselException    niepoprawny PESEL
+     * @throws NullNameException brak imienia lub nazwiska
+     * @throws AgeException      niepoprawny wiek
+     */
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age)
+            throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age);
         this.birthDate = birthDate;
         this.address = address;
         this.diagnosis = Diagnosis.AWAITING;
     }
 
-    public Patient(
-            String firstName,
-            String lastName,
-            long pesel,
-            LocalDate birthDate,
-            String address,
-            int age,
-            String plainPassword
-    ) throws PeselException, NullNameException, AgeException {
+    /**
+     * Konstruktor tworzący pacjenta z hasłem w postaci jawnej.
+     */
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age, String plainPassword)
+            throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age, plainPassword);
         this.birthDate = birthDate;
         this.address = address;
         this.diagnosis = Diagnosis.AWAITING;
     }
 
-    public Patient(
-            String firstName,
-            String lastName,
-            long pesel,
-            LocalDate birthDate,
-            String address,
-            int age,
-            String plainPassword,
-            Diagnosis diagnosis
-    ) throws PeselException, NullNameException, AgeException {
+    /**
+     * Konstruktor tworzący pacjenta z jawnie określoną diagnozą.
+     */
+    public Patient(String firstName, String lastName, long pesel, LocalDate birthDate, String address, int age, String plainPassword, Diagnosis diagnosis)
+            throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age, plainPassword);
         this.birthDate = birthDate;
         this.address = address;
         this.diagnosis = diagnosis;
     }
 
-    public Patient(
-            String firstName,
-            String lastName,
-            long pesel,
-            int age,
-            String passwordHash,
-            String passwordSalt
-    ) throws PeselException, NullNameException, AgeException {
+    /**
+     * Konstruktor używany przy odczycie z bazy z hasłem zahashowanym.
+     */
+    public Patient(String firstName, String lastName, long pesel, int age, String passwordHash, String passwordSalt)
+            throws PeselException, NullNameException, AgeException {
         super(firstName, lastName, pesel, age, passwordHash, passwordSalt);
         setDiagnosis(Diagnosis.AWAITING);
     }
@@ -105,13 +108,13 @@ public class Patient extends Person {
 
     public void setDiagnosis(Diagnosis diagnosis) {
         this.diagnosis = diagnosis;
-
     }
 
     /**
-     * Oblicza wiek na podstawie daty urodzenia.
+     * Oblicza wiek pacjenta na podstawie daty urodzenia.
+     *
      * @param birthDate data urodzenia
-     * @return wiek w latach
+     * @return wiek w latach, lub 0 jeśli data jest pusta
      */
     public static int calculateAge(LocalDate birthDate) {
         if (birthDate == null) {
@@ -120,11 +123,17 @@ public class Patient extends Person {
         return Period.between(birthDate, LocalDate.now()).getYears();
     }
 
+    /**
+     * Zwraca reprezentację tekstową pacjenta.
+     */
     @Override
     public String toString() {
         return getFirstName() + " " + getLastName() + " (" + getPesel() + ")";
     }
 
+    /**
+     * Wzorzec projektowy Builder dla tworzenia pacjentów w elastyczny sposób.
+     */
     public static class Builder {
         private ObjectId id;
         private String firstName;
@@ -189,7 +198,6 @@ public class Patient extends Person {
             return this;
         }
 
-
         public Builder skipValidation(boolean skipValidation) {
             this.skipValidation = skipValidation;
             return this;
@@ -200,6 +208,14 @@ public class Patient extends Person {
             return this;
         }
 
+        /**
+         * Tworzy nową instancję {@link Patient} na podstawie zdefiniowanych pól.
+         *
+         * @return nowy obiekt klasy {@link Patient}
+         * @throws PeselException    niepoprawny PESEL
+         * @throws NullNameException brak imienia/nazwiska
+         * @throws AgeException      niepoprawny wiek
+         */
         public Patient build() throws PeselException, NullNameException, AgeException {
             if (!skipValidation) {
                 if (firstName == null || firstName.trim().isEmpty()) {
@@ -218,17 +234,16 @@ public class Patient extends Person {
 
             Patient patient;
             if (plainPassword != null) {
-                patient = new Patient(firstName, lastName, pesel, birthDate, address, age, plainPassword);
+                patient = new Patient(firstName, lastName, pesel, birthDate, address, age, plainPassword, diagnosis);
             } else {
                 patient = new Patient(firstName, lastName, pesel, age, passwordHash, passwordSalt);
                 patient.setBirthDate(birthDate);
                 patient.setAddress(address);
-
+                patient.setDiagnosis(diagnosis);
             }
 
             patient.setId(id != null ? id : new ObjectId());
             return patient;
         }
-
     }
 }

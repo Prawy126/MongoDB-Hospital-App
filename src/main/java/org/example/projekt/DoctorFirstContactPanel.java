@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Klasa odpowiedzialna za panel doktora pierwszego kontaktu.
- * Zawiera specjalistyczne funkcje dla lekarzy pierwszego kontaktu.
+ * Klasa odpowiedzialna za panel graficzny lekarza pierwszego kontaktu.
+ * Udostępnia interfejs do przeglądania danych, zmiany dostępności i obsługi pacjentów.
  */
 public class DoctorFirstContactPanel {
     private BorderPane root;
@@ -31,6 +31,12 @@ public class DoctorFirstContactPanel {
     private final Doctor currentDoctor;
     private DoctorRepository doctorRepo;
 
+    /**
+     * Tworzy nowy panel lekarza pierwszego kontaktu.
+     * @param stage główne okno aplikacji
+     * @param doctor aktualnie zalogowany lekarz
+     * @param doctorRepository repozytorium lekarzy
+     */
     public DoctorFirstContactPanel(Stage stage, Doctor doctor, DoctorRepository doctorRepository) {
         this.primaryStage = stage;
         this.currentDoctor = doctor;
@@ -40,6 +46,9 @@ public class DoctorFirstContactPanel {
         initializePanel();
     }
 
+    /**
+     * Inicjalizuje główny interfejs użytkownika oraz domyślny widok.
+     */
     private void initializePanel() {
         root = new BorderPane();
         root.setPadding(new Insets(10));
@@ -62,6 +71,10 @@ public class DoctorFirstContactPanel {
         primaryStage.show();
     }
 
+    /**
+     * Tworzy menu nawigacyjne dla panelu.
+     * @return VBox zawierający przyciski nawigacyjne
+     */
     private VBox createMenu() {
         VBox menu = new VBox(10);
         menu.setPadding(new Insets(10));
@@ -73,8 +86,6 @@ public class DoctorFirstContactPanel {
 
         Button patientsButton = createStyledButton("Lista pacjentów");
         patientsButton.setOnAction(e -> controller.showPatientsList());
-
-
 
         Button logoutButton = createStyledButton("Wyloguj", "#E74C3C");
         logoutButton.setOnAction(e -> controller.logout());
@@ -88,6 +99,10 @@ public class DoctorFirstContactPanel {
         return menu;
     }
 
+    /**
+     * Wyświetla formularz edycji dostępności lekarza.
+     * @return VBox z widokiem kalendarza dostępności
+     */
     public VBox showAvailabilityCalendar() {
         VBox layout = new VBox(20);
         layout.setPadding(new Insets(20));
@@ -184,6 +199,10 @@ public class DoctorFirstContactPanel {
         return layout;
     }
 
+    /**
+     * Wyświetla okno z komunikatem o sukcesie.
+     * @param message treść wiadomości
+     */
     private void showSuccessAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Sukces");
@@ -192,6 +211,10 @@ public class DoctorFirstContactPanel {
         alert.showAndWait();
     }
 
+    /**
+     * Wyświetla okno z komunikatem o błędzie.
+     * @param message treść wiadomości
+     */
     private void showErrorAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Błąd");
@@ -200,16 +223,30 @@ public class DoctorFirstContactPanel {
         alert.showAndWait();
     }
 
+    /**
+     * Odświeża dane lekarza oraz widok dostępności.
+     * @param updatedDoctor zaktualizowany obiekt lekarza
+     */
     private void refreshDoctor(Doctor updatedDoctor) {
-        // Update the controller with the refreshed doctor data
         controller = new DoctorFirstContactController(this, updatedDoctor);
         controller.showAvailabilityCalendar();
     }
 
+    /**
+     * Tworzy przycisk z domyślnym kolorem.
+     * @param text etykieta przycisku
+     * @return stylizowany przycisk
+     */
     private Button createStyledButton(String text) {
         return createStyledButton(text, "#3498DB");
     }
 
+    /**
+     * Tworzy stylizowany przycisk z niestandardowym kolorem.
+     * @param text etykieta przycisku
+     * @param color kolor tła w stylu CSS
+     * @return stylizowany przycisk
+     */
     private Button createStyledButton(String text, String color) {
         Button button = new Button(text);
         button.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -231,6 +268,11 @@ public class DoctorFirstContactPanel {
         return button;
     }
 
+    /**
+     * Uruchamia animację zanikania komponentu.
+     * @param element element do animacji
+     * @param duration czas trwania w milisekundach
+     */
     private void animateFadeIn(VBox element, int duration) {
         FadeTransition fade = new FadeTransition(Duration.millis(duration), element);
         fade.setFromValue(0);
@@ -238,6 +280,11 @@ public class DoctorFirstContactPanel {
         fade.play();
     }
 
+    /**
+     * Uruchamia animację przesunięcia w dół.
+     * @param element element do animacji
+     * @param duration czas trwania w milisekundach
+     */
     private void animateSlideDown(VBox element, int duration) {
         TranslateTransition slide = new TranslateTransition(Duration.millis(duration), element);
         slide.setFromY(-50);
@@ -246,10 +293,18 @@ public class DoctorFirstContactPanel {
         slide.play();
     }
 
+    /**
+     * Ustawia komponent centralny w głównym oknie.
+     * @param pane komponent do wyświetlenia
+     */
     public void setCenterPane(Pane pane) {
         root.setCenter(pane);
     }
 
+    /**
+     * Zwraca główne okno aplikacji.
+     * @return scena Stage
+     */
     public Stage getPrimaryStage() {
         return primaryStage;
     }

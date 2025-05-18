@@ -11,6 +11,10 @@ import javafx.stage.Stage;
 
 import java.time.LocalDate;
 
+/**
+ * Kontroler logiki rejestracji nowego pacjenta w systemie.
+ * Odpowiada za walidację danych, tworzenie pacjenta oraz interakcję z repozytorium.
+ */
 public class RegisterPanelController {
     private TextField nameField;
     private TextField surnameField;
@@ -21,35 +25,65 @@ public class RegisterPanelController {
 
     private final PatientRepository patientRepository;
 
+    /**
+     * Konstruktor inicjalizujący kontroler z repozytorium pacjentów.
+     * @param patientRepository repozytorium pacjentów
+     */
     public RegisterPanelController(PatientRepository patientRepository) {
         this.patientRepository = patientRepository;
     }
 
-    // Settery dla pól formularza
+    /**
+     * Ustawia pole imienia.
+     * @param nameField pole tekstowe imienia
+     */
     public void setNameField(TextField nameField) {
         this.nameField = nameField;
     }
 
+    /**
+     * Ustawia pole nazwiska.
+     * @param surnameField pole tekstowe nazwiska
+     */
     public void setSurnameField(TextField surnameField) {
         this.surnameField = surnameField;
     }
 
+    /**
+     * Ustawia pole PESEL.
+     * @param peselField pole tekstowe PESEL
+     */
     public void setPeselField(TextField peselField) {
         this.peselField = peselField;
     }
 
+    /**
+     * Ustawia kontrolkę daty urodzenia.
+     * @param birthDatePicker kontrolka wyboru daty
+     */
     public void setBirthDatePicker(DatePicker birthDatePicker) {
         this.birthDatePicker = birthDatePicker;
     }
 
+    /**
+     * Ustawia pole adresu.
+     * @param addressField pole tekstowe adresu
+     */
     public void setAddressField(TextField addressField) {
         this.addressField = addressField;
     }
 
+    /**
+     * Ustawia pole hasła.
+     * @param passwordField pole hasła
+     */
     public void setPasswordField(PasswordField passwordField) {
         this.passwordField = passwordField;
     }
 
+    /**
+     * Konfiguruje walidację formularza rejestracyjnego (PESEL i data urodzenia).
+     */
     public void setupFormValidation() {
         // Walidacja PESEL
         peselField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -67,6 +101,10 @@ public class RegisterPanelController {
         });
     }
 
+    /**
+     * Obsługuje próbę zatwierdzenia formularza rejestracji.
+     * @param stage scena do zamknięcia po pomyślnym zarejestrowaniu
+     */
     public void handleSubmit(Stage stage) {
         try {
             validateForm();
@@ -78,6 +116,10 @@ public class RegisterPanelController {
         }
     }
 
+    /**
+     * Sprawdza poprawność danych wprowadzonych do formularza.
+     * @throws Exception jeśli któreś pole jest nieprawidłowe
+     */
     private void validateForm() throws Exception {
         if (nameField.getText().trim().isEmpty()) {
             throw new NullNameException("Imię nie może być puste");
@@ -106,6 +148,13 @@ public class RegisterPanelController {
         }
     }
 
+    /**
+     * Tworzy i zapisuje nowego pacjenta na podstawie danych formularza.
+     * @throws PeselException jeśli PESEL jest nieprawidłowy
+     * @throws NullNameException jeśli imię lub nazwisko są puste
+     * @throws AgeException jeśli wiek pacjenta jest niepoprawny
+     */
+    //TODO: zmienić na patient reposiotry
     private void createPatient() throws PeselException, NullNameException, AgeException {
         int age = Patient.calculateAge(birthDatePicker.getValue());
 
@@ -123,6 +172,12 @@ public class RegisterPanelController {
         patientRepository.createPatient(patient);
     }
 
+    /**
+     * Wyświetla komunikat w formie alertu.
+     * @param type typ alertu (informacja, błąd itp.)
+     * @param title tytuł okna alertu
+     * @param message treść wiadomości
+     */
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

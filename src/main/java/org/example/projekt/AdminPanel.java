@@ -19,8 +19,6 @@ import javafx.util.Duration;
  * Zawiera menu nawigacyjne oraz dynamiczne ładowanie widoków.
  */
 public class AdminPanel {
-    //TODO: Dodać animacje do przycisków
-    //TODO: Dodać animacje do przejść między widokami
     private BorderPane root;
     private Stage primaryStage;
     private AdminPanelController controller;
