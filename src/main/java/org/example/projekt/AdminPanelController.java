@@ -447,8 +447,37 @@ public class AdminPanelController {
         cancelProcedure.setOnAction(e -> {
             Appointment selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                appointmentRepo.deleteAppointment(selected.getId());
-                refreshAppointments(tableView);
+                // Utwórz okno dialogowe potwierdzenia
+                Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmDialog.setTitle("Potwierdzenie usunięcia");
+                confirmDialog.setHeaderText("Czy na pewno chcesz usunąć wybrany zabieg?");
+
+                // Dodaj szczegóły zabiegu do treści komunikatu
+                Doctor lekarz = doctorRepo.findDoctorById(selected.getDoctorId());
+                Patient pacjent = patientRepo.findPatientById(selected.getPatientId()).getFirst();
+                Room sala = roomRepo.findRoomsById(selected.getRoom()).getFirst();
+
+                String szczegoly = "Data: " + selected.getDate().format(formatter) + "\n" +
+                        "Lekarz: " + lekarz.getFirstName() + " " + lekarz.getLastName() + "\n" +
+                        "Pacjent: " + pacjent.getFirstName() + " " + pacjent.getLastName() + "\n" +
+                        "Sala: " + sala.toString2() + "\n" +
+                        "Opis: " + selected.getDescription();
+
+                confirmDialog.setContentText(szczegoly);
+
+                // Dodaj przyciski Tak/Nie
+                ButtonType buttonTypeYes = new ButtonType("Tak");
+                ButtonType buttonTypeNo = new ButtonType("Nie", ButtonBar.ButtonData.CANCEL_CLOSE);
+                confirmDialog.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
+
+                // Pokaż okno dialogowe i poczekaj na odpowiedź
+                confirmDialog.showAndWait().ifPresent(response -> {
+                    if (response == buttonTypeYes) {
+                        // Jeśli użytkownik potwierdził, usuń zabieg
+                        appointmentRepo.deleteAppointment(selected.getId());
+                        refreshAppointments(tableView);
+                    }
+                });
             }
         });
 
@@ -555,6 +584,15 @@ public class AdminPanelController {
                     showWarningMessage("Nie można usunąć",
                             "Nie można usunąć sali, która ma przypisanych pacjentów. " +
                                     "Liczba przypisanych pacjentów: " + selected.getCurrentPatientCount());
+                    return;
+                }
+
+                // Sprawdź, czy sala jest używana w zabiegach
+                List<Appointment> appointmentsInRoom = appointmentRepo.findAppointmentsByRoom(selected.getId());
+                if (appointmentsInRoom != null && !appointmentsInRoom.isEmpty()) {
+                    showWarningMessage("Nie można usunąć",
+                            "Nie można usunąć sali, która jest używana w zaplanowanych zabiegach. " +
+                                    "Liczba zabiegów w tej sali: " + appointmentsInRoom.size());
                     return;
                 }
 

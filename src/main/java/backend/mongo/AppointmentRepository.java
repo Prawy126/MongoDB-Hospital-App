@@ -279,6 +279,19 @@ public class AppointmentRepository {
     }
 
     /**
+     * Znajduje wszystkie zabiegi zaplanowane w danej sali.
+     *
+     * @param roomId identyfikator sali
+     * @return lista zabiegów zaplanowanych w danej sali
+     */
+    public List<Appointment> findAppointmentsByRoom(ObjectId roomId) {
+        if (roomId == null) {
+            throw new IllegalArgumentException("ID sali nie może być null");
+        }
+        return collection.find(eq("room", roomId)).into(new ArrayList<>());
+    }
+
+    /**
      * Aktualizuje przypisania do sali po modyfikacji wizyty.
      */
     private void updateRoomAfterAppointmentUpdate(Appointment oldAppointment, Appointment newAppointment) {

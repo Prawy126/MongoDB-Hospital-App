@@ -25,6 +25,7 @@ import org.bson.types.ObjectId;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -35,11 +36,12 @@ import java.util.stream.Collectors;
 public class AppointmentForm {
 
     private final List<Doctor> wszyscyLekarze;
-    private final List<Patient> pacjenci;
+    private final List<Patient> wszyscyPacjenci;
     private final List<Room> wszystkieSale;
     private final AppointmentRepository zabiegiRepo;
     private final RoomRepository saleRepo;
     private ObservableList<Doctor> dostepniLekarze;
+    private ObservableList<Patient> dostepniPacjenci;
     private ObservableList<Room> kompatybilneSale;
 
     /**
@@ -48,7 +50,7 @@ public class AppointmentForm {
     public AppointmentForm(List<Doctor> lekarze, List<Patient> pacjenci, List<Room> sale,
                            AppointmentRepository zabiegiRepo, RoomRepository saleRepo) {
         this.wszyscyLekarze = lekarze;
-        this.pacjenci = pacjenci;
+        this.wszyscyPacjenci = pacjenci;
         this.wszystkieSale = sale;
         this.zabiegiRepo = zabiegiRepo;
         this.saleRepo = saleRepo;
@@ -59,7 +61,7 @@ public class AppointmentForm {
      */
     public AppointmentForm(List<Doctor> lekarze, List<Patient> pacjenci, List<Room> sale) {
         this.wszyscyLekarze = lekarze;
-        this.pacjenci = pacjenci;
+        this.wszyscyPacjenci = pacjenci;
         this.wszystkieSale = sale;
         this.zabiegiRepo = null;
         this.saleRepo = null;
@@ -80,6 +82,7 @@ public class AppointmentForm {
 
         // Inicjalizacja pustych list - będą wypełnione na podstawie wyborów
         dostepniLekarze = FXCollections.observableArrayList();
+        dostepniPacjenci = FXCollections.observableArrayList();
         kompatybilneSale = FXCollections.observableArrayList();
 
         // Pole wyboru daty
@@ -110,8 +113,23 @@ public class AppointmentForm {
         });
 
         // Pole wyboru pacjenta
-        ComboBox<Patient> wyborPacjenta = new ComboBox<>(FXCollections.observableArrayList(pacjenci));
+        ComboBox<Patient> wyborPacjenta = new ComboBox<>(dostepniPacjenci);
         wyborPacjenta.setPromptText("Wybierz pacjenta");
+
+        // Niestandardowy konwerter dla pacjentów
+        wyborPacjenta.setConverter(new javafx.util.StringConverter<Patient>() {
+            @Override
+            public String toString(Patient pacjent) {
+                if (pacjent == null) return null;
+                return pacjent.getFirstName() + " " + pacjent.getLastName() +
+                        " (PESEL: " + pacjent.getPesel() + ")";
+            }
+
+            @Override
+            public Patient fromString(String tekst) {
+                return null;
+            }
+        });
 
         // Pole wyboru sali
         ComboBox<Room> wyborSali = new ComboBox<>(kompatybilneSale);
@@ -127,7 +145,7 @@ public class AppointmentForm {
 
             @Override
             public Room fromString(String tekst) {
-                return null; // Niepotrzebne dla niemodyfikowalnego ComboBox
+                return null;
             }
         });
 
@@ -139,27 +157,33 @@ public class AppointmentForm {
         ComboBox<AppointmentStatus> wyborStatusu = new ComboBox<>(FXCollections.observableArrayList(AppointmentStatus.values()));
         wyborStatusu.setPromptText("Wybierz status");
 
-        // Dodaj nasłuchiwacz do pola daty, aby aktualizować dostępnych lekarzy
+        // Dodaj nasłuchiwacz do pola daty, aby aktualizować dostępnych lekarzy i pacjentów
         wyborDaty.valueProperty().addListener((obs, staraDat, nowaDat) -> {
             if (nowaDat != null) {
                 aktualizujDostepnychLekarzy(nowaDat, poleGodziny.getText(), wyborLekarza, istniejacyZabieg);
+                aktualizujDostepnychPacjentow(nowaDat, poleGodziny.getText(), wyborPacjenta, istniejacyZabieg);
             } else {
-                // Wyczyść listę lekarzy, jeśli nie wybrano daty
+                // Wyczyść listy, jeśli nie wybrano daty
                 dostepniLekarze.clear();
+                dostepniPacjenci.clear();
                 wyborLekarza.setValue(null);
+                wyborPacjenta.setValue(null);
             }
         });
 
-        // Dodaj nasłuchiwacz do pola godziny, aby aktualizować dostępnych lekarzy
+        // Dodaj nasłuchiwacz do pola godziny, aby aktualizować dostępnych lekarzy i pacjentów
         poleGodziny.textProperty().addListener((obs, staraGodz, nowaGodz) -> {
             LocalDate wybranaDat = wyborDaty.getValue();
             if (wybranaDat != null && !nowaGodz.isEmpty()) {
                 try {
-                    // Spróbuj sparsować godzinę, aby sprawdzić, czy jest poprawna
                     LocalTime.parse(nowaGodz);
                     aktualizujDostepnychLekarzy(wybranaDat, nowaGodz, wyborLekarza, istniejacyZabieg);
+                    aktualizujDostepnychPacjentow(wybranaDat, nowaGodz, wyborPacjenta, istniejacyZabieg);
                 } catch (Exception e) {
-                    // Ignoruj niepoprawny format godziny
+                    if (nowaGodz.length() >= 5) {
+                        pokazBlad("Niepoprawny format godziny",
+                                "Wprowadzona godzina ma niepoprawny format. Użyj formatu gg:mm (np. 14:30).");
+                    }
                 }
             }
         });
@@ -189,13 +213,14 @@ public class AppointmentForm {
                     .orElse(null);
 
             // Znajdź i ustaw wybranego pacjenta
-            Patient wybranyPacjent = pacjenci.stream()
+            Patient wybranyPacjent = wszyscyPacjenci.stream()
                     .filter(p -> p.getId().equals(istniejacyZabieg.getPatientId()))
                     .findFirst()
                     .orElse(null);
 
-            // Aktualizuj listy dostępnych lekarzy i kompatybilnych sal
+            // Aktualizuj listy dostępnych lekarzy, pacjentów i kompatybilnych sal
             aktualizujDostepnychLekarzy(wyborDaty.getValue(), poleGodziny.getText(), wyborLekarza, istniejacyZabieg);
+            aktualizujDostepnychPacjentow(wyborDaty.getValue(), poleGodziny.getText(), wyborPacjenta, istniejacyZabieg);
 
             if (wybranyLekarz != null) {
                 wyborLekarza.setValue(wybranyLekarz);
@@ -207,8 +232,9 @@ public class AppointmentForm {
             // Dla nowych zabiegów, ustaw domyślnie dzisiejszą datę
             LocalDate dzisiaj = LocalDate.now();
             wyborDaty.setValue(dzisiaj);
-            // Aktualizuj listę dostępnych lekarzy
+            // Aktualizuj listę dostępnych lekarzy i pacjentów
             aktualizujDostepnychLekarzy(dzisiaj, "", wyborLekarza, null);
+            aktualizujDostepnychPacjentow(dzisiaj, "", wyborPacjenta, null);
         }
 
         Button przyciskZapisz = new Button("Zapisz");
@@ -319,7 +345,6 @@ public class AppointmentForm {
                 // Filtruj lekarzy, którzy nie mają już zaplanowanych zabiegów w tym terminie
                 lekarzeNaDzien = lekarzeNaDzien.stream()
                         .filter(lekarz -> {
-                            // Jeśli edytujemy istniejący zabieg, wykluczamy go z porównania
                             ObjectId wykluczonId = istniejacyZabieg != null ? istniejacyZabieg.getId() : null;
                             return czyLekarzDostepny(lekarz.getId(), termin, wykluczonId);
                         })
@@ -334,7 +359,6 @@ public class AppointmentForm {
         // Dodaj wszystkich dostępnych lekarzy do listy
         dostepniLekarze.addAll(lekarzeNaDzien);
 
-        // Jeśli edytujemy istniejący zabieg, upewnij się, że aktualny lekarz jest na liście
         if (istniejacyZabieg != null) {
             Doctor aktualnyLekarz = wszyscyLekarze.stream()
                     .filter(d -> d.getId().equals(istniejacyZabieg.getDoctorId()))
@@ -352,6 +376,79 @@ public class AppointmentForm {
             wyborLekarza.setValue(dostepniLekarze.get(0));
         } else {
             wyborLekarza.setValue(null);
+        }
+    }
+
+    /**
+     * Aktualizuje listę dostępnych pacjentów na podstawie wybranej daty i godziny.
+     * Filtruje pacjentów, którzy są już zajęci w wybranym terminie.
+     */
+    private void aktualizujDostepnychPacjentow(LocalDate data, String godzinaText, ComboBox<Patient> wyborPacjenta, Appointment istniejacyZabieg) {
+        // Wyczyść aktualną listę
+        dostepniPacjenci.clear();
+
+        if (data == null) {
+            // Jeśli nie wybrano daty, nie aktualizuj listy
+            return;
+        }
+
+        // Domyślnie wszyscy pacjenci są dostępni
+        List<Patient> pacjenciNaDzien = new ArrayList<>(wszyscyPacjenci);
+
+        // Jeśli podano godzinę, sprawdź również dostępność w danym terminie
+        if (!godzinaText.isEmpty() && zabiegiRepo != null) {
+            try {
+                LocalTime godzina = LocalTime.parse(godzinaText);
+                LocalDateTime termin = LocalDateTime.of(data, godzina);
+
+                // Filtruj pacjentów, którzy nie mają już zaplanowanych zabiegów w tym terminie
+                pacjenciNaDzien = pacjenciNaDzien.stream()
+                        .filter(pacjent -> {
+                            ObjectId wykluczonId = istniejacyZabieg != null ? istniejacyZabieg.getId() : null;
+                            return czyPacjentDostepny(pacjent.getId(), termin, wykluczonId);
+                        })
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                // Wyświetl komunikat o błędnym formacie godziny
+                pokazBlad("Niepoprawny format godziny",
+                        "Wprowadzona godzina ma niepoprawny format. Użyj formatu gg:mm (np. 14:30).");
+            }
+        }
+
+        // Dodaj wszystkich dostępnych pacjentów do listy
+        dostepniPacjenci.addAll(pacjenciNaDzien);
+
+        // Jeśli edytujemy istniejący zabieg, upewnij się, że aktualny pacjent jest na liście
+        if (istniejacyZabieg != null) {
+            Patient aktualnyPacjent = wszyscyPacjenci.stream()
+                    .filter(p -> p.getId().equals(istniejacyZabieg.getPatientId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (aktualnyPacjent != null && !dostepniPacjenci.contains(aktualnyPacjent)) {
+                dostepniPacjenci.add(aktualnyPacjent);
+
+                // Dodaj informację o zajętości pacjenta
+                pokazOstrzezenie("Pacjent zajęty",
+                        "Pacjent " + aktualnyPacjent.getFirstName() + " " + aktualnyPacjent.getLastName() +
+                                " ma już zaplanowany inny zabieg w tym terminie, ale został dodany do listy, " +
+                                "ponieważ jest przypisany do edytowanego zabiegu.");
+            }
+
+            // Ustaw wybranego pacjenta
+            wyborPacjenta.setValue(aktualnyPacjent);
+        } else if (!dostepniPacjenci.isEmpty()) {
+            // Dla nowych zabiegów, wybierz pierwszego dostępnego pacjenta
+            wyborPacjenta.setValue(dostepniPacjenci.get(0));
+        } else {
+            wyborPacjenta.setValue(null);
+
+            // Jeśli nie ma dostępnych pacjentów, wyświetl komunikat
+            if (!wszyscyPacjenci.isEmpty()) {
+                pokazOstrzezenie("Brak dostępnych pacjentów",
+                        "Wszyscy pacjenci mają już zaplanowane zabiegi w wybranym terminie. " +
+                                "Wybierz inny termin lub dodaj nowego pacjenta.");
+            }
         }
     }
 
@@ -379,7 +476,6 @@ public class AppointmentForm {
         // Sprawdź, czy lekarz ma już zaplanowany zabieg w tym terminie (z 30-minutowym marginesem)
         return zabiegiLekarza.stream()
                 .filter(zabieg -> {
-                    // Pomiń wykluczony zabieg (przy edycji)
                     if (wykluczonZabiegId != null && zabieg.getId().equals(wykluczonZabiegId)) {
                         return false;
                     }
@@ -393,6 +489,48 @@ public class AppointmentForm {
                     LocalDateTime czasZabiegu = zabieg.getDate();
                     long roznicaMinut = Math.abs(java.time.Duration.between(termin, czasZabiegu).toMinutes());
                     return roznicaMinut < 30; // Zakładamy, że zabieg trwa 30 minut
+                })
+                .findAny()
+                .isEmpty(); // Zwróć true, jeśli nie znaleziono kolidujących zabiegów
+    }
+
+    /**
+     * Sprawdza, czy pacjent jest dostępny w danym terminie.
+     */
+    private boolean czyPacjentDostepny(ObjectId pacjentId, LocalDateTime termin, ObjectId wykluczonZabiegId) {
+        if (zabiegiRepo == null) {
+            // Jeśli nie mamy repozytorium, zakładamy, że pacjent jest dostępny
+            return true;
+        }
+
+        // Pobierz wszystkie zabiegi dla danego pacjenta
+        Patient pacjent = wszyscyPacjenci.stream()
+                .filter(p -> p.getId().equals(pacjentId))
+                .findFirst()
+                .orElse(null);
+
+        if (pacjent == null) {
+            return false;
+        }
+
+        List<Appointment> zabiegiPacjenta = zabiegiRepo.findAppointmentsByPatient(pacjent);
+
+        // Sprawdź, czy pacjent ma już zaplanowany zabieg w tym terminie (z 30-minutowym marginesem)
+        return zabiegiPacjenta.stream()
+                .filter(zabieg -> {
+                    if (wykluczonZabiegId != null && zabieg.getId().equals(wykluczonZabiegId)) {
+                        return false;
+                    }
+
+                    // Pomiń zakończone zabiegi
+                    if (zabieg.getStatus() == AppointmentStatus.COMPLETED) {
+                        return false;
+                    }
+
+                    // Sprawdź, czy termin zabiegu koliduje z wybranym terminem
+                    LocalDateTime czasZabiegu = zabieg.getDate();
+                    long roznicaMinut = Math.abs(java.time.Duration.between(termin, czasZabiegu).toMinutes());
+                    return roznicaMinut < 30;
                 })
                 .findAny()
                 .isEmpty(); // Zwróć true, jeśli nie znaleziono kolidujących zabiegów
@@ -496,6 +634,17 @@ public class AppointmentForm {
      */
     private void pokazBlad(String tytul, String wiadomosc) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(tytul);
+        alert.setHeaderText(null);
+        alert.setContentText(wiadomosc);
+        alert.showAndWait();
+    }
+
+    /**
+     * Wyświetla alert ostrzegawczy.
+     */
+    private void pokazOstrzezenie(String tytul, String wiadomosc) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(tytul);
         alert.setHeaderText(null);
         alert.setContentText(wiadomosc);
