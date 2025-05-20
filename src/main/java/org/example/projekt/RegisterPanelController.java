@@ -154,7 +154,6 @@ public class RegisterPanelController {
      * @throws NullNameException jeśli imię lub nazwisko są puste
      * @throws AgeException jeśli wiek pacjenta jest niepoprawny
      */
-    //TODO: zmienić na patient reposiotry
     private void createPatient() throws PeselException, NullNameException, AgeException {
         int age = Patient.calculateAge(birthDatePicker.getValue());
 

@@ -8,6 +8,8 @@ import backend.wyjatki.NullNameException;
 import backend.wyjatki.PeselException;
 import org.bson.types.ObjectId;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 
 /**
@@ -21,6 +23,7 @@ public class Doctor extends Person {
     private List<Day> availableDays;
     private String room;
     private String contactInformation;
+    private LocalDate birthDate; // Dodane pole daty urodzenia
 
     /**
      * Domyślny konstruktor.
@@ -34,6 +37,7 @@ public class Doctor extends Person {
      * @param lastName           nazwisko lekarza
      * @param age                wiek lekarza
      * @param pesel              numer PESEL
+     * @param birthDate          data urodzenia
      * @param specialization     specjalizacja
      * @param availableDays      dostępne dni pracy
      * @param room               numer gabinetu
@@ -47,6 +51,7 @@ public class Doctor extends Person {
                   String lastName,
                   int age,
                   long pesel,
+                  LocalDate birthDate,
                   Specialization specialization,
                   List<Day> availableDays,
                   String room,
@@ -54,6 +59,7 @@ public class Doctor extends Person {
                   String plainPassword
     ) throws NullNameException, AgeException, PeselException {
         super(firstName, lastName, pesel, age, plainPassword);
+        this.birthDate = birthDate;
         this.specialization = specialization;
         this.availableDays = availableDays;
         this.room = room;
@@ -67,6 +73,7 @@ public class Doctor extends Person {
      * @param lastName           nazwisko lekarza
      * @param age                wiek lekarza
      * @param pesel              numer PESEL
+     * @param birthDate          data urodzenia
      * @param specialization     specjalizacja
      * @param availableDays      dostępne dni pracy
      * @param room               numer gabinetu
@@ -81,6 +88,7 @@ public class Doctor extends Person {
                   String lastName,
                   int age,
                   long pesel,
+                  LocalDate birthDate,
                   Specialization specialization,
                   List<Day> availableDays,
                   String room,
@@ -89,6 +97,7 @@ public class Doctor extends Person {
                   String passwordSalt
     ) throws NullNameException, AgeException, PeselException {
         super(firstName, lastName, pesel, age, passwordHash, passwordSalt);
+        this.birthDate = birthDate;
         this.specialization = specialization;
         this.availableDays = availableDays;
         this.room = room;
@@ -135,6 +144,42 @@ public class Doctor extends Person {
         this.contactInformation = contactInformation;
     }
 
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    /**
+     * Ustawia datę urodzenia lekarza i aktualizuje wiek.
+     *
+     * @param birthDate data urodzenia
+     * @throws AgeException jeśli obliczony wiek jest mniejszy niż 25 lat
+     */
+    public void setBirthDate(LocalDate birthDate) throws AgeException {
+        if (birthDate != null) {
+            int calculatedAge = calculateAge(birthDate);
+            if (calculatedAge < 25) {
+                throw new AgeException("Wiek lekarza musi być co najmniej 25 lat. Obliczony wiek: " + calculatedAge);
+            }
+            this.birthDate = birthDate;
+            setAge(calculatedAge);
+        } else {
+            this.birthDate = null;
+        }
+    }
+
+    /**
+     * Oblicza wiek na podstawie daty urodzenia.
+     *
+     * @param birthDate data urodzenia
+     * @return wiek w latach
+     */
+    public static int calculateAge(LocalDate birthDate) {
+        if (birthDate == null) {
+            return 0;
+        }
+        return Period.between(birthDate, LocalDate.now()).getYears();
+    }
+
     /**
      * Sprawdza, czy lekarz jest lekarzem pierwszego kontaktu.
      *
@@ -163,6 +208,7 @@ public class Doctor extends Person {
         private String lastName;
         private int age;
         private long pesel;
+        private LocalDate birthDate;
         private Specialization specialization;
         private List<Day> availableDays;
         private String room;
@@ -188,6 +234,25 @@ public class Doctor extends Person {
 
         public Builder age(int age) {
             this.age = age;
+            return this;
+        }
+
+        /**
+         * Ustawia datę urodzenia lekarza.
+         *
+         * @param birthDate data urodzenia
+         * @return this (dla łańcuchowania metod)
+         * @throws AgeException jeśli obliczony wiek jest mniejszy niż 25 lat
+         */
+        public Builder birthDate(LocalDate birthDate) throws AgeException {
+            if (birthDate != null) {
+                int calculatedAge = calculateAge(birthDate);
+                if (calculatedAge < 25) {
+                    throw new AgeException("Wiek lekarza musi być co najmniej 25 lat. Obliczony wiek: " + calculatedAge);
+                }
+                this.birthDate = birthDate;
+                this.age = calculatedAge;
+            }
             return this;
         }
 
@@ -256,13 +321,22 @@ public class Doctor extends Person {
             if (specialization == null) {
                 throw new IllegalArgumentException("Specjalizacja nie może być pusta.");
             }
+            if (birthDate == null) {
+                throw new IllegalArgumentException("Data urodzenia nie może być pusta.");
+            }
+            if (room == null || room.trim().isEmpty()) {
+                throw new IllegalArgumentException("Numer sali nie może być pusty.");
+            }
+            if (contactInformation == null || contactInformation.trim().isEmpty() || !contactInformation.matches("\\d{9}")) {
+                throw new IllegalArgumentException("Numer telefonu musi składać się dokładnie z 9 cyfr.");
+            }
 
             Doctor doctor;
 
             if (plainPassword != null) {
-                doctor = new Doctor(firstName, lastName, age, pesel, specialization, availableDays, room, contactInformation, plainPassword);
+                doctor = new Doctor(firstName, lastName, age, pesel, birthDate, specialization, availableDays, room, contactInformation, plainPassword);
             } else if (passwordHash != null && passwordSalt != null) {
-                doctor = new Doctor(firstName, lastName, age, pesel, specialization, availableDays, room, contactInformation, passwordHash, passwordSalt);
+                doctor = new Doctor(firstName, lastName, age, pesel, birthDate, specialization, availableDays, room, contactInformation, passwordHash, passwordSalt);
             } else {
                 throw new IllegalArgumentException("Nie podano hasła ani zahashowanego hasła i soli.");
             }

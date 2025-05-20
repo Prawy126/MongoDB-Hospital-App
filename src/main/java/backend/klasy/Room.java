@@ -30,8 +30,10 @@ public class Room {
      * @param number      numer pokoju
      * @param maxPatients maksymalna liczba pacjentów
      * @param type        typ pokoju
+     * @throws IllegalArgumentException jeśli któryś z parametrów jest nieprawidłowy
      */
     public Room(String address, int floor, int number, int maxPatients, TypeOfRoom type) {
+        validateRoomData(address, number, maxPatients, type);
         this.address = address;
         this.floor = floor;
         this.number = number;
@@ -49,14 +51,19 @@ public class Room {
      * @param maxPatients maksymalna liczba pacjentów
      * @param type        typ pokoju
      * @param patientIds  lista ID pacjentów przypisanych do pokoju
+     * @throws IllegalArgumentException jeśli któryś z parametrów jest nieprawidłowy
      */
     public Room(String address, int floor, int number, int maxPatients, TypeOfRoom type, List<ObjectId> patientIds) {
+        validateRoomData(address, number, maxPatients, type);
+        if (patientIds != null && patientIds.size() > maxPatients) {
+            throw new IllegalArgumentException("Liczba pacjentów przekracza maksymalną pojemność sali");
+        }
         this.address = address;
         this.floor = floor;
         this.number = number;
         this.maxPatients = maxPatients;
         this.type = type;
-        this.patientIds = patientIds;
+        this.patientIds = patientIds != null ? new ArrayList<>(patientIds) : new ArrayList<>();
     }
 
     /**
@@ -66,11 +73,44 @@ public class Room {
         this.patientIds = new ArrayList<>();
     }
 
+    /**
+     * Waliduje dane sali.
+     *
+     * @param address     adres budynku
+     * @param number      numer pokoju
+     * @param maxPatients maksymalna liczba pacjentów
+     * @param type        typ pokoju
+     * @throws IllegalArgumentException jeśli któryś z parametrów jest nieprawidłowy
+     */
+    private void validateRoomData(String address, int number, int maxPatients, TypeOfRoom type) {
+        if (address == null || address.trim().isEmpty()) {
+            throw new IllegalArgumentException("Adres budynku nie może być pusty");
+        }
+        if (number <= 0) {
+            throw new IllegalArgumentException("Numer sali musi być liczbą dodatnią");
+        }
+        if (maxPatients <= 0) {
+            throw new IllegalArgumentException("Maksymalna liczba pacjentów musi być większa od zera");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("Typ sali nie może być pusty");
+        }
+    }
+
     public String getAddress() {
         return address;
     }
 
+    /**
+     * Ustawia adres budynku.
+     *
+     * @param address adres budynku
+     * @throws IllegalArgumentException jeśli adres jest pusty
+     */
     public void setAddress(String address) {
+        if (address == null || address.trim().isEmpty()) {
+            throw new IllegalArgumentException("Adres budynku nie może być pusty");
+        }
         this.address = address;
     }
 
@@ -86,7 +126,16 @@ public class Room {
         return number;
     }
 
+    /**
+     * Ustawia numer sali.
+     *
+     * @param number numer sali
+     * @throws IllegalArgumentException jeśli numer jest mniejszy lub równy zero
+     */
     public void setNumber(int number) {
+        if (number <= 0) {
+            throw new IllegalArgumentException("Numer sali musi być liczbą dodatnią");
+        }
         this.number = number;
     }
 
@@ -106,11 +155,14 @@ public class Room {
      * Ustawia maksymalną liczbę pacjentów. Nie może być mniejsza niż aktualna liczba pacjentów.
      *
      * @param maxPatients maksymalna liczba pacjentów
-     * @throws IllegalArgumentException jeśli nowy limit jest mniejszy niż aktualna liczba pacjentów
+     * @throws IllegalArgumentException jeśli nowy limit jest mniejszy niż aktualna liczba pacjentów lub mniejszy od 1
      */
     public void setMaxPatients(int maxPatients) {
+        if (maxPatients <= 0) {
+            throw new IllegalArgumentException("Maksymalna liczba pacjentów musi być większa od zera");
+        }
         if (maxPatients < patientIds.size()) {
-            throw new IllegalArgumentException("Limit mniejszy niż liczba pacjentów");
+            throw new IllegalArgumentException("Limit mniejszy niż aktualna liczba pacjentów (" + patientIds.size() + ")");
         }
         this.maxPatients = maxPatients;
     }
@@ -129,8 +181,13 @@ public class Room {
      * @throws IllegalArgumentException jeśli liczba pacjentów przekracza maksymalną pojemność
      */
     public void setPatientIds(List<ObjectId> patientIds) {
+        if (patientIds == null) {
+            this.patientIds = new ArrayList<>();
+            return;
+        }
         if (patientIds.size() > maxPatients) {
-            throw new IllegalArgumentException("Liczba pacjentów przekracza limit");
+            throw new IllegalArgumentException("Liczba pacjentów (" + patientIds.size() +
+                    ") przekracza limit (" + maxPatients + ")");
         }
         this.patientIds = new ArrayList<>(patientIds);
     }
@@ -158,17 +215,42 @@ public class Room {
      * @throws IllegalStateException jeśli pokój jest już pełny
      */
     public void addPatientId(ObjectId patientId) {
+        if (patientId == null) {
+            throw new IllegalArgumentException("ID pacjenta nie może być null");
+        }
         if (isFull()) {
-            throw new IllegalStateException("Pokój jest pełny");
+            throw new IllegalStateException("Pokój jest pełny (limit: " + maxPatients + ")");
         }
         this.patientIds.add(patientId);
+    }
+
+    /**
+     * Usuwa pacjenta z pokoju.
+     *
+     * @param patientId identyfikator pacjenta
+     * @return true jeśli pacjent został usunięty, false jeśli nie znaleziono pacjenta
+     */
+    public boolean removePatientId(ObjectId patientId) {
+        if (patientId == null) {
+            return false;
+        }
+        return this.patientIds.remove(patientId);
     }
 
     public TypeOfRoom getType() {
         return type;
     }
 
+    /**
+     * Ustawia typ sali.
+     *
+     * @param type typ sali
+     * @throws IllegalArgumentException jeśli typ jest null
+     */
     public void setType(TypeOfRoom type) {
+        if (type == null) {
+            throw new IllegalArgumentException("Typ sali nie może być pusty");
+        }
         this.type = type;
     }
 
