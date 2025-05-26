@@ -2,6 +2,8 @@ package org.example.projekt;
 
 import backend.klasy.*;
 import backend.mongo.*;
+import backend.status.Specialization;
+import backend.status.TypeOfRoom;
 import backend.wyjatki.DoctorIsNotAvailableException;
 import backend.wyjatki.InappropriateRoomException;
 import backend.wyjatki.PatientIsNotAvailableException;
@@ -12,6 +14,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -65,6 +68,8 @@ public class AdminPanelController {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
         layout.setAlignment(Pos.TOP_CENTER);
+        layout.setPrefWidth(1000);
+        layout.setPrefHeight(700);
 
         Label titleLabel = new Label("Lista pacjentów");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
@@ -86,14 +91,21 @@ public class AdminPanelController {
                 p.getValue().getBirthDate().format(DateTimeFormatter.ofPattern("d MMMM yyyy", new Locale("pl", "PL")))
         ));
 
+        // Usunięto kolumnę diagnozy
+
         tableView.getColumns().addAll(firstNameCol, lastNameCol, addressCol, birthDateCol);
         tableView.setItems(patientData);
-        patientData.setAll(patientRepo.findAll());
+        refreshPatientData(patientData);
 
         Button addBtn = new Button("Dodaj pacjenta");
         addBtn.setOnAction(e -> PatientForm.showForm(null, patient -> {
-            patientRepo.createPatient(patient);
-            patientData.setAll(patientRepo.findAll());
+            try {
+                patientRepo.createPatient(patient);
+                refreshPatientData(patientData);
+                showSuccessMessage("Pacjent dodany", "Pacjent został pomyślnie dodany do bazy danych.");
+            } catch (Exception ex) {
+                showErrorMessage("Błąd dodawania", "Nie udało się dodać pacjenta: " + ex.getMessage());
+            }
         }));
 
         Button editBtn = new Button("Edytuj pacjenta");
@@ -101,9 +113,16 @@ public class AdminPanelController {
             Patient selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
                 PatientForm.showForm(selected, updated -> {
-                    patientRepo.updatePatient(updated);
-                    patientData.setAll(patientRepo.findAll());
+                    try {
+                        patientRepo.updatePatient(updated);
+                        refreshPatientData(patientData);
+                        showSuccessMessage("Pacjent zaktualizowany", "Dane pacjenta zostały pomyślnie zaktualizowane.");
+                    } catch (Exception ex) {
+                        showErrorMessage("Błąd aktualizacji", "Nie udało się zaktualizować danych pacjenta: " + ex.getMessage());
+                    }
                 });
+            } else {
+                showWarningMessage("Brak wyboru", "Proszę wybrać pacjenta do edycji.");
             }
         });
 
@@ -111,8 +130,20 @@ public class AdminPanelController {
         deleteBtn.setOnAction(e -> {
             Patient selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                patientRepo.deletePatient(selected.getId());
-                patientData.setAll(patientRepo.findAll());
+                boolean confirmed = showConfirmationDialog("Potwierdzenie usunięcia",
+                        "Czy na pewno chcesz usunąć pacjenta " + selected.getFirstName() + " " + selected.getLastName() + "?");
+
+                if (confirmed) {
+                    try {
+                        patientRepo.deletePatient(selected.getId());
+                        refreshPatientData(patientData);
+                        showSuccessMessage("Pacjent usunięty", "Pacjent został pomyślnie usunięty z bazy danych.");
+                    } catch (Exception ex) {
+                        showErrorMessage("Błąd usuwania", "Nie udało się usunąć pacjenta: " + ex.getMessage());
+                    }
+                }
+            } else {
+                showWarningMessage("Brak wyboru", "Proszę wybrać pacjenta do usunięcia.");
             }
         });
 
@@ -125,12 +156,73 @@ public class AdminPanelController {
     }
 
     /**
+     * Odświeża dane pacjentów w tabeli.
+     */
+    private void refreshPatientData(ObservableList<Patient> patientData) {
+        patientData.setAll(patientRepo.findAll());
+    }
+
+    /**
+     * Wyświetla komunikat o sukcesie.
+     */
+    private void showSuccessMessage(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * Wyświetla komunikat o błędzie.
+     */
+    private void showErrorMessage(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * Wyświetla komunikat ostrzegawczy.
+     */
+    private void showWarningMessage(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * Wyświetla okno dialogowe z potwierdzeniem.
+     *
+     * @return true jeśli użytkownik potwierdził, false w przeciwnym razie
+     */
+    private boolean showConfirmationDialog(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+
+        ButtonType buttonTypeYes = new ButtonType("Tak");
+        ButtonType buttonTypeNo = new ButtonType("Nie", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
+
+        return alert.showAndWait().orElse(buttonTypeNo) == buttonTypeYes;
+    }
+
+    /**
      * Wyświetla panel zarządzania lekarzami.
      */
     public VBox showDoctorsManagement() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
         layout.setAlignment(Pos.TOP_CENTER);
+        layout.setPrefWidth(1000);
+        layout.setPrefHeight(700);
 
         Label titleLabel = new Label("Lista lekarzy");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
@@ -145,19 +237,30 @@ public class AdminPanelController {
         lastNameCol.setCellValueFactory(new PropertyValueFactory<>("lastName"));
 
         TableColumn<Doctor, String> specializationCol = new TableColumn<>("Specjalizacja");
-        specializationCol.setCellValueFactory(new PropertyValueFactory<>("specialization"));
+        specializationCol.setCellValueFactory(cellData -> {
+            Specialization spec = cellData.getValue().getSpecialization();
+            return new ReadOnlyStringWrapper(spec != null ? spec.getDescription() : "");
+        });
 
         TableColumn<Doctor, String> roomCol = new TableColumn<>("Sala");
         roomCol.setCellValueFactory(new PropertyValueFactory<>("room"));
 
-        tableView.getColumns().addAll(nameCol, lastNameCol, specializationCol, roomCol);
+        TableColumn<Doctor, String> contactCol = new TableColumn<>("Kontakt");
+        contactCol.setCellValueFactory(new PropertyValueFactory<>("contactInformation"));
+
+        tableView.getColumns().addAll(nameCol, lastNameCol, specializationCol, roomCol, contactCol);
         tableView.setItems(doctorList);
-        doctorList.setAll(doctorRepo.findAll());
+        refreshDoctorList(doctorList);
 
         Button addBtn = new Button("Dodaj lekarza");
         addBtn.setOnAction(e -> DoctorForm.showForm(null, doctor -> {
-            doctorRepo.createDoctor(doctor);
-            doctorList.setAll(doctorRepo.findAll());
+            try {
+                doctorRepo.createDoctor(doctor);
+                refreshDoctorList(doctorList);
+                showSuccessMessage("Lekarz dodany", "Lekarz został pomyślnie dodany do bazy danych.");
+            } catch (Exception ex) {
+                showErrorMessage("Błąd dodawania", "Nie udało się dodać lekarza: " + ex.getMessage());
+            }
         }));
 
         Button editBtn = new Button("Edytuj lekarza");
@@ -165,9 +268,16 @@ public class AdminPanelController {
             Doctor selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
                 DoctorForm.showForm(selected, updated -> {
-                    doctorRepo.updateDoctor(updated);
-                    doctorList.setAll(doctorRepo.findAll());
+                    try {
+                        doctorRepo.updateDoctor(updated);
+                        refreshDoctorList(doctorList);
+                        showSuccessMessage("Lekarz zaktualizowany", "Dane lekarza zostały pomyślnie zaktualizowane.");
+                    } catch (Exception ex) {
+                        showErrorMessage("Błąd aktualizacji", "Nie udało się zaktualizować danych lekarza: " + ex.getMessage());
+                    }
                 });
+            } else {
+                showWarningMessage("Brak wyboru", "Proszę wybrać lekarza do edycji.");
             }
         });
 
@@ -175,8 +285,20 @@ public class AdminPanelController {
         deleteBtn.setOnAction(e -> {
             Doctor selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                doctorRepo.deleteDoctor(selected.getId());
-                doctorList.setAll(doctorRepo.findAll());
+                boolean confirmed = showConfirmationDialog("Potwierdzenie usunięcia",
+                        "Czy na pewno chcesz usunąć lekarza " + selected.getFirstName() + " " + selected.getLastName() + "?");
+
+                if (confirmed) {
+                    try {
+                        doctorRepo.deleteDoctor(selected.getId());
+                        refreshDoctorList(doctorList);
+                        showSuccessMessage("Lekarz usunięty", "Lekarz został pomyślnie usunięty z bazy danych.");
+                    } catch (Exception ex) {
+                        showErrorMessage("Błąd usuwania", "Nie udało się usunąć lekarza: " + ex.getMessage());
+                    }
+                }
+            } else {
+                showWarningMessage("Brak wyboru", "Proszę wybrać lekarza do usunięcia.");
             }
         });
 
@@ -189,16 +311,25 @@ public class AdminPanelController {
     }
 
     /**
+     * Odświeża listę lekarzy w tabeli.
+     */
+    private void refreshDoctorList(ObservableList<Doctor> doctorList) {
+        doctorList.setAll(doctorRepo.findAll());
+    }
+
+    /**
      * Wyświetla panel harmonogramu zabiegów.
      */
     public VBox showAppointmentsManagement() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
 
+
         Label titleLabel = new Label("Harmonogram zabiegów");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         TableView<Appointment> tableView = new TableView<>();
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         refreshAppointments(tableView);
 
         TableColumn<Appointment, String> dateCol = new TableColumn<>("Data");
@@ -316,8 +447,37 @@ public class AdminPanelController {
         cancelProcedure.setOnAction(e -> {
             Appointment selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                appointmentRepo.deleteAppointment(selected.getId());
-                refreshAppointments(tableView);
+                // Utwórz okno dialogowe potwierdzenia
+                Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmDialog.setTitle("Potwierdzenie usunięcia");
+                confirmDialog.setHeaderText("Czy na pewno chcesz usunąć wybrany zabieg?");
+
+                // Dodaj szczegóły zabiegu do treści komunikatu
+                Doctor lekarz = doctorRepo.findDoctorById(selected.getDoctorId());
+                Patient pacjent = patientRepo.findPatientById(selected.getPatientId()).getFirst();
+                Room sala = roomRepo.findRoomsById(selected.getRoom()).getFirst();
+
+                String szczegoly = "Data: " + selected.getDate().format(formatter) + "\n" +
+                        "Lekarz: " + lekarz.getFirstName() + " " + lekarz.getLastName() + "\n" +
+                        "Pacjent: " + pacjent.getFirstName() + " " + pacjent.getLastName() + "\n" +
+                        "Sala: " + sala.toString2() + "\n" +
+                        "Opis: " + selected.getDescription();
+
+                confirmDialog.setContentText(szczegoly);
+
+                // Dodaj przyciski Tak/Nie
+                ButtonType buttonTypeYes = new ButtonType("Tak");
+                ButtonType buttonTypeNo = new ButtonType("Nie", ButtonBar.ButtonData.CANCEL_CLOSE);
+                confirmDialog.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
+
+                // Pokaż okno dialogowe i poczekaj na odpowiedź
+                confirmDialog.showAndWait().ifPresent(response -> {
+                    if (response == buttonTypeYes) {
+                        // Jeśli użytkownik potwierdził, usuń zabieg
+                        appointmentRepo.deleteAppointment(selected.getId());
+                        refreshAppointments(tableView);
+                    }
+                });
             }
         });
 
@@ -350,6 +510,9 @@ public class AdminPanelController {
     public VBox showRoomsManagement() {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
+        layout.setAlignment(Pos.TOP_CENTER);
+        layout.setPrefWidth(1000);
+        layout.setPrefHeight(700);
 
         Label titleLabel = new Label("Zarządzanie salami");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
@@ -357,7 +520,6 @@ public class AdminPanelController {
         TableView<Room> tableView = new TableView<>();
         ObservableList<Room> roomData = FXCollections.observableArrayList();
 
-        /* -------- kolumny -------- */
         TableColumn<Room, String> addressCol = new TableColumn<>("Adres");
         addressCol.setCellValueFactory(new PropertyValueFactory<>("address"));
 
@@ -374,15 +536,25 @@ public class AdminPanelController {
         currentCol.setCellValueFactory(cellData ->
                 new SimpleIntegerProperty(cellData.getValue().getCurrentPatientCount()).asObject());
 
-        tableView.getColumns().addAll(addressCol, floorCol, numberCol, maxCol, currentCol);
-        roomData.setAll(roomRepo.getAllRooms());
+        TableColumn<Room, String> typeCol = new TableColumn<>("Typ sali");
+        typeCol.setCellValueFactory(cellData -> {
+            TypeOfRoom type = cellData.getValue().getType();
+            return new ReadOnlyStringWrapper(type != null ? type.getDescription() : "");
+        });
+
+        tableView.getColumns().addAll(addressCol, floorCol, numberCol, maxCol, currentCol, typeCol);
+        refreshRoomList(roomData);
         tableView.setItems(roomData);
 
-        /* -------- przyciski -------- */
         Button addRoom = new Button("Dodaj salę");
         addRoom.setOnAction(e -> RoomForm.showForm(null, room -> {
-            roomRepo.createRoom(room);
-            roomData.setAll(roomRepo.getAllRooms());
+            try {
+                roomRepo.createRoom(room);
+                refreshRoomList(roomData);
+                showSuccessMessage("Sala dodana", "Sala została pomyślnie dodana do bazy danych.");
+            } catch (Exception ex) {
+                showErrorMessage("Błąd dodawania", "Nie udało się dodać sali: " + ex.getMessage());
+            }
         }));
 
         Button editRoom = new Button("Edytuj salę");
@@ -390,9 +562,16 @@ public class AdminPanelController {
             Room selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
                 RoomForm.showForm(selected, updated -> {
-                    roomRepo.updateRoom(updated.getId(), updated);
-                    roomData.setAll(roomRepo.getAllRooms());
+                    try {
+                        roomRepo.updateRoom(updated.getId(), updated);
+                        refreshRoomList(roomData);
+                        showSuccessMessage("Sala zaktualizowana", "Dane sali zostały pomyślnie zaktualizowane.");
+                    } catch (Exception ex) {
+                        showErrorMessage("Błąd aktualizacji", "Nie udało się zaktualizować danych sali: " + ex.getMessage());
+                    }
                 });
+            } else {
+                showWarningMessage("Brak wyboru", "Proszę wybrać salę do edycji.");
             }
         });
 
@@ -400,8 +579,42 @@ public class AdminPanelController {
         deleteRoom.setOnAction(e -> {
             Room selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                roomRepo.deleteRoom(selected.getId());
-                roomData.setAll(roomRepo.getAllRooms());
+                // Sprawdź, czy sala ma przypisanych pacjentów
+                if (selected.getCurrentPatientCount() > 0) {
+                    showWarningMessage("Nie można usunąć",
+                            "Nie można usunąć sali, która ma przypisanych pacjentów. " +
+                                    "Liczba przypisanych pacjentów: " + selected.getCurrentPatientCount());
+                    return;
+                }
+
+                // Sprawdź, czy sala jest używana w zabiegach
+                List<Appointment> appointmentsInRoom = appointmentRepo.findAppointmentsByRoom(selected.getId());
+                if (appointmentsInRoom != null && !appointmentsInRoom.isEmpty()) {
+                    showWarningMessage("Nie można usunąć",
+                            "Nie można usunąć sali, która jest używana w zaplanowanych zabiegach. " +
+                                    "Liczba zabiegów w tej sali: " + appointmentsInRoom.size());
+                    return;
+                }
+
+                boolean confirmed = showConfirmationDialog("Potwierdzenie usunięcia",
+                        "Czy na pewno chcesz usunąć salę nr " + selected.getNumber() +
+                                " na piętrze " + selected.getFloor() + "?");
+
+                if (confirmed) {
+                    try {
+                        boolean deleted = roomRepo.deleteRoom(selected.getId());
+                        if (deleted) {
+                            refreshRoomList(roomData);
+                            showSuccessMessage("Sala usunięta", "Sala została pomyślnie usunięta z bazy danych.");
+                        } else {
+                            showErrorMessage("Błąd usuwania", "Nie udało się usunąć sali. Sala nie została znaleziona.");
+                        }
+                    } catch (Exception ex) {
+                        showErrorMessage("Błąd usuwania", "Nie udało się usunąć sali: " + ex.getMessage());
+                    }
+                }
+            } else {
+                showWarningMessage("Brak wyboru", "Proszę wybrać salę do usunięcia.");
             }
         });
 
@@ -411,6 +624,10 @@ public class AdminPanelController {
         layout.getChildren().addAll(titleLabel, tableView, buttonBox);
         adminPanel.setCenterPane(layout);
         return layout;
+    }
+
+    private void refreshRoomList(ObservableList<Room> roomData) {
+        roomData.setAll(roomRepo.getAllRooms());
     }
 
     public void logout() {

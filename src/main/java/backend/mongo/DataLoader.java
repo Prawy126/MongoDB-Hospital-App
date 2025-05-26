@@ -85,7 +85,7 @@ public class DataLoader {
     private void createDemoPatients(String passwordHash, String salt) {
         for (int i = 1; i <= 10; i++) {
             try {
-                LocalDate birthDate = generateRandomBirthDate();
+                LocalDate birthDate = generateRandomBirthDate(0, 100); // Pacjenci mogą mieć dowolny wiek
                 int age = Patient.calculateAge(birthDate);
 
                 Patient patient = new Patient.Builder()
@@ -150,16 +150,24 @@ public class DataLoader {
                 for (int j = 0; j < selectedDays.length; j++) {
                     selectedDays[j] = days[random.nextInt(days.length)];
                 }
-                LocalDate birthDate = generateRandomBirthDate();
+
+                // Generuj datę urodzenia dla lekarza (wiek 25-65 lat)
+                LocalDate birthDate = generateRandomBirthDate(25, 65);
+                int age = Doctor.calculateAge(birthDate);
+
+                // Generuj numer telefonu w formacie 9 cyfr (bez myślników)
+                String phoneNumber = generateRandomPhoneNumber9Digits();
+
                 Doctor doctor = new Doctor.Builder()
                         .firstName(getRandomFirstName())
                         .lastName(getRandomLastName())
-                        .age(30 + random.nextInt(35))
+                        .birthDate(birthDate) // Ustawienie daty urodzenia
+                        .age(age) // Wiek jest obliczany automatycznie, ale ustawiamy go dla pewności
                         .pesel(generateRandomPesel(birthDate))
                         .specialization(specializations[random.nextInt(specializations.length)])
                         .availableDays(Arrays.stream(selectedDays).map(Day::valueOf).collect(Collectors.toList()))
                         .room(String.format("%03d", random.nextInt(500) + 1))
-                        .contactInformation(generateRandomPhoneNumber())
+                        .contactInformation(phoneNumber)
                         .passwordHash(passwordHash)
                         .passwordSalt(salt)
                         .build();
@@ -200,18 +208,42 @@ public class DataLoader {
     }
 
     /**
-     * Generuje losową datę urodzenia.
+     * Generuje losową datę urodzenia w zakresie lat.
+     *
+     * @param minAge minimalny wiek w latach
+     * @param maxAge maksymalny wiek w latach
+     * @return losowa data urodzenia
      */
-    private LocalDate generateRandomBirthDate() {
-        int year = 1950 + random.nextInt(70);
+    private LocalDate generateRandomBirthDate(int minAge, int maxAge) {
+        LocalDate now = LocalDate.now();
+        int minYear = now.getYear() - maxAge;
+        int maxYear = now.getYear() - minAge;
+        int year = minYear + random.nextInt(maxYear - minYear + 1);
         int month = random.nextInt(12) + 1;
-        int day = random.nextInt(28) + 1;
+
+        // Upewnij się, że dzień jest prawidłowy dla danego miesiąca i roku
+        int maxDay = LocalDate.of(year, month, 1).lengthOfMonth();
+        int day = random.nextInt(maxDay) + 1;
+
         return LocalDate.of(year, month, day);
     }
 
     /**
-     * Generuje losowy numer telefonu.
+     * Generuje losowy numer telefonu w formacie 9 cyfr bez myślników.
      */
+    private String generateRandomPhoneNumber9Digits() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 9; i++) {
+            sb.append(random.nextInt(10));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Generuje losowy numer telefonu.
+     * @deprecated Zastąpione przez {@link #generateRandomPhoneNumber9Digits()}
+     */
+    @Deprecated
     private String generateRandomPhoneNumber() {
         return String.format("%03d-%03d-%03d",
                 random.nextInt(900) + 100,
