@@ -12,7 +12,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -66,8 +65,6 @@ public class AdminPanelController {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
         layout.setAlignment(Pos.TOP_CENTER);
-        layout.setPrefWidth(1000);
-        layout.setPrefHeight(700);
 
         Label titleLabel = new Label("Lista pacjentów");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
@@ -92,7 +89,6 @@ public class AdminPanelController {
         tableView.getColumns().addAll(firstNameCol, lastNameCol, addressCol, birthDateCol);
         tableView.setItems(patientData);
         patientData.setAll(patientRepo.findAll());
-
 
         Button addBtn = new Button("Dodaj pacjenta");
         addBtn.setOnAction(e -> PatientForm.showForm(null, patient -> {
@@ -199,12 +195,10 @@ public class AdminPanelController {
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(20));
 
-
         Label titleLabel = new Label("Harmonogram zabiegów");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         TableView<Appointment> tableView = new TableView<>();
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         refreshAppointments(tableView);
 
         TableColumn<Appointment, String> dateCol = new TableColumn<>("Data");
