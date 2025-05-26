@@ -26,6 +26,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.util.StringConverter;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -94,6 +95,7 @@ public class DoctorFirstContactController implements Initializable {
         TableView<Patient> tableView = new TableView<>();
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        // Kolumna Imię i Nazwisko
         TableColumn<Patient, String> nameCol = new TableColumn<>("Imię i Nazwisko");
         nameCol.setCellValueFactory(param ->
                 new SimpleStringProperty(
@@ -101,9 +103,15 @@ public class DoctorFirstContactController implements Initializable {
                 )
         );
 
+        // Kolumna Diagnoza
         TableColumn<Patient, String> diagnosisCol = new TableColumn<>("Diagnoza");
-        diagnosisCol.setCellValueFactory(new PropertyValueFactory<>("diagnosis"));
+        diagnosisCol.setCellValueFactory(param -> {
+            Diagnosis diagnosis = param.getValue().getDiagnosis();
+            String displayText = (diagnosis == Diagnosis.AWAITING) ? "Oczekujący" : diagnosis.toString();
+            return new SimpleStringProperty(displayText);
+        });
 
+        // Kolumna Akcje
         TableColumn<Patient, Void> actionCol = new TableColumn<>("Akcje");
         actionCol.setCellFactory(param -> new TableCell<>() {
             private final Button diagButton = createStyledButton("Przypisz diagnozę", "#2ECC71");
@@ -121,18 +129,19 @@ public class DoctorFirstContactController implements Initializable {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    setGraphic(diagButton);
+                    setGraphic(diagButton); // Przycisk zawsze widoczny, bo lista zawiera tylko AWAITING
                 }
             }
         });
 
         tableView.getColumns().addAll(nameCol, diagnosisCol, actionCol);
 
-        List<Patient> patients = patientRepository.findAll();
-        tableView.setItems(FXCollections.observableArrayList(patients));
+        // Pobierz tylko pacjentów ze statusem AWAITING
+        List<Patient> awaitingPatients = patientRepository.findPatientsWithAwaitingDiagnosis();
+        tableView.setItems(FXCollections.observableArrayList(awaitingPatients));
 
         patientsList.getChildren().addAll(
-                new Label("Lista pacjentów"),
+                new Label("Lista pacjentów oczekujących na diagnozę"),
                 tableView
         );
 
@@ -148,13 +157,29 @@ public class DoctorFirstContactController implements Initializable {
         dialog.setTitle("Przypisz diagnozę");
         dialog.setHeaderText("Wybierz diagnozę dla pacjenta: " + patient.getFirstName() + " " + patient.getLastName());
 
+        // ComboBox z tłumaczeniami
         ComboBox<Diagnosis> diagnosisBox = new ComboBox<>();
         diagnosisBox.setItems(FXCollections.observableArrayList(Diagnosis.values()));
+
+        // Ustaw konwerter, aby wyświetlać tłumaczenia
+        diagnosisBox.setConverter(new StringConverter<Diagnosis>() {
+            @Override
+            public String toString(Diagnosis diagnosis) {
+                return diagnosis != null ? diagnosis.getDescription() : "";
+            }
+
+            @Override
+            public Diagnosis fromString(String string) {
+                return Diagnosis.valueOf(string);
+            }
+        });
+
+        // Ustaw domyślną wartość
         diagnosisBox.setValue(patient.getDiagnosis());
 
         TextArea descriptionArea = new TextArea();
         descriptionArea.setPromptText("Dodatkowy opis diagnozy (opcjonalnie)");
-        descriptionArea.setText(patient.getDiagnosis().toString());
+        descriptionArea.setText(patient.getDiagnosis().getDescription()); // Używamy tłumaczenia
         descriptionArea.setWrapText(true);
 
         VBox content = new VBox(10);
@@ -205,7 +230,7 @@ public class DoctorFirstContactController implements Initializable {
                             "Brak wolnych łóżek na oddziale " + department.getDescription());
                 }
 
-                panel.setCenterPane(new VBox());
+                // Odśwież listę pacjentów
                 showPatientsList();
 
             } catch (Exception e) {

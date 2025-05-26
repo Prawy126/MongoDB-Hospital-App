@@ -131,11 +131,15 @@ public class AdminPanelController {
             Patient selected = tableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
                 boolean confirmed = showConfirmationDialog("Potwierdzenie usunięcia",
-                        "Czy na pewno chcesz usunąć pacjenta " + selected.getFirstName() + " " + selected.getLastName() + "?");
+                        "Czy na pewno chcesz usunąć pacjenta oraz wszystkie jego zabiegi?" + selected.getFirstName() + " " + selected.getLastName() + "?");
 
                 if (confirmed) {
                     try {
                         patientRepo.deletePatient(selected.getId());
+                        List<Appointment> lista = appointmentRepo.findAppointmentsByPatient(selected);
+                        for(Appointment appointment : lista) {
+                            appointmentRepo.deleteAppointment(appointment.getId());
+                        }
                         refreshPatientData(patientData);
                         showSuccessMessage("Pacjent usunięty", "Pacjent został pomyślnie usunięty z bazy danych.");
                     } catch (Exception ex) {
