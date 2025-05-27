@@ -294,9 +294,14 @@ public class AdminPanelController {
 
                 if (confirmed) {
                     try {
-                        doctorRepo.deleteDoctor(selected.getId());
-                        refreshDoctorList(doctorList);
-                        showSuccessMessage("Lekarz usunięty", "Lekarz został pomyślnie usunięty z bazy danych.");
+                        if(appointmentRepo.findAppointmentsByDoctor(selected) != null && !appointmentRepo.findAppointmentsByDoctor(selected).isEmpty()) {
+                            showWarningMessage("Uwaga!!","Lekarz posiada aktualnie zaplanowany zabieg nie można go usunąć.");
+                        }else{
+                            doctorRepo.deleteDoctor(selected.getId());
+                            refreshDoctorList(doctorList);
+                            showSuccessMessage("Lekarz usunięty", "Lekarz został pomyślnie usunięty z bazy danych.");
+                        }
+
                     } catch (Exception ex) {
                         showErrorMessage("Błąd usuwania", "Nie udało się usunąć lekarza: " + ex.getMessage());
                     }
