@@ -17,7 +17,7 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
  */
 public class MongoDatabaseConnector {
 
-    private static final String DB_IP = "192.168.0.50"; // Adres IP serwera MongoDB
+    private static final String DB_IP = "192.168.141.191"; // Adres IP serwera MongoDB
 
     private static final int DB_PORT = 27017;
     private static final String DB_NAME = "hospitalDB";

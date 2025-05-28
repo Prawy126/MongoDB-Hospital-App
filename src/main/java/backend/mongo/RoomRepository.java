@@ -173,6 +173,38 @@ public class RoomRepository {
     }
 
 
+    /**
+     * Znajduje pokój po jego ID i aktualizuje pacjentów.
+     *
+     * @param roomId ID pokoju
+     * @param oldPatientId ID starego pacjenta do usunięcia (może być null)
+     * @param newPatientId ID nowego pacjenta do dodania (może być null)
+     */
+    public void updateRoomPatientAssignment(ObjectId roomId,
+                                            ObjectId oldPatientId,
+                                            ObjectId newPatientId) {
+        Room room = findRoomsById(roomId).stream().findFirst().orElse(null);
+        if (room == null) return;
+
+        boolean changed = false;
+
+        // usuń tylko, jeśli pacjent był faktycznie w pokoju
+        if (oldPatientId != null && room.removePatientId(oldPatientId)) {
+            changed = true;
+        }
+        // dodaj tylko, jeśli pacjenta jeszcze nie ma
+        if (newPatientId != null && !room.getPatientIds().contains(newPatientId)) {
+            room.addPatientId(newPatientId);     // addPatientId ma już ochronę przed duplikatem,
+            changed = true;
+        }
+
+        if (changed) {
+            updateRoom(room.getId(), room);      // zapis do MongoDB
+        }
+    }
+
+
+
 
     public List<Room> findRoomsById(ObjectId id) {
         return collection.find(eq("_id", id)).into(new ArrayList<>());

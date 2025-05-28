@@ -218,10 +218,14 @@ public class Room {
         if (patientId == null) {
             throw new IllegalArgumentException("ID pacjenta nie może być null");
         }
+        // ⬇︎ NIE dodaj, jeśli już jest na liście
+        if (patientIds.contains(patientId)) {
+            return;               // albo możesz rzucić wyjątek, jeśli wolisz
+        }
         if (isFull()) {
             throw new IllegalStateException("Pokój jest pełny (limit: " + maxPatients + ")");
         }
-        this.patientIds.add(patientId);
+        patientIds.add(patientId);
     }
 
     /**
